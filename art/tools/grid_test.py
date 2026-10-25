@@ -51,9 +51,11 @@ def ours(n):
     return im.resize((TW,TH),Image.LANCZOS)
 kinds=["sudoku","cupcake","blocks","pancake","word","jigsaw","cookie","bubble","mahjong","ramen","donut","kitchen","sudoku","cupcake","blocks","pancake"]
 cells=[]; k=0
+import sys
+V2=len(sys.argv)>1 and sys.argv[1]=="v2"
+POS={3:"A",13:"B"} if not V2 else {1:"A2",10:"B2",12:"A",16:"B"}
 for i in range(18):
-    if i==3: cells.append(("A",ours("A")))
-    elif i==13: cells.append(("B",ours("B")))
+    if i in POS: cells.append((POS[i],ours(POS[i])))
     else: cells.append((kinds[k],ph(kinds[k],i))); k+=1
 GW,GH=6*TW+7*G,3*TH+4*G
 grid=Image.new("RGB",(GW,GH),"#0C0D14")   # CG dark browse background
@@ -64,7 +66,10 @@ glance=grid.resize((GW//4,GH//4),Image.LANCZOS).filter(ImageFilter.GaussianBlur(
 sheet=Image.new("RGB",(GW,GH*2+60),"#FFFFFF"); d=ImageDraw.Draw(sheet)
 from ttdraw import font
 sheet.paste(grid,(0,30)); sheet.paste(glance,(0,GH+60))
-d.text((8,6),"Actual size (230x130 tiles on CG-style dark grid). Ours: row 1 col 4 = A 'Golden tray'; row 3 col 2 = B 'Recipe book table'. Others = self-drawn placeholders.",fill="#43283A",font=font("ui",15,500))
+cap=("Actual size (230x130 tiles on CG-style dark grid). Ours: row 1 col 4 = A 'Golden tray'; row 3 col 2 = B 'Recipe book table'. Others = self-drawn placeholders." if not V2 else
+     "v2 test, actual size (230x130). Ours: row1 col2 = A2, row2 col5 = B2 (v2); row3 col1 = A, row3 col5 = B (v1, for comparison). Others = self-drawn placeholders.")
+d.text((8,6),cap,fill="#43283A",font=font("ui",15,500))
 d.text((8,GH+36),"Glance: downscaled to 1/4 + blurred (peripheral read while scrolling)",fill="#43283A",font=font("ui",15,500))
-sheet.save(f"{OUT}/grid_test.png",optimize=True); sheet.save("/tmp/tt_grid_test.png")
+fn="grid_test_v2.png" if V2 else "grid_test.png"
+sheet.save(f"{OUT}/{fn}",optimize=True); sheet.save(f"/tmp/tt_{fn}")
 print(sheet.size)

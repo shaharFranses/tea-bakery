@@ -55,6 +55,25 @@ A mock CrazyGames browse grid: 6×3 tiles at 230×130 on a dark background. A si
 
   B gets the same treatment as the challenger (board as hero, one card instead of three). Then re-run the grid test.
 
+### v2 concepts and re-test (2026-10-25, about 10:40): `art/covers/grid_test_v2.png`
+`concept_A2_960x540.jpg` / `_square_540.jpg` and `concept_B2_*` (v1 kept). Changes:
+- Raspberry-to-pink vignette with a faint cream lattice.
+- Tray at about 63% of the frame height, cakes drawn 1.15× cell.
+- Compact title band (dashed, no text).
+- B2 is board-led with one card (ch5 Cherry Bakewell).
+- The squares are **re-stacked 1080² compositions**, not crops: nothing is cut at the edges, and the corners are plain background for Poki's mask.
+
+**Verdict: the v2s are a clear step up from v1, but at glance size they sit mid-pack, not top.**
+- Their dark-raspberry edges now frame the tile against the dark grid, and the board reads as a coloured square with dots. They hold their own against the softer placeholders (cookie jar, pancakes, mahjong).
+- They still lose to the boldest placeholders (bubbles, blocks, sudoku, donut). Those have one high-contrast shape filling 70–80% of the tile; ours is a pastel board at about 60% inside a mid-value pink.
+- **A2 is still ahead of B2.** B2's card and gingham add clutter at 230 px.
+
+**Next levers, without leaving the in-game look:**
+1. In the 16:9 cover, scale the tray to about 75–80% of the height and drop the side props (they vanish at 230 px anyway).
+2. Darken the vignette centre a step (#E9A9BA rather than #F6C9D3) so the pastel tray separates more.
+
+Then re-run `python3 art/tools/grid_test.py v2`.
+
 ## 3. Week-1 schedule (2026-10-25 → 10-31, Asia/Jerusalem)
 | Day | Work | Owner | Needs |
 |---|---|---|---|
