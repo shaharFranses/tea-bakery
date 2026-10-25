@@ -1,4 +1,4 @@
-# CURRENT_BUILD: Tea & Tarts: Bakery Logic Puzzle (game #4)
+# CURRENT_BUILD: tea-bakery (game #4, working name; title TBD, old title dropped SM 2026-10-25)
 
 The single "what is current" pointer for this game. Every bot reads this before acting (Playbook v1, standing rule 5).
 SM owns the State line; `ci/run.sh` fills in "Last CI"; QA fills in Verdict; PO fills in Portal. Times are Asia/Jerusalem.
@@ -20,7 +20,7 @@ SM owns the State line; `ci/run.sh` fills in "Last CI"; QA fills in Verdict; PO 
 ## Live
 | Field | Value |
 |---|---|
-| Pages URL | https://shaharfranses.github.io/tea-and-tarts/ (not created yet) |
+| Pages URL | https://shaharfranses.github.io/tea-bakery/ (repo name TBD, likely tea-bakery; not created yet) |
 | Live commit (web/) | `<sha>` |
 | Live pck sha256 == gated? | <yes/no, checked date> |
 | Live QA check | <PASS/FAIL, date> |
@@ -33,7 +33,10 @@ SM owns the State line; `ci/run.sh` fills in "Last CI"; QA fills in Verdict; PO 
 | Submission | <not started | submitted date | decision> |
 
 ## Open rulings / interim decisions (broadcast to QA, ART, PO)
-- <date>: <ruling>
+- 2026-10-25: working name tea-bakery; no old-title string in source or built output (CI step 7 = QA NAME-01 scanner).
+- 2026-10-25: SPEC v0.2 canonical; mobile max 8x8 (44 px), 9x9 desktop only.
+- 2026-10-25: responsive layout: wide mode (aspect > 1.0) board left / panel right, 1 logical unit >= 1 CSS px (CI step 6b).
+- BLOCKER: release ~36 MB (stock template, wasm ~35 MB) vs 20 MB target; Pipeline Ops slim template build OOM'd (engine/build_slim.log), pending.
 
 ## Last CI (auto)
 <!-- ci:begin -->
