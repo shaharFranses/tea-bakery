@@ -1,27 +1,36 @@
 #!/usr/bin/env python3
-"""Release audit (adapted from sudoko_dash qa/release_audit.sh): lists the Web Release pck directory and fails if
-debug/test/tool files or QA hook strings shipped. usage: release_audit.py <release_build_dir> [report.txt]"""
-import re, struct, sys
-d = sys.argv[1]; rep = sys.argv[2] if len(sys.argv) > 2 else None
-b = open(f"{d}/index.pck", "rb").read()
-assert b[:4] == b"GDPC", "not a Godot pck"
-o = 4; ver, ma, mi, pa, flags = struct.unpack_from("<5I", b, o); o += 20; base = struct.unpack_from("<Q", b, o)[0]; o += 8 + 64
-n = struct.unpack_from("<I", b, o)[0]; o += 4; files = []
-for _ in range(n):
-    l = struct.unpack_from("<I", b, o)[0]; o += 4; p = b[o:o + l].rstrip(b"\0").decode(); o += l
-    off, sz = struct.unpack_from("<QQ", b, o); o += 16 + 16 + 4; files.append((p, sz))
+"""Release audit (QA-A13 / D0-18). Lists the Web Release pck, fails if debug/test/tool files shipped or any hook string
+appears in the release pck (decompressed .gdc incl. identifiers, via qa/pck_strings.py), index.js or index.html.
+Control: the same patterns must be FOUND in the debug build (proves the grep works).
+usage: release_audit.py <release_dir> [report.txt] [debug_dir]"""
+import os, re, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import pck_strings
+d = sys.argv[1]; rep = sys.argv[2] if len(sys.argv) > 2 else None; dbg = sys.argv[3] if len(sys.argv) > 3 else None
 BAD_PATH = re.compile(r"res://(debug|tests|tools|qa|ci|addons/gut|build|web|engine|metrics)/")
-HOOKS = [b"PKD_QA", b"__pkdDump", b"QA hooks enabled", b"qa_hooks", b"ads_mock"]
-bad = [p for p, _ in files if BAD_PATH.match(p)]
-hits = {}
-for f in ("index.pck", "index.js", "index.html"):
-    raw = open(f"{d}/{f}", "rb").read()
-    for h in HOOKS:
-        c = raw.count(h)
-        if c: hits[f"{f}:{h.decode()}"] = c
-lines = [f"pck v{ver} engine {ma}.{mi}.{pa}: {n} files"] + [f"{sz:>10} {p}" for p, sz in files]
-lines += ["## forbidden paths in release pck: " + (", ".join(bad) or "(none)"), "## hook strings: " + (str(hits) or "(none)")]
+# QA_TEST_PLAN v0.4 QA-A13 list + starter's + BR-2/BR-3 hook commands
+HOOKS = ["PKD_QA", "__pkdDump", "QA hooks enabled", "qa_hooks", "ads_mock", "mock_available", "mock_unavailable", "mock_error",
+         "mock_timeout", "qa_state", "qa_show", "session_offset_s", "solve_next", "seed_sweep", "validate_boards", "gut_cmdln",
+         "force_daily_complete", "tt_qa_game"]
+PAT = re.compile("|".join(re.escape(h) for h in HOOKS).encode())
+def scan(dirn):
+    ver, fl = pck_strings.files(f"{dirn}/index.pck"); hits = {}
+    for p, data in fl:
+        for m in PAT.finditer(pck_strings.text_of(p, data)): hits[f"pck:{p}:{m.group().decode()}"] = hits.get(f"pck:{p}:{m.group().decode()}", 0) + 1
+    for f in ("index.js", "index.html"):
+        for m in PAT.finditer(open(f"{dirn}/{f}", "rb").read()): hits[f"{f}:{m.group().decode()}"] = hits.get(f"{f}:{m.group().decode()}", 0) + 1
+    return ver, fl, hits
+ver, fl, hits = scan(d)
+bad = [p for p, _ in fl if BAD_PATH.match(p)]
+lines = [f"pck engine {ver[0]}.{ver[1]}.{ver[2]}: {len(fl)} files"] + [f"{len(x):>10} {p}" for p, x in fl]
+lines += ["## forbidden paths in release pck: " + (", ".join(bad) or "(none)"), "## hook strings (release): " + (str(hits) if hits else "(none)")]
+ctrl_ok = True
+if dbg and os.path.exists(f"{dbg}/index.pck"):
+    _, _, ch = scan(dbg); found = sorted({k.rsplit(":", 1)[1] for k in ch})
+    ctrl_ok = len(found) >= 5
+    lines.append(f"## control (debug build {dbg}): {len(found)} distinct hook strings found: {found}")
 if rep: open(rep, "w").write("\n".join(lines) + "\n")
-ok = not bad and not hits
-print(f"release audit: {'PASS' if ok else 'FAIL'} ({n} files; forbidden {len(bad)}; hook hits {len(hits)})")
+ok = not bad and not hits and ctrl_ok
+print(f"release audit: {'PASS' if ok else 'FAIL'} ({len(fl)} files; forbidden {len(bad)}; hook hits {len(hits)}; control {'ok' if ctrl_ok else 'FAILED'})")
+for k in list(hits)[:10]: print("  ", k)
 sys.exit(0 if ok else 1)

@@ -1,7 +1,7 @@
 ## Ported from sudoku-dash dev a795a1a autoload/ads.gd (SD_CG→PKD_CG, grid→play contexts). Boot hold + single SDK gate (Ads.sdk) + sdk_log.
 ## Ads adapter over CrazyGames SDK v3 (glue in web/head_include.html). Autoload "Ads".
 ## Release: "sdk" on CrazyGames hosts, otherwise "none" (rewarded reports unavailable, never grants).
-## Debug builds additionally load res://debug/ads_mock.gd (excluded from the release export).
+## Debug builds: debug/boot.gd installs the ads mock into `mock` (debug/ is excluded from the release export).
 extends Node
 
 signal changed
@@ -10,7 +10,6 @@ signal ad_started
 signal ad_finished
 
 const TIMEOUT_S = 8.0
-const MOCK_PATH = "res://debug/ads_mock.gd"
 var timeout_s: float = TIMEOUT_S   # tests may shorten
 
 var mode: String = "none"       # none | sdk | (debug only) mock modes
@@ -27,8 +26,7 @@ var sdk_log: Array = []
 func _ready() -> void:
 	if OS.has_feature("web") and _js_bool("window.PKD_CG && window.PKD_CG.portal()"):
 		mode = "sdk"
-	elif OS.is_debug_build() and ResourceLoader.exists(MOCK_PATH):
-		mock = load(MOCK_PATH).new()
+	elif mock:
 		mode = mock.DEFAULT_MODE
 
 func play_open() -> bool:

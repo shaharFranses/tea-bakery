@@ -7,6 +7,7 @@
 ##   Keys: F7 = dump to console.
 ## Patterns from ff-r5 scripts/game_manager.gd (?qa=1 tunables + hitlog) and sudoko_dash debug/qa_hooks.gd (dump()).
 extends Node
+const TT_GAME := "res://debug/tt_qa_game.gd"
 
 var params: Dictionary = {}
 var qa_on := false
@@ -84,7 +85,7 @@ func state() -> Dictionary:
 		"ads_mode": Ads.mode,
 		"hitlog": _lines,
 	}
-	if Dbg.main and Dbg.main.has_method("qa_state"): d["game"] = Dbg.main.qa_state()
+	if Dbg.main and ResourceLoader.exists(TT_GAME): d["game"] = load(TT_GAME).state(Dbg.main)
 	return d
 
 func publish() -> void:
@@ -96,7 +97,7 @@ func _bind_js() -> void:
 	var qa = JavaScriptBridge.get_interface("window").PKD_QA
 	var defs := {
 		"refresh": func(_a): publish(),
-		"show": func(a): if Dbg.main and Dbg.main.has_method("qa_show"): Dbg.main.qa_show(str(a[0])),
+		"show": func(a): if Dbg.main and ResourceLoader.exists(TT_GAME): load(TT_GAME).show(Dbg.main, str(a[0])),
 		"hit": func(a): hitlog(str(a[0])),
 		"cgmute": func(a): JavaScriptBridge.eval("window.PKD_AUDIO && window.PKD_AUDIO.setPortalMute(%s)" % ("true" if str(a[0]) == "1" else "false")),
 	}

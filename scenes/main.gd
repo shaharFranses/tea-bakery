@@ -3,7 +3,7 @@
 ## Mobile boards capped at 8x8 (44 px cells); 9x9 only on desktop where cells stay >= 44 px (SPEC §9 D-04).
 ## CrazyGames gameplayStart fires once when board 1 becomes playable (after the intro), via PKD_CG (no-op without the SDK).
 ## PKD intro in overlay mode (pikeydi-logo/godot/INTEGRATION.md §2A); ?intro=0 skips it.
-## QA (debug builds, ?qa=1): &seed=<int|text> (skips the tutorial) &size=5..9 &state=solved|almost|conflict ; PKD_QA.show("solve"|"clear"|"new"|"tap:r,c").
+## Debug builds: URL seed/size/state presets; dump/show commands live in debug/ (see debug/tt_qa_game.gd).
 ## Nothing here pauses the tree (FF boot-hang lesson).
 extends Control
 
@@ -69,7 +69,7 @@ func _ready() -> void:
 	else:
 		load_tutorial()
 	var st := Dbg.toggle("state", "")
-	if st != "": _qa_state_preset(st)
+	if st != "": _preset_state(st)
 	Ads.hold(true)            # no SDK call / ad until the intro has finished (SD dev a795a1a boot hold)
 	if Dbg.toggle("intro", "1") == "0":
 		_on_intro_finished.call_deferred()
@@ -313,7 +313,7 @@ func _refresh() -> void:
 	else:
 		status.text = "%d x %d tray: %d of %d cakes placed. Tap: X, cake, clear." % [n, n, cs.size(), n]
 
-func _qa_state_preset(st: String) -> void:
+func _preset_state(st: String) -> void:
 	var sol: PackedInt32Array = puzzle.solution
 	match st:
 		"solved":
@@ -376,25 +376,20 @@ func _board_interactive() -> void:
 
 ## Chapter-end midgame slot: every decision (denials included) goes to the ads log (BR-3); requests the ad if allowed.
 func chapter_end_slot(chapter: int) -> Dictionary:
-	var e: Dictionary = ad_policy.decide(chapter, Clock.session_ms(), Ads.available(), "chapter_end", mode if mode != "free" else "chapter")
+	var am := "qa_off" if Dbg.hooks and Ads.mode == "none" else Ads.mode
+	var e: Dictionary = ad_policy.decide(chapter, Clock.session_ms(), Ads.available(), "chapter_end", mode if mode != "free" else "chapter", am)
 	Ads.log_decision(e)
 	if e.decision == "requested": Ads.midgame("chapter_end")
 	return e
 
-## QA hooks live in debug/tt_qa_game.gd (debug export only). In release these return nothing.
-const QA_GAME := "res://debug/tt_qa_game.gd"
-func qa_state() -> Dictionary:
-	return load(QA_GAME).state(self) if Dbg.hooks and ResourceLoader.exists(QA_GAME) else {}
-
-func qa_show(cmd: String) -> void:
-	if Dbg.hooks and ResourceLoader.exists(QA_GAME): load(QA_GAME).show(self, cmd)
-
+## Debug hooks (dump/show) live in debug/tt_qa_game.gd and are called by debug/qa_hooks.gd with this node; nothing
+## here names them, so no hook identifier ships in the release pck (QA-A13).
 func board_id() -> String:
 	if mode == "daily": return "daily-" + (daily.open_date if daily.open_date != "" else "done")
 	return "c1-b1" if puzzle.get("tutorial", false) else "gen-%d-%d" % [n, seed_value]
 
 func preset(st: String) -> void:
-	_qa_state_preset(st)
+	_preset_state(st)
 
 func fresh_seed() -> int:
 	return _fresh_seed()

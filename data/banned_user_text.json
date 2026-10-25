@@ -1,0 +1,10 @@
+{
+ "source": "/workspace/pipeline-ops/games/tea-and-tarts/SPEC.md \u00a73.5 tunables.banned_user_text (synced; qa/user_text_scan.py fails if the spec changes)",
+ "banned_user_text": [
+  "\\btea[\\s_-]*(&amp;|&|\\+|and|'?n'?)[\\s_-]*tarts?\\b",
+  "tea-bakery",
+  "linkedin",
+  "meowdoku",
+  "\\bpop[\\s_-]*tarts?\\b"
+ ]
+}

@@ -5,7 +5,7 @@
    no hitlog overlay text, PKD_AUDIO.state().portalMute false (cgmute ignored).
 2. Intro skip works in release by touch tap, mouse click and key press (fresh page each): '[PKD] intro finished' arrives
    well before the unskipped intro does (compared with a no-input control run on the same box).
-3. Page <title> is the working-name stub 'tea-bakery'."""
+3. Page <title> is the user-visible stub 'Bakery Logic Puzzle' (config/name; QA ruling 10-25), never the slug."""
 import json, os, re, sys, time
 from playwright.sync_api import sync_playwright
 base, out = sys.argv[1].rstrip("/"), sys.argv[2]; os.makedirs(out, exist_ok=True)
@@ -39,7 +39,7 @@ with sync_playwright() as p:
     res["flags_inert_no_qa_log"] = not any("QA on" in l or "QA show" in l or "[ads]" in l and "mock" in l for l in text)
     st = pg.evaluate("window.PKD_AUDIO ? window.PKD_AUDIO.state() : {}")
     res["flags_inert_cgmute_ignored"] = st.get("portalMute") is False
-    res["title_is_working_name_stub"] = pg.title() == "tea-bakery"
+    res["title_is_stub_not_slug"] = pg.title() == "Bakery Logic Puzzle"
     notes["title"] = pg.title()
     pg.screenshot(path=f"{out}/release_flags_390.png"); pg.close()
     # intro skip: control (no input) vs tap / click / key

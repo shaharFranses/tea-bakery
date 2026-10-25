@@ -10,7 +10,8 @@ set -uo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd); cd "$ROOT"
 GATE=0; PORT=${PKD_PORT:-8900}; SLUG=${PKD_SLUG:-tea-bakery}; NOBUILD=0; LIVE=""
 while [ $# -gt 0 ]; do case $1 in --gate) GATE=1;; --port) PORT=$2; shift;; --slug) SLUG=$2; shift;; --no-build) NOBUILD=1;; --live) LIVE=$2; shift;; esac; shift; done
-PY=${PKD_PY:-/workspace/pwvenv/bin/python}; GODOT=${GODOT:-godot}; export GODOT
+PY=${PKD_PY:-/workspace/pwvenv/bin/python}; ZPY=${PKD_ZPY:-/workspace/zvenv/bin/python};   # zvenv: zstandard for pck scripts
+ GODOT=${GODOT:-godot}; export GODOT
 export PKD_DIRTY_AT_START=$(git status --porcelain --untracked-files=no | wc -l)
 SHA=$(git rev-parse --short HEAD); R="qa/results/ci-$SHA"; mkdir -p "$R"
 FAILS=(); STEPS=()
@@ -40,12 +41,12 @@ tests() { $GODOT --headless --path "$ROOT" --import >/dev/null 2>&1; out=$($GODO
   echo "$out" | grep -q 'SCRIPT ERROR' && { echo "SCRIPT ERROR counts as FAIL (SD build retro)"; return 1; }
   echo "$out" | grep -q 'All tests passed'; }
 build() { tools/build_web.sh debug build/web-debug && tools/build_web.sh release build/web-release; }
-audit() { $PY qa/release_audit.py build/web-release "$R/release_audit.txt"; }
+audit() { $ZPY qa/release_audit.py build/web-release "$R/release_audit.txt" build/web-debug; }
 serve() { tools/serve_unit.sh start build/web-debug "$PORT" && tools/serve_unit.sh start build/web-release "$((PORT+1))"; }
 smoke() { $PY ci/browser_smoke.py "http://127.0.0.1:$PORT" "$R" debug; a=$?; $PY ci/browser_smoke.py "http://127.0.0.1:$((PORT+1))" "$R" release; b=$?; [ $a = 0 ] && [ $b = 0 ]; }
 game_smoke() { $PY ci/game_smoke.py "http://127.0.0.1:$PORT" "$R"; }
 layout() { $PY ci/layout_smoke.py "http://127.0.0.1:$PORT" "$R" qa_shots; }   # >=44 CSS px targets, >=12 px text at 390x844/800x450/1280x720
-no_old_title() { python3 qa/title_scan_ci.py "$R" build/web-debug build/web-release; }   # QA NAME-01 scanner (qa/tt_title_scan.py)
+no_old_title() { $ZPY qa/user_text_scan.py "$R" build/web-debug build/web-release && python3 qa/title_scan_ci.py "$R" build/web-debug build/web-release; }   # SPEC §3.5 banned_user_text + QA NAME-01 scanner; source tree too
 release_flags() { $PY ci/release_flags_smoke.py "http://127.0.0.1:$((PORT+1))" "$R"; }
 gate() { G=$(tools/freeze_gate.sh build/web-release "$SLUG" | tail -1) && echo "gated: $G" && echo "$G" > "$R/GATED_DIR" && tools/cg_zip.sh "$G" "$SLUG"; }
 
@@ -57,7 +58,7 @@ step 4 "serve :$PORT/:$((PORT+1))" serve
 step 5 "browser smoke + console-zero + screenshots" smoke
 step 6 "game smoke (tutorial, taps, conflict, win, seed, 8x8 cap)" game_smoke
 step 6b "responsive layout: 44px targets / 12px text at 390x844, 800x450, 1280x720" layout
-step 7 "dropped title absent from build output (QA NAME-01 scanner)" no_old_title
+step 7 "banned user text absent (SPEC §3.5 + QA NAME-01) in title/pck/html/js + source" no_old_title
 step 8 "release: QA URL flags inert + intro skip by tap/click/key" release_flags
 [ $GATE = 1 ] && [ ${#FAILS[@]} = 0 ] && step 9 "freeze gate + CG zip" gate
 VERDICT=$([ ${#FAILS[@]} = 0 ] && echo PASS || echo FAIL)

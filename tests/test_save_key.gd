@@ -9,5 +9,7 @@ func test_save_key_survives_rename():
 	assert_eq(fresh.KEY, "tea_bakery_save_v1", "key independent of config/name")
 	fresh.free()
 	ProjectSettings.set_setting("application/config/name", old)
-func test_project_name_is_working_name():
-	assert_eq(ProjectSettings.get_setting("application/config/name"), "tea-bakery")
+func test_project_name_is_user_visible_stub_not_slug():
+	# QA ruling 10-25: config/name -> HTML <title>; the slug "tea-bakery" is banned user text (SPEC §3.5)
+	assert_eq(ProjectSettings.get_setting("application/config/name"), "Bakery Logic Puzzle")
+	assert_eq(Store.KEY, "tea_bakery_save_v1", "save key unchanged by the rename")
