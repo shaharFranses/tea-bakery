@@ -47,6 +47,7 @@ smoke() { $PY ci/browser_smoke.py "http://127.0.0.1:$PORT" "$R" debug; a=$?; $PY
 game_smoke() { $PY ci/game_smoke.py "http://127.0.0.1:$PORT" "$R"; }
 layout() { $PY ci/layout_smoke.py "http://127.0.0.1:$PORT" "$R" qa_shots; }   # >=44 CSS px targets, >=12 px text at 390x844/800x450/1280x720
 no_old_title() { $ZPY qa/user_text_scan.py "$R" build/web-debug build/web-release && python3 qa/title_scan_ci.py "$R" build/web-debug build/web-release; }   # SPEC §3.5 banned_user_text + QA NAME-01 scanner; source tree too
+br() { $PY ci/br_smoke.py "http://127.0.0.1:$PORT" "http://127.0.0.1:$((PORT+1))" "$R"; }   # SPEC §13.1 BR-1..BR-3
 release_flags() { $PY ci/release_flags_smoke.py "http://127.0.0.1:$((PORT+1))" "$R"; }
 gate() { G=$(tools/freeze_gate.sh build/web-release "$SLUG" | tail -1) && echo "gated: $G" && echo "$G" > "$R/GATED_DIR" && tools/cg_zip.sh "$G" "$SLUG"; }
 
@@ -58,6 +59,7 @@ step 4 "serve :$PORT/:$((PORT+1))" serve
 step 5 "browser smoke + console-zero + screenshots" smoke
 step 6 "game smoke (tutorial, taps, conflict, win, seed, 8x8 cap)" game_smoke
 step 6b "responsive layout: 44px targets / 12px text at 390x844, 800x450, 1280x720" layout
+step 6c "BR-1 perf lines (release+debug), BR-2 set_date/retry_daily, BR-3 set_session_s/ads_decisions" br
 step 7 "banned user text absent (SPEC §3.5 + QA NAME-01) in title/pck/html/js + source" no_old_title
 step 8 "release: QA URL flags inert + intro skip by tap/click/key" release_flags
 [ $GATE = 1 ] && [ ${#FAILS[@]} = 0 ] && step 9 "freeze gate + CG zip" gate

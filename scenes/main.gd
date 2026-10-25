@@ -58,6 +58,9 @@ func _ready() -> void:
 	ad_policy.chapters_completed = int(save_data.get("chapters_completed", 0))
 	_build_ui()
 	_relayout()
+	current_date = Clock.local_date()
+	var day_timer := Timer.new(); day_timer.name = "DayTimer"; day_timer.wait_time = 5.0; day_timer.autostart = true
+	day_timer.timeout.connect(check_day); add_child(day_timer)
 	PkdView.insets_changed.connect(_on_resized)
 	_apply_safe_area()
 	get_viewport().size_changed.connect(_on_resized)
@@ -357,30 +360,56 @@ func _apply_safe_area() -> void:
 		backdrop.visible = landscape and backdrop.texture != null
 		backdrop_fill.visible = landscape
 
-## BR-1 release-safe perf markers (PERF-46 b/c): pkd:transition_start when a board transition begins; when the next
-## board accepts input: pkd:board_interactive {detail:{board_id}} + exactly one console line + pkd:transition_end.
+## BR-1 (SPEC v0.3.1 §13.1; release + debug): performance.mark() for pkd:transition_start (Next / new board tapped),
+## pkd:transition_end (next board drawn) and pkd:board_interactive (next board accepts input); each mark prints exactly
+## one console line "pkd:perf <mark> <ms>" (ms = performance.now() at the mark, 1 decimal). No other console output.
+const PERF_JS := "(function(m,d){performance.mark(m,d?{detail:d}:undefined);console.log('pkd:perf '+m+' '+performance.now().toFixed(1));})(%s,%s)"
 var _transition_open := false
+var perf_marks: Array = []      # [{mark, board_id}] (tests / debug dump; off-web the console line uses engine ms)
+
+func perf_mark(m: String, detail: Dictionary = {}) -> void:
+	perf_marks.append({"mark": m, "board_id": detail.get("board_id", "")})
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval(PERF_JS % [JSON.stringify(m), JSON.stringify(detail) if not detail.is_empty() else "null"])
+	else:
+		print("pkd:perf %s %.1f" % [m, Time.get_ticks_usec() / 1000.0])
+
 func _mark_transition_start() -> void:
 	if _transition_open: return
 	_transition_open = true
-	if OS.has_feature("web"): JavaScriptBridge.eval("performance.mark('pkd:transition_start')")
+	perf_mark("pkd:transition_start")
 
 func _board_interactive() -> void:
 	await get_tree().process_frame          # the new board has been drawn and takes input from here
 	if not _transition_open: return
 	_transition_open = false
 	var id := board_id()
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("performance.mark('pkd:board_interactive', {detail: {board_id: %s}}); performance.mark('pkd:transition_end')" % JSON.stringify(id))
-	print("[PKD] board interactive ", id)
+	perf_mark("pkd:transition_end", {"board_id": id})
+	perf_mark("pkd:board_interactive", {"board_id": id})
 
-## Chapter-end midgame slot: every decision (denials included) goes to the ads log (BR-3); requests the ad if allowed.
+## Chapter-end midgame slot: every decision (allowed or denied, SPEC §13.1 BR-3 reason codes) is emitted on
+## Ads.decided (the debug hooks record it in dump().ads_decisions[]); requests the ad only if allowed.
 func chapter_end_slot(chapter: int) -> Dictionary:
-	var am := "qa_off" if Dbg.hooks and Ads.mode == "none" else Ads.mode
-	var e: Dictionary = ad_policy.decide(chapter, Clock.session_ms(), Ads.available(), "chapter_end", mode if mode != "free" else "chapter", am)
-	Ads.log_decision(e)
-	if e.decision == "requested": Ads.midgame("chapter_end")
+	var e: Dictionary = ad_policy.decide(chapter, Clock.session_ms(), Ads.available(), "chapter_end",
+		mode if mode != "free" else "chapter", Clock.session_started())
+	Ads.decided.emit(e)
+	if e.allowed: Ads.midgame("chapter_end")
 	return e
+
+## Local-date change (a real midnight rollover, or the debug date hook): the open daily keeps its board date (U1/V9);
+## today's daily becomes available. One path for both (SPEC §13.1 BR-2).
+var current_date := ""
+func check_day() -> void:
+	var d := Clock.local_date()
+	if current_date == "": current_date = d; return
+	if d == current_date: return
+	var old := current_date; current_date = d
+	Dbg.hit("day change %s -> %s (open daily stays %s)" % [old, d, daily.open_date])
+	if not won: _refresh()
+
+## Second completion attempt on today's daily: always rejected if already baked; streak/total unchanged (V8).
+func retry_today_daily() -> Dictionary:
+	return complete_daily(Clock.local_date())
 
 ## Debug hooks (dump/show) live in debug/tt_qa_game.gd and are called by debug/qa_hooks.gd with this node; nothing
 ## here names them, so no hook identifier ships in the release pck (QA-A13).

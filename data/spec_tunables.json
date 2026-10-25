@@ -1,0 +1,12 @@
+{
+ "source": "SPEC v1.0 \u00a73.5 tunables.ads (/workspace/pipeline-ops/games/tea-and-tarts/SPEC.md sha256 8425dc37...)",
+ "ads": {
+  "first_interstitial_after_chapter": 1,
+  "min_session_s_before_interstitial": 300,
+  "min_gap_between_midgame_s": 180,
+  "interstitial_after_daily": false,
+  "rewarded_uses": [
+   "hint"
+  ]
+ }
+}

@@ -41,6 +41,7 @@ rep = {"variant": var, "commit": sha, "build_id": bid, "files": f, "total_raw_by
        "wasm_bytes": f.get("index.wasm"), "wasm_gz_bytes": f.get("index.wasm.gz"),
        "pck_bytes": f.get("index.pck"), "pck_gz_bytes": f.get("index.pck.gz"),
        "md5": {n: md5(n) for n in ("index.wasm", "index.pck", "index.js", "index.html")},
+       "sha256": {n: hashlib.sha256(open(os.path.join(d, n), 'rb').read()).hexdigest() for n in ("index.wasm", "index.pck", "index.js", "index.html")},
        "budget_bytes": 20 * 1000 * 1000, "over_budget": raw > 20 * 1000 * 1000}
 json.dump(rep, open(os.path.join(d, "SIZE.json"), "w"), indent=1)
 mb = lambda b: f"{b/1e6:.2f} MB"

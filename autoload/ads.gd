@@ -6,6 +6,7 @@ extends Node
 
 signal changed
 signal logged(entry: Dictionary)
+signal decided(entry: Dictionary)     # every midgame decision {t, session_s, origin, allowed, reason} (SPEC §13.1 BR-3)
 signal ad_started
 signal ad_finished
 
@@ -81,14 +82,7 @@ func _log(kind: String, origin: String, result: String) -> void:
 	logged.emit(e)
 	changed.emit()
 
-## Ad-policy decision (game/ad_policy.gd decide()), denials included, into the same ads log (BR-3).
-func log_decision(e: Dictionary) -> void:
-	var x := e.duplicate()
-	x["t_ms"] = Time.get_ticks_msec(); x["result"] = x.get("decision", ""); x["mode_ads"] = mode
-	call_log.append(x)
-	if OS.is_debug_build(): print("[PKD][ads] ", JSON.stringify(x))
-	logged.emit(x)
-	changed.emit()
+## (ad-policy decisions are emitted on `decided`; the debug hooks record them, release keeps no log)
 
 ## Player-requested rewarded ad. Allowed only from pause panels (play_panel) or results.
 func rewarded(origin: String) -> bool:

@@ -15,8 +15,11 @@ var _lines: Array[String] = []
 var _label: Label
 var _cbs: Array = []
 
+var ads_decisions: Array = []   # every midgame decision {t, session_s, origin, allowed, reason} (BR-3)
+
 func _ready() -> void:
 	print("[PKD][debug] QA hooks enabled (debug build)")
+	Ads.decided.connect(func(e): ads_decisions.append(e); hitlog("ad decision %s" % JSON.stringify(e)))
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if OS.has_feature("web"):
 		var q = str(JavaScriptBridge.eval("location.search || ''"))
@@ -86,6 +89,7 @@ func state() -> Dictionary:
 		"hitlog": _lines,
 	}
 	if Dbg.main and ResourceLoader.exists(TT_GAME): d["game"] = load(TT_GAME).state(Dbg.main)
+	d["ads_decisions"] = ads_decisions      # SPEC §13.1 BR-3: PKD_QA.dump().ads_decisions[]
 	return d
 
 func publish() -> void:
@@ -99,6 +103,10 @@ func _bind_js() -> void:
 		"refresh": func(_a): publish(),
 		"show": func(a): if Dbg.main and ResourceLoader.exists(TT_GAME): load(TT_GAME).show(Dbg.main, str(a[0])),
 		"hit": func(a): hitlog(str(a[0])),
+		# SPEC v0.3.1 §13.1 BR-2 / BR-3 (debug ?qa=1 only)
+		"set_date": func(a): if Dbg.main and ResourceLoader.exists(TT_GAME): load(TT_GAME).set_date(Dbg.main, str(a[0])),
+		"retry_daily": func(_a): if Dbg.main and ResourceLoader.exists(TT_GAME): load(TT_GAME).retry_daily(Dbg.main),
+		"set_session_s": func(a): if ResourceLoader.exists(TT_GAME): load(TT_GAME).set_session_s(float(str(a[0]))),
 		"cgmute": func(a): JavaScriptBridge.eval("window.PKD_AUDIO && window.PKD_AUDIO.setPortalMute(%s)" % ("true" if str(a[0]) == "1" else "false")),
 	}
 	for k in defs:

@@ -31,6 +31,8 @@ toggles = """- `?qa=1` on-screen hitlog + `window.PKD_QA.dump()` (debug build on
 - `?qa=1&<key>=<value>` game tunables via `Dbg.toggle(key)` (list the game's keys in the spec)
 - `?intro=0` skip the PKD intro, `?audio=0` boot with audio muted (feature-off toggles, also in release)
 - Keys: F7 dumps state to the console (debug)"""
+import hashlib
+gated_sha = hashlib.sha256(open(os.path.join(gated, "index.pck"), "rb").read()).hexdigest() if gated and os.path.exists(os.path.join(gated, "index.pck")) else ""
 template = "pkd slim" if "slim" in open("export_presets.cfg").read().split("custom_template/release=")[1].split("\n")[0] else "stock"
 L = [f"# Gate packet: {slug} @ `{sha}` ({branch}): CI {verdict}", "",
      f"Generated {now} Asia/Jerusalem by ci/run.sh. {'**Working tree dirty: not gateable.**' if dirty else 'Working tree clean.'}", "",
@@ -38,8 +40,9 @@ L = [f"# Gate packet: {slug} @ `{sha}` ({branch}): CI {verdict}", "",
      f"| Commit | `{sha}` on `{branch}` |",
      f"| Local ports | debug :{port} (`?qa=1`), release :{int(port)+1} (tools/serve_unit.sh) |",
      f"| Gated dir | `{gated or '(not frozen; run ci/run.sh --gate)'}` |",
-     f"| Release pck md5 | `{rel.get('md5', {}).get('index.pck', '?')}` ({mb(rel.get('pck_bytes'))}) |",
-     f"| Release wasm md5 | `{rel.get('md5', {}).get('index.wasm', '?')}` ({mb(rel.get('wasm_bytes'))}, gz {mb(rel.get('wasm_gz_bytes'))}) |",
+     f"| Release index.pck sha256 (authoritative, SM3-4) | `{rel.get('sha256', {}).get('index.pck', '?')}` · md5 `{rel.get('md5', {}).get('index.pck', '?')}` (INFO) ({mb(rel.get('pck_bytes'))}) |",
+     f"| Gated index.pck sha256 (served copy) | `{gated_sha or '(not frozen)'}` {'== release build' if gated_sha and gated_sha == rel.get('sha256', {}).get('index.pck') else ('!= release build: FAIL' if gated_sha else '')} |",
+     f"| Release wasm sha256 · md5 | `{rel.get('sha256', {}).get('index.wasm', '?')}` · `{rel.get('md5', {}).get('index.wasm', '?')}` ({mb(rel.get('wasm_bytes'))}, gz {mb(rel.get('wasm_gz_bytes'))}) |",
      f"| Release total | {mb(rel.get('total_raw_bytes'))} vs 20 MB budget: {'OVER' if rel.get('over_budget') else 'ok'} (engine template: {template}) |",
      f"| Debug build id | `{dbg.get('build_id', '?')}` (wasm {mb(dbg.get('wasm_bytes'))}) |",
      f"| Release build id | `{rel.get('build_id', '?')}` |"] + ([zipline] if zipline else []) + [

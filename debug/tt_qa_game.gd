@@ -3,8 +3,10 @@
 ##  H1  PKD_QA.dump().game schema           -> state(main)
 ##  H2  PKD_QA.show("board:<id>" | "gen:N,seed" | "solve_next" | "solve" | "home" | "daily:YYYY-MM-DD" | "tap:r,c" | "clear" | "new")
 ##  H3  ?qa=1&date=YYYY-MM-DD (local-date override) &session_offset_s=N (session clock offset)
-##  BR-2 show("now:YYYY-MM-DDTHH:MM") device-local clock at runtime, no reload; show("force_daily_complete") (V8)
-##  BR-3 show("session_s:N") U2 session clock at runtime; show("chapter_end:K") runs the midgame decision (logged)
+##  BR-2 PKD_QA.set_date("YYYY-MM-DD"[ "THH:MM"]) runtime local date via main.check_day() (real rollover path);
+##       PKD_QA.retry_daily() second completion attempt on today's daily -> rejected, streak unchanged (V8)
+##  BR-3 PKD_QA.set_session_s(N) runtime U2 session clock; dump().ads_decisions[] = every midgame decision
+##  driver: show("chapter_end:K") completes chapter K and runs the chapter-end slot decision (no chapter flow yet)
 ##  H4  ?qa=1&ads=mock_available|mock_unavailable|mock_error|mock_timeout (Ads mock mode; mock has a 0.6 s ad delay)
 ## Not implemented yet (no feature to hook): undo, hints, streak/meta, analytics ring, packs/daily, per-region texture ids.
 extends RefCounted
@@ -71,7 +73,7 @@ static func state(main) -> Dictionary:
 		"total_bakes": sm.total_bakes, "bakes": main.daily.bakes, "daily_open": main.daily.open_date,
 		"daily_done_today": main.daily.is_done(Clock.local_date()), "last_daily": main.last_daily_result, "unlocked": null,
 		"ad_policy": {"chapters_completed": main.ad_policy.chapters_completed, "last_midgame_session_ms": main.ad_policy.last_midgame_ms},
-		"save_key": Store.KEY, "analytics": [], "ads_log": Ads.call_log, "ads_mode": Ads.mode, "sdk_log": Ads.sdk_log,
+		"save_key": Store.KEY, "analytics": [], "ads_log": Ads.call_log, "ads_decisions": Dbg.hooks.ads_decisions if Dbg.hooks else [], "perf_marks": main.perf_marks, "ads_mode": Ads.mode, "sdk_log": Ads.sdk_log,
 		"gameplay_started": main.gameplay_started, "backdrop": main.backdrop.visible, "backdrop_asset": main.backdrop.texture != null,
 		"gen_ms": main.puzzle.get("ms", 0.0), "reshapes": main.puzzle.get("reshapes", 0),
 		"button_rect": [main.button.get_global_rect().position.x, main.button.get_global_rect().position.y, main.button.size.x, main.button.size.y]}
@@ -99,15 +101,6 @@ static func show(main, cmd: String) -> String:
 	elif cmd.begins_with("daily:"):
 		var d := cmd.substr(6)
 		res = "open %s" % d if main.open_daily(d) else "refused: %s already baked (not replayable)" % d
-	elif cmd.begins_with("now:"):                                        # BR-2
-		res = "now %s" % Clock.local_datetime() if Clock.set_local_now(cmd.substr(4)) else "bad datetime"
-	elif cmd == "force_daily_complete":                                 # BR-2 (V8)
-		var d2: String = main.daily.open_date
-		if d2 == "" and main.mode == "daily" and not main.daily.bakes.is_empty(): d2 = main.daily.bakes[-1]
-		if d2 == "": d2 = Clock.local_date()
-		res = JSON.stringify(main.complete_daily(d2))
-	elif cmd.begins_with("session_s:"):                                 # BR-3
-		Clock.set_session_s(cmd.substr(10).to_float()); res = "session_s %.3f" % Clock.session_s()
 	elif cmd.begins_with("chapter_end:"):                               # BR-3: completes chapter K, runs the slot decision
 		var k := cmd.substr(12).to_int()
 		main.ad_policy.on_chapter_completed(k)
@@ -123,3 +116,24 @@ static func show(main, cmd: String) -> String:
 	else: res = "unknown command"
 	Dbg.hit("QA show %s -> %s" % [cmd, res])
 	return res
+
+
+## BR-2 (SPEC v0.3.1 §13.1): runtime local date ("YYYY-MM-DD", optional "THH:MM"), then the same day-change path a real
+## midnight rollover takes (main.check_day()). Returns the new local date-time or "bad date".
+static func set_date(main, d: String) -> String:
+	if not Clock.set_local_now(d if "T" in d else d + "T12:00"): return "bad date"
+	main.check_day()
+	Dbg.hit("set_date %s" % Clock.local_datetime())
+	return Clock.local_datetime()
+
+## BR-2: second completion attempt on today's daily; rejected (counted=false) with streak/total unchanged if baked.
+static func retry_daily(main) -> Dictionary:
+	var r: Dictionary = main.retry_today_daily()
+	Dbg.hit("retry_daily -> %s" % ("REJECTED" if not r.counted else "counted"))
+	return r
+
+## BR-3: runtime U2 session clock.
+static func set_session_s(n: float) -> float:
+	Clock.set_session_s(n)
+	Dbg.hit("set_session_s %.3f" % Clock.session_s())
+	return Clock.session_s()

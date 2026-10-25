@@ -11,7 +11,7 @@ BAD_PATH = re.compile(r"res://(debug|tests|tools|qa|ci|addons/gut|build|web|engi
 # QA_TEST_PLAN v0.4 QA-A13 list + starter's + BR-2/BR-3 hook commands
 HOOKS = ["PKD_QA", "__pkdDump", "QA hooks enabled", "qa_hooks", "ads_mock", "mock_available", "mock_unavailable", "mock_error",
          "mock_timeout", "qa_state", "qa_show", "session_offset_s", "solve_next", "seed_sweep", "validate_boards", "gut_cmdln",
-         "force_daily_complete", "tt_qa_game"]
+         "force_daily_complete", "tt_qa_game", "set_date", "retry_daily", "set_session_s", "ads_decisions"]   # + QA v0.6 BR-2/BR-3
 PAT = re.compile("|".join(re.escape(h) for h in HOOKS).encode())
 def scan(dirn):
     ver, fl = pck_strings.files(f"{dirn}/index.pck"); hits = {}

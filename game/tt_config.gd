@@ -28,11 +28,10 @@ const CHAPTERS := 8
 const HINTS_FREE_PER_BOARD := 1
 const HINTS_CHAPTER1_UNLIMITED_FREE := true
 const ADS_FIRST_INTERSTITIAL_AFTER_CHAPTER := 1
-# SM ruling 2026-10-25 09:13: NO 5-minute rule (no session floor, no round-count or timer-triggered midgame).
-# SPEC v0.3 §3.5/§13.0 U2 still says min_session_s_before_interstitial = 300 -> conflict reported to SM/GD/QA.
-# Kept as ONE config value, disabled (0): set to 300000 to restore the spec's floor without code changes.
-const ADS_MIN_SESSION_MS_BEFORE_INTERSTITIAL := 0
-const ADS_CG_MIDGAME_CAP_MS := 180000           # game-enforced cooldown between midgame requests (SM: max 1 per 3 min)
+# SPEC v1.0 §3.5 tunables.ads.min_session_s_before_interstitial (U2): a FLOOR checked at the chapter-end slot only;
+# nothing is ever timer-triggered. tests/test_spec_tunables.gd checks these values against the spec.
+const ADS_MIN_SESSION_MS_BEFORE_INTERSTITIAL := 300000
+const ADS_CG_MIDGAME_CAP_MS := 180000           # SPEC v1.0 §3.5 min_gap_between_midgame_s (game-enforced, U2)
 const ADS_INTERSTITIAL_AFTER_DAILY := false
 const ADS_REWARDED_USES := ["hint"]
 
