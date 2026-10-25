@@ -38,7 +38,10 @@ A board in progress (5×5) on a gingham tea table, three fanned recipe cards (le
 - **Launch with one cover (A).** Wait about the first 7 days of CG Basic Launch for traffic to settle before testing.
 - **Then alternate A / B in 3–4 day blocks, matched on weekdays** (Mon–Thu and Fri–Sun blocks; each arm gets the same number of each, see the schedule below). **Change nothing else in the build or listing during the test:** no build updates, description, tags or title. Each switch swaps only the **3 covers + 2 previews** of that arm.
 - **Previews (Growth ruling, 2026-10-25):** each preview set (landscape 1920×1080, portrait 1080×1620) exists in an **A and a B version that differ ONLY in the opening static-cover frame**. The gameplay footage is byte-identical: same capture, same cut, same length; only the first ~0.5 s cover hold and the cover-to-gameplay transition differ. During B blocks, B's covers **and** B's previews go up, so every preview opens on the cover being shown (CG rule).
-- **Deciding metric: engaged plays per impression** = cover CTR × the share of clickers who play past ~1 min (from `gameplayStart` + the analytics session timer). **Guardrail:** average playtime must not drop.
+- **Deciding metric: engaged plays per impression** = cover CTR × the share of clickers who play past ~1 min (from `gameplayStart` + the analytics session timer). **Guardrail:** average playtime.
+- **Like-for-like comparison:** each B block is judged against the **nearest A block of the same type** (Mon–Thu vs Mon–Thu, Fri–Sun vs Fri–Sun). The schedule gives **each cover both block types** (2 Mon–Thu + 2 Fri–Sun each).
+- **Minimum sample:** a block **counts only with ≥ about 300 cover clicks**. That is Growth's estimate, not a CG rule. If a block is too thin, **extend it** (same weekdays the following week) rather than judging it. No stop rule fires on a thin block.
+- **Final decision:** **B wins only with a clear lift of ≥10% in engaged plays per impression across all its counted blocks, and no playtime breach.** Otherwise **keep A**.
 - **Approvals:** asking CrazyGames for a split test, or **any listing change**, needs **Shahar's OK and goes through CoS**. **Every block switch is a CG listing change** and goes through Portal Ops. To avoid asking 7 times, Shahar approves the **whole schedule below once, up front**; Portal Ops then executes each switch on its date. Any deviation (a date slip, an extra block, an early stop) goes back to Shahar. TT Art prepares the files only and never uploads.
 - **Poki** runs its own thumbnail A/B tests during soft release. Hand Poki both A and B (text-free 1080²) when soft release starts.
 
@@ -111,10 +114,29 @@ Totals: each arm gets **2 Mon–Thu + 2 Fri–Sun blocks** (A: blocks 1, 3, 5, 7
 - `cg-preview-1920x1080-{A|B}_<sha>.mp4`
 - `cg-preview-1080x1620-{A|B}_<sha>.mp4`
 
-Arm A = concept **A3**. Arm B = the challenger rebuilt on A3's recipe (**B3**: board ~76%, one small card, darker centre), ready before block 2.
-**Stop rules (proposed by TT Art; Growth to confirm the thresholds before the schedule goes to Shahar):**
+Arm A = concept **A3**. Arm B = concept **B3** (the recipe-book challenger, below).
+**Stop rules (Growth-confirmed thresholds; they apply only to blocks that meet the ≥ about 300-click minimum):**
 - Stop early and revert to A if engaged plays per impression drop by more than 30% on B for a full block, or if average playtime (the guardrail) drops by more than 15%.
-- Otherwise run to the end. Growth reads the results from the CG developer dashboard plus our analytics hooks.
+- Otherwise run to the end and decide by the ≥10% rule above. Growth reads the results from the CG developer dashboard plus our analytics hooks.
+- **Approval:** the whole schedule, including the stop rules and any extensions of thin blocks, needs **Shahar's OK via Portal Ops (CoS) before the first swap**.
+
+### Board validity and B3 (2026-10-25, about 10:50)
+- **Validity check:** the boards in A2/B2/A3 were procedurally generated (`ttdraw.gen_board`). They were **valid solved states**: one cake per row, column and region, and no two cakes touching, diagonals included. But they were **not real levels**.
+  - All v2/v3 covers are now rendered from **real shipped levels**: A2/A3 use `6-g3-0038` (`game/levels/pack_6_g3.json`, shown solved); B2/B3 use `5-g2-0029` (`pack_5_g2.json`; B3 shows it nearly solved, with one cake left and an empty mold in its cell).
+  - `cover_concepts.py` asserts the rules on load.
+  - The v1 files (`concept_A_*`, `concept_B_*`) are unchanged history (valid generated boards). `grid_test_v3.png` was re-run with the real-level covers.
+- **B3 "Recipe book"** (`concept_B3_960x540.jpg` / `_square_540.jpg`):
+  - An open recipe book fills 74% of the frame height on the same dark-edged raspberry vignette as A3 (centre #E9A9BA).
+  - The left page has the 5×5 board in play. The right page has the collected Cherry Bakewell card plus a teapot sticker (landscape only).
+  - A raspberry ribbon bookmark, no text, and the same compact dashed title area.
+  - The square is a re-stacked composition, not a crop.
+  - It is the collection concept, not a copy of A3's single tray.
+- **`grid_test_v3b.png` (A3 vs B3) verdict:**
+  - B3 now matches A3's contrast: a big cream book shape on raspberry, which holds up on the dark grid as well as A3's tray, and reads at glance size as "open book with a coloured board and a card". It is in the same tier as A3 and the single-shape bold placeholders (sudoku, donut), and still behind the saturated bubbles and blocks.
+  - A3 reads as "puzzle" faster, because its board is about 76% of the tile versus about 45% for B3's.
+  - B3 sells the cozy collection better.
+
+  It is a fair challenger, which is what the test needs.
 
 ## 3. Week-1 schedule (2026-10-25 → 10-31, Asia/Jerusalem)
 | Day | Work | Owner | Needs |
