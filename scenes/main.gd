@@ -11,6 +11,7 @@ const PkdIntro := preload("res://pkd_intro/pkd_intro.tscn")
 const Gen = preload("res://game/generator.gd")
 const Rules = preload("res://game/rules.gd")
 const BoardView = preload("res://scenes/board_view.gd")
+const Cfg = preload("res://game/tt_config.gd")
 
 var intro_done := false
 var n := 5
@@ -48,6 +49,7 @@ func _ready() -> void:
 		load_tutorial()
 	var st := Dbg.toggle("state", "")
 	if st != "": _qa_state_preset(st)
+	Ads.hold(true)            # no SDK call / ad until the intro has finished (SD dev a795a1a boot hold)
 	if Dbg.toggle("intro", "1") == "0":
 		_on_intro_finished.call_deferred()
 	else:
@@ -78,12 +80,12 @@ func _build_ui() -> void:
 	vb.name = "VBox"
 	vb.add_theme_constant_override("separation", 12)
 	margin.add_child(vb)
-	label = Label.new(); label.name = "Title"; label.text = "Tea Bakery"   # working title placeholder; final title TBD
+	label = Label.new(); label.name = "Title"; label.text = Cfg.TITLE_PLACEHOLDER   # final title TBD
 	label.add_theme_font_size_override("font_size", 28)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(label)
 	var hint := Label.new(); hint.name = "Hint"
-	hint.text = "One cake in every row, column and dough patch.\nCakes can't touch, not even at the corners."
+	hint.text = Cfg.RULES_TEXT
 	hint.add_theme_font_size_override("font_size", 14)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -154,7 +156,7 @@ func max_size() -> int:
 		mobile = mobile or DisplayServer.is_touchscreen_available()
 	if mobile: return Gen.MAX_N_MOBILE
 	var side: float = board.board_rect().size.x if board and board.size.x > 0 else 0.0
-	if side > 0.0 and side / 9.0 < 44.0: return Gen.MAX_N_MOBILE
+	if side > 0.0 and side / float(Gen.MAX_N) < Cfg.MIN_TAP_PX: return Gen.MAX_N_MOBILE
 	return Gen.MAX_N
 
 func _update_size_buttons() -> void:
@@ -216,18 +218,18 @@ func _qa_state_preset(st: String) -> void:
 
 func _on_intro_finished() -> void:
 	intro_done = true
+	Ads.hold(false)
 	Store.loading_stop()      # CrazyGames loadingStop: intro finished AND scene ready
 	Dbg.hit("intro finished")
 	_gameplay_start()
 	print("[PKD] intro finished")
 
-## CrazyGames SDK v3 gameplayStart, once, when board 1 is playable. Guarded: PKD_CG (html/head_include.html)
-## is a no-op without the SDK (localhost, Pages, QA builds), and non-web builds skip it.
+## CrazyGames SDK v3 gameplayStart, once, when board 1 is playable, through the Ads gate (held during the intro;
+## only reaches the page in "sdk" mode, i.e. on CrazyGames hosts or ?cgsdk=1; PKD_CG itself no-ops without the SDK).
 func _gameplay_start() -> void:
 	if gameplay_started: return
 	gameplay_started = true
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.PKD_CG && window.PKD_CG.gameplay && window.PKD_CG.gameplay(true)")
+	Ads.set_context("play")   # -> Ads.sdk("gameplayStart") in sdk mode; no-op without the SDK (mock / localhost)
 	Dbg.hit("gameplayStart (board 1)")
 
 func _apply_safe_area() -> void:
@@ -252,7 +254,7 @@ func qa_state() -> Dictionary:
 	for i in n * n:
 		if board.cells[i] == BoardView.MARK: marks.append([i / n, i % n])
 	return {"intro_done": intro_done, "taps": taps, "n": n, "max_size": max_size(), "tutorial": puzzle.get("tutorial", false),
-		"gameplay_started": gameplay_started, "backdrop": backdrop.visible, "backdrop_asset": backdrop.texture != null, "seed": seed_value, "moves": moves, "won": won,
+		"gameplay_started": gameplay_started, "sdk_log": Ads.sdk_log, "ads_mode": Ads.mode, "backdrop": backdrop.visible, "backdrop_asset": backdrop.texture != null, "seed": seed_value, "moves": moves, "won": won,
 		"cakes": cakes().map(func(p): return [p.x, p.y]), "marks": marks,
 		"conflicts": board.conflict_cells.keys().map(func(p): return [p.x, p.y]),
 		"regions": Array(puzzle.regions), "gen_ms": puzzle.ms, "reshapes": puzzle.reshapes,

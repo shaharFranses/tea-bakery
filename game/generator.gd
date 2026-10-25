@@ -11,10 +11,11 @@ const TtRng = preload("res://game/tt_rng.gd")
 const Rules = preload("res://game/rules.gd")
 const Solver = preload("res://game/solver.gd")
 
-const SIZES := {"easy": 5, "medium": 6, "hard": 7, "expert": 8, "master": 9}
-const MIN_N := 5
-const MAX_N := 9            # 9x9 is desktop only (SPEC §9 D-04 / SM 10-25): see MAX_N_MOBILE
-const MAX_N_MOBILE := 8     # 358 px board / 8 = 44.75 px cells, keeps the 44 px tap rule at 390x844
+const Cfg = preload("res://game/tt_config.gd")
+const SIZES := Cfg.DIFFICULTY_SIZES
+const MIN_N := Cfg.MIN_N
+const MAX_N := Cfg.MAX_N                # 9x9 desktop only (SPEC §9 D-04 / SM 10-25)
+const MAX_N_MOBILE := Cfg.MAX_N_MOBILE  # 358 px board / 8 = 44.75 px cells at 390x844
 
 ## Tutorial / board 1 (SPEC §4 worked example, validated unique by the solver in tests/test_puzzle.gd).
 const TUTORIAL := {"n": 5, "rows": ["AAACC", "BBACC", "DDACC", "DDDCC", "DDEEC"], "solution": [2, 0, 4, 1, 3]}

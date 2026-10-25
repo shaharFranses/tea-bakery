@@ -2,7 +2,8 @@
 ## else localStorage (web) or user://save.json (desktop). Key = "<project name>_save_v1".
 extends Node
 
-var KEY: String = str(ProjectSettings.get_setting("application/config/name", "pkd")).to_snake_case() + "_save_v1"
+## SPEC v0.2 §12.2: fixed key, must never change after launch (config/name will change with the title).
+const KEY: String = preload("res://game/tt_config.gd").SAVE_KEY
 
 func wait_ready() -> void:
 	if not OS.has_feature("web"): return
@@ -12,8 +13,7 @@ func wait_ready() -> void:
 		await get_tree().create_timer(0.05).timeout
 
 func loading_stop() -> void:
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.PKD_CG && window.PKD_CG.loadingStop()")
+	Ads.sdk("loadingStop", "window.PKD_CG && window.PKD_CG.loadingStop()")   # SD dev a795a1a: via the single SDK gate
 
 func save(d: Dictionary) -> void:
 	var text = JSON.stringify(d)
