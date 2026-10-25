@@ -15,11 +15,10 @@ func test_mute_any_reason():
 	assert_false(m.muted())
 
 func test_ad_policy_never_both():
-	var p = AdPolicy.new(0)
-	assert_eq(p.results_offer(0, false), "none")
-	for i in 3: p.on_round_completed()
-	assert_eq(p.results_offer(10 * 60 * 1000, true), "midgame")
-	assert_eq(p.results_offer(10 * 60 * 1000, true), "rewarded")
+	# tea-bakery replaces the starter's 3-round policy with the chapter policy (tests/test_ad_policy.gd)
+	var p = AdPolicy.new(0, 1)
+	assert_eq(p.board_end_offer(), "none")
+	assert_eq(p.chapter_end_offer(1, 10 * 60 * 1000, false), "none")
 
 func test_query_parse():
 	var d = QaHooks.parse_query("?qa=1&level=3&intro=0&name=a%20b")
