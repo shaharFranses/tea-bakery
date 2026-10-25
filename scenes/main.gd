@@ -20,6 +20,7 @@ var puzzle: Dictionary = {}
 var moves := 0
 var won := false
 var taps := 0
+var session_start_ms := 0
 
 @onready var margin: MarginContainer = $Margin
 var label: Label
@@ -36,6 +37,7 @@ const COLUMN_MAX_W := 480.0   # portrait play column width on landscape screens
 
 func _ready() -> void:
 	Dbg.main = self
+	session_start_ms = int(Time.get_unix_time_from_system() * 1000.0)
 	_build_ui()
 	PkdView.insets_changed.connect(_apply_safe_area)
 	_apply_safe_area()
@@ -247,24 +249,19 @@ func _apply_safe_area() -> void:
 		backdrop.visible = landscape and backdrop.texture != null
 		backdrop_fill.visible = landscape
 
+## QA hooks live in debug/tt_qa_game.gd (debug export only). In release these return nothing.
+const QA_GAME := "res://debug/tt_qa_game.gd"
 func qa_state() -> Dictionary:
-	var br: Rect2 = board.board_rect()
-	var gp := board.global_position
-	var marks := []
-	for i in n * n:
-		if board.cells[i] == BoardView.MARK: marks.append([i / n, i % n])
-	return {"intro_done": intro_done, "taps": taps, "n": n, "max_size": max_size(), "tutorial": puzzle.get("tutorial", false),
-		"gameplay_started": gameplay_started, "sdk_log": Ads.sdk_log, "ads_mode": Ads.mode, "backdrop": backdrop.visible, "backdrop_asset": backdrop.texture != null, "seed": seed_value, "moves": moves, "won": won,
-		"cakes": cakes().map(func(p): return [p.x, p.y]), "marks": marks,
-		"conflicts": board.conflict_cells.keys().map(func(p): return [p.x, p.y]),
-		"regions": Array(puzzle.regions), "gen_ms": puzzle.ms, "reshapes": puzzle.reshapes,
-		"board_rect": [gp.x + br.position.x, gp.y + br.position.y, br.size.x, br.size.y],
-		"button_rect": [button.get_global_rect().position.x, button.get_global_rect().position.y, button.size.x, button.size.y]}
+	return load(QA_GAME).state(self) if Dbg.hooks and ResourceLoader.exists(QA_GAME) else {}
 
 func qa_show(cmd: String) -> void:
-	if cmd == "solve": clear_board(); _qa_state_preset("solved")
-	elif cmd == "clear": clear_board()
-	elif cmd == "new": new_board(n, _fresh_seed())
-	elif cmd.begins_with("tap:"):
-		var p := cmd.substr(4).split(",")
-		if p.size() == 2: tap_cell(p[0].to_int(), p[1].to_int())
+	if Dbg.hooks and ResourceLoader.exists(QA_GAME): load(QA_GAME).show(self, cmd)
+
+func board_id() -> String:
+	return "c1-b1" if puzzle.get("tutorial", false) else "gen-%d-%d" % [n, seed_value]
+
+func preset(st: String) -> void:
+	_qa_state_preset(st)
+
+func fresh_seed() -> int:
+	return _fresh_seed()
