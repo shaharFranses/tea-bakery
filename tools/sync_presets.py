@@ -6,6 +6,9 @@ Release uses the PKD slim template when engine/pkd_web_release_slim.zip exists (
 import json, os, sys
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 head = open(os.path.join(root, "html", "head_include.html")).read()
+# ASCII only: json.dumps escapes non-ASCII as \uXXXX and Godot 4.3's cfg parser mangles it at import
+# ("Unicode parsing error ... leading byte (a7)" from a section sign); CI step 1b catches any recurrence.
+assert head.isascii(), "html/head_include.html must be ASCII-only: " + repr(sorted({c for c in head if not c.isascii()}))
 slim = os.path.join(root, "engine", "pkd_web_release_slim.zip")
 rel_tpl = slim if (os.path.exists(slim) and os.environ.get("PKD_STOCK") != "1") else ""
 dbg_tpl = os.environ.get("PKD_DEBUG_TEMPLATE", "")

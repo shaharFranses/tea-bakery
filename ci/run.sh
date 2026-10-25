@@ -41,6 +41,13 @@ preflight() {
 tests() { $GODOT --headless --path "$ROOT" --import >/dev/null 2>&1; out=$($GODOT --headless --path "$ROOT" -s addons/gut/gut_cmdln.gd -gexit 2>&1); echo "$out" | sed 's/\x1b\[[0-9;]*m//g' | tail -20
   echo "$out" | grep -q 'SCRIPT ERROR' && { echo "SCRIPT ERROR counts as FAIL (SD build retro)"; return 1; }
   echo "$out" | grep -q 'All tests passed'; }
+# Fresh-checkout headless import of every tracked file (no .godot cache) = what the editor / a clean clone sees. Catches
+# warnings-as-errors and unicode problems GUT's runner does not surface (QA 10-25: test_tap_order Variant inference; 0xA7).
+importcheck() { local T; T=$(mktemp -d /tmp/tt_import.XXXXXX); git ls-files -c -z | xargs -0 -I{} sh -c 'test -e "{}" && printf "%s\0" "{}"' | tar --null -T - -cf - | tar -xf - -C "$T"
+  $GODOT --headless --path "$T" --import > "$R/import_check.log" 2>&1; local rc=$?
+  rm -rf "$T"; echo "import rc=$rc, $(wc -l < "$R/import_check.log") log lines"
+  if grep -nE 'Parse Error|SCRIPT ERROR|ERROR:|Unicode parsing error' "$R/import_check.log"; then echo "FAIL: errors in headless import"; return 1; fi
+  echo "headless import clean (0 Parse Error / SCRIPT ERROR / ERROR: / Unicode parsing error)"; }
 build() { tools/build_web.sh debug build/web-debug && tools/build_web.sh release build/web-release; }
 audit() { $ZPY qa/release_audit.py build/web-release "$R/release_audit.txt" build/web-debug; }
 serve() { tools/serve_unit.sh start build/web-debug "$PORT" && tools/serve_unit.sh start build/web-release "$((PORT+1))"; }
@@ -55,6 +62,7 @@ gate() { G=$(tools/freeze_gate.sh build/web-release "$SLUG" | tail -1) && echo "
 
 step 0 preflight preflight
 step 1 "GUT tests" tests
+step 1b "headless import of all scripts, fresh checkout (fail on Parse Error / SCRIPT ERROR / ERROR:)" importcheck
 if [ $NOBUILD = 0 ]; then step 2 "web export (debug+release)" build; fi
 step 3 "release audit" audit
 step 4 "serve :$PORT/:$((PORT+1))" serve

@@ -46,7 +46,7 @@ func test_auto_molds_derived_and_removed_with_their_cake():
 func test_settings_persist_both_orders():
 	for order in [Cells.ORDER_CAKE_FIRST, Cells.ORDER_MOLD_FIRST]:
 		var s = Settings.new(); s.tap_order = order; s.auto_mold = false
-		var saved := JSON.parse_string(JSON.stringify({"settings": s.to_dict()}))   # through the save format
+		var saved: Dictionary = JSON.parse_string(JSON.stringify({"settings": s.to_dict()}))   # through the save format
 		var r = Settings.new(); r.from_dict(saved.settings)
 		assert_eq(r.tap_order, order); assert_false(r.auto_mold)
 		assert_eq(Cells.NAMES[Cells.next_state(Cells.EMPTY, r.tap_order)], "cake" if order == Cells.ORDER_CAKE_FIRST else "mold")
