@@ -2,6 +2,7 @@
 ## so none of these command strings / URL flags exist in release (checked by qa/release_audit.py + ci/release_flags_smoke.py).
 ##  H1  PKD_QA.dump().game schema           -> state(main)
 ##  H2  PKD_QA.show("board:<id>" | "gen:N,seed" | "solve_next" | "solve" | "home" | "daily:YYYY-MM-DD" | "tap:r,c" | "clear" | "new")
+##      + "rclick:r,c" (desktop mold toggle) | "tap_order:mold_first|cake_first" | "auto_mold:0|1" (Settings, persisted)
 ##  H3  ?qa=1&date=YYYY-MM-DD (local-date override) &session_offset_s=N (session clock offset)
 ##  BR-2 PKD_QA.set_date("YYYY-MM-DD"[ "THH:MM"]) runtime local date via main.check_day() (real rollover path);
 ##       PKD_QA.retry_daily() second completion attempt on today's daily -> rejected, streak unchanged (V8)
@@ -14,6 +15,7 @@ extends RefCounted
 const Gen = preload("res://game/generator.gd")
 const Cfg = preload("res://game/tt_config.gd")
 const Clock = preload("res://game/clock.gd")
+const Cells = preload("res://game/cells.gd")
 
 static func apply_url(params: Dictionary) -> void:
 	if params.has("ads"): Ads.set_mode(str(params["ads"]))                 # H4
@@ -26,7 +28,7 @@ static func qa_date(params: Dictionary) -> String:
 	return Clock.local_date()
 
 static func _cell_kind(v: int) -> String:
-	return ["empty", "x_player", "cake"][v] if v >= 0 and v < 3 else "?"
+	return Cells.NAMES[v] if v >= 0 and v < Cells.NAMES.size() else "?"
 
 ## CSS px per logical unit (final canvas transform / devicePixelRatio).
 static func _css(main: Control) -> float:
@@ -53,7 +55,7 @@ static func _ui(main: Control) -> Array:
 static func state(main) -> Dictionary:
 	var b = main.board
 	var cells := []
-	for i in main.n * main.n: cells.append(_cell_kind(b.cells[i]))
+	for i in main.n * main.n: cells.append(_cell_kind(b.shown(i)))
 	var br: Rect2 = b.board_rect()
 	var gp: Vector2 = b.global_position
 	var hooks = Dbg.hooks
@@ -63,7 +65,9 @@ static func state(main) -> Dictionary:
 		"intro_done": main.intro_done, "taps": main.taps, "n": main.n, "seed": main.seed_value, "max_size": main.max_size(),
 		"tutorial": main.puzzle.get("tutorial", false), "regions": Array(main.puzzle.regions), "cells": cells,
 		"cakes": main.cakes().map(func(p): return [p.x, p.y]),
-		"marks": range(main.n * main.n).filter(func(i): return b.cells[i] == 1).map(func(i): return [i / main.n, i % main.n]),
+		"molds": range(main.n * main.n).filter(func(i): return b.cells[i] == Cells.MOLD).map(func(i): return [i / main.n, i % main.n]),
+		"molds_auto": range(main.n * main.n).filter(func(i): return b.shown(i) == Cells.MOLD_AUTO).map(func(i): return [i / main.n, i % main.n]),
+		"settings": main.settings.to_dict(), "analytics": Analytics.ring, "analytics_sink": Analytics.sink,
 		"conflicts": b.conflict_cells.keys().map(func(p): return [p.x, p.y]), "solved": main.won, "won": main.won, "moves": main.moves,
 		"undo_len": 0, "undo_hash": "", "board_rect": [(gp.x + br.position.x) * _css(main), (gp.y + br.position.y) * _css(main), br.size.x * _css(main), br.size.y * _css(main)],
 		"cell_css": b.cell_size() * _css(main), "css_per_unit": _css(main), "layout": main.layout_mode_name,
@@ -73,7 +77,7 @@ static func state(main) -> Dictionary:
 		"total_bakes": sm.total_bakes, "bakes": main.daily.bakes, "daily_open": main.daily.open_date,
 		"daily_done_today": main.daily.is_done(Clock.local_date()), "last_daily": main.last_daily_result, "unlocked": null,
 		"ad_policy": {"chapters_completed": main.ad_policy.chapters_completed, "last_midgame_session_ms": main.ad_policy.last_midgame_ms},
-		"save_key": Store.KEY, "analytics": [], "ads_log": Ads.call_log, "ads_decisions": Dbg.hooks.ads_decisions if Dbg.hooks else [], "perf_marks": main.perf_marks, "ads_mode": Ads.mode, "sdk_log": Ads.sdk_log,
+		"save_key": Store.KEY, "ads_log": Ads.call_log, "ads_decisions": Dbg.hooks.ads_decisions if Dbg.hooks else [], "perf_marks": main.perf_marks, "ads_mode": Ads.mode, "sdk_log": Ads.sdk_log,
 		"gameplay_started": main.gameplay_started, "backdrop": main.backdrop.visible, "backdrop_asset": main.backdrop.texture != null,
 		"gen_ms": main.puzzle.get("ms", 0.0), "reshapes": main.puzzle.get("reshapes", 0),
 		"button_rect": [main.button.get_global_rect().position.x, main.button.get_global_rect().position.y, main.button.size.x, main.button.size.y]}
@@ -83,13 +87,13 @@ static func show(main, cmd: String) -> String:
 	var res := "ok"
 	if cmd == "solve": main.clear_board(); main.preset("solved")
 	elif cmd == "solve_next":
-		# enters the next solution cake through the normal tap path (empty -> X -> cake), so moves/conflicts stay real
+		# enters the next solution cake through the normal tap path (tap cycle per Settings tap order), so moves/conflicts stay real
 		var sol: PackedInt32Array = main.puzzle.solution
 		res = "already solved"
 		for r in main.n:
 			var i: int = r * main.n + sol[r]
-			if main.board.cells[i] != 2:
-				while main.board.cells[i] != 2: main.tap_cell(r, sol[r])
+			if main.board.cells[i] != Cells.CAKE:
+				while main.board.cells[i] != Cells.CAKE: main.tap_cell(r, sol[r])
 				res = "cake r%d c%d" % [r, sol[r]]; break
 	elif cmd == "clear": main.clear_board()
 	elif cmd == "new": main.new_board(main.n, main.fresh_seed())
@@ -110,6 +114,11 @@ static func show(main, cmd: String) -> String:
 		var n := p[0].to_int(); var s := p[1].to_int() if p.size() > 1 else 1
 		if n > main.max_size(): res = "refused: %dx%d not offered on this device (max %d)" % [n, n, main.max_size()]
 		else: main.new_board(n, s)
+	elif cmd.begins_with("rclick:"):
+		var q := cmd.substr(7).split(",")
+		if q.size() == 2: main.right_click_cell(q[0].to_int(), q[1].to_int())
+	elif cmd.begins_with("tap_order:"): main.set_tap_order(cmd.substr(10))
+	elif cmd.begins_with("auto_mold:"): main.set_auto_mold(cmd.substr(10) == "1")
 	elif cmd.begins_with("tap:"):
 		var p := cmd.substr(4).split(",")
 		if p.size() == 2: main.tap_cell(p[0].to_int(), p[1].to_int())

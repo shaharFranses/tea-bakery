@@ -20,7 +20,7 @@ const RUNTIME_BUDGET_MS := 30.0
 const BAND_MAX_ATTEMPTS := 60
 
 # Rules text (§2, ≤3 lines, 12px+)
-const RULES_TEXT := "One cake in every row, column and dough patch.\nCakes can't touch, not even at the corners."
+const RULES_TEXT := "One cake in every row, column and color.\nCakes can't touch — not even corners — or they'll stick in the oven!"   # D-02 verbatim
 
 # Chapters / hints / ads (§3.4, §3.5 tunables, §12 D-19)
 const BOARDS_PER_CHAPTER := 5

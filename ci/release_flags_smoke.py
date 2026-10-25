@@ -5,36 +5,43 @@
    no hitlog overlay text, PKD_AUDIO.state().portalMute false (cgmute ignored).
 2. Intro skip works in release by touch tap, mouse click and key press (fresh page each): '[PKD] intro finished' arrives
    well before the unskipped intro does (compared with a no-input control run on the same box).
-3. Page <title> is the user-visible stub 'Bakery Logic Puzzle' (config/name; QA ruling 10-25), never the slug."""
+3. TT-AC-53 (SPEC v1.0.1) run (a): every request from these release pages is same-origin; 0 sendBeacon (type ping).
+4. Page <title> is the user-visible stub 'Bakery Logic Puzzle' (config/name; QA ruling 10-25), never the slug."""
 import json, os, re, sys, time
 from playwright.sync_api import sync_playwright
 base, out = sys.argv[1].rstrip("/"), sys.argv[2]; os.makedirs(out, exist_ok=True)
 HERE = os.path.dirname(os.path.abspath(__file__))
 allow = [re.compile(l.strip()) for l in open(os.path.join(HERE, "console_allowlist.txt")) if l.strip() and not l.startswith("#")]
-res, bad, notes = {}, [], {}
+res, bad, notes, reqs = {}, [], {}, []
 def page(ctx, q=""):
     logs = []; pg = ctx.new_page()
     def oc(m):
         logs.append((time.time(), m.text))
         if m.type in ("error", "warning") and not any(a.search(m.text) for a in allow): bad.append(m.text)
     pg.on("console", oc); pg.on("pageerror", lambda e: bad.append(str(e)))
+    pg.on("request", lambda r: reqs.append((r.url, r.resource_type)))   # TT-AC-53 run (a): network log of the game page
     pg.goto(f"{base}/index.html{q}")
     return pg, logs
-def wait_for(logs, s, t=60):
+def wait_for(pg, logs, s, t=60):
+    # NB: pump Playwright's event loop (pg.wait_for_timeout), never time.sleep: the sync API only delivers console
+    # events while inside a Playwright call, so a time.sleep loop never sees new lines (that was the 'null' bug).
     t0 = time.time()
     while time.time() - t0 < t:
         for ts, l in logs:
             if s in l: return ts
-        time.sleep(0.05)
+        pg.wait_for_timeout(50)
     return None
 with sync_playwright() as p:
     br = p.chromium.launch(executable_path=os.environ.get("PKD_CHROME", "/usr/bin/google-chrome"), headless=True,
                            args=["--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
     ctx = br.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, has_touch=True, is_mobile=True)
     pg, logs = page(ctx, "?qa=1&seed=42&size=8&state=solved&ads=mock_error&date=2030-01-01&session_offset_s=999&cgmute=1&intro=1")
-    wait_for(logs, "[PKD] intro finished"); pg.wait_for_timeout(800)
+    wait_for(pg, logs, "pkd:perf pkd:board_interactive"); pg.wait_for_timeout(800)
     text = [l for _, l in logs]
-    res["flags_inert_tutorial_board"] = any("board 1: tutorial 5x5" in l for l in text) and not any("board n=" in l for l in text)
+    # release has no Dbg lines: board 1 is identified by the BR-1 performance mark detail (board_id), which ships in release
+    bids = pg.evaluate("performance.getEntriesByName('pkd:board_interactive').map(e => (e.detail || {}).board_id)")
+    notes["board_ids"] = bids
+    res["flags_inert_tutorial_board"] = bids[:1] == ["c1-b1"] and not any("board n=" in l for l in text)
     res["flags_inert_no_PKD_QA"] = pg.evaluate("typeof window.PKD_QA") == "undefined"
     res["flags_inert_no_qa_log"] = not any("QA on" in l or "QA show" in l or "[ads]" in l and "mock" in l for l in text)
     st = pg.evaluate("window.PKD_AUDIO ? window.PKD_AUDIO.state() : {}")
@@ -46,13 +53,13 @@ with sync_playwright() as p:
     def intro_len(how):
         c = br.new_context(viewport={"width": 390, "height": 844}, has_touch=(how == "tap"), is_mobile=(how == "tap"))
         pg, logs = page(c)
-        t0 = wait_for(logs, "[PKD] main ready")
+        t0 = wait_for(pg, logs, "[PKD] main ready")
         if t0 is None: c.close(); return None
         pg.wait_for_timeout(250)
         if how == "tap": pg.touchscreen.tap(195, 422)
         elif how == "click": pg.mouse.click(195, 422)
         elif how == "key": pg.keyboard.press("Space")
-        t1 = wait_for(logs, "[PKD] intro finished", 20)
+        t1 = wait_for(pg, logs, "[PKD] intro finished", 20)
         c.close()
         return None if t1 is None else round(t1 - t0, 2)
     ctrl = intro_len("none"); notes["intro_s_no_input"] = ctrl
@@ -60,6 +67,13 @@ with sync_playwright() as p:
         d = intro_len(how); notes[f"intro_s_{how}"] = d
         res[f"intro_skip_{how}"] = d is not None and ctrl is not None and d < 1.0 and d < ctrl - 0.5
     br.close()
+# TT-AC-53 (SPEC v1.0.1), allowlist run (a) local release without SDK: every request goes to the game's own origin, 0 beacons
+from urllib.parse import urlsplit
+own = urlsplit(base).netloc
+foreign = sorted({u for u, t in reqs if not u.startswith("data:") and not u.startswith("blob:") and urlsplit(u).netloc != own})
+beacons = [u for u, t in reqs if t == "ping"]
+notes["requests"] = len(reqs); notes["foreign_requests"] = foreign
+res["ac53_only_own_origin_0_beacons"] = bool(reqs) and not foreign and not beacons
 res["console_zero"] = not bad
 json.dump({"checks": res, "notes": notes, "console_bad": bad}, open(f"{out}/release_flags.json", "w"), indent=1)
 for k, v in res.items(): print(("PASS " if v else "FAIL ") + k)

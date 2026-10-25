@@ -90,6 +90,10 @@ func state() -> Dictionary:
 	}
 	if Dbg.main and ResourceLoader.exists(TT_GAME): d["game"] = load(TT_GAME).state(Dbg.main)
 	d["ads_decisions"] = ads_decisions      # SPEC §13.1 BR-3: PKD_QA.dump().ads_decisions[]
+	if OS.has_feature("web"):               # TT-AC-53 runtime half: network calls since boot (game ones must be 0)
+		var nc = JavaScriptBridge.eval("JSON.stringify(window.__pkdNet || [])")
+		d["net_calls"] = JSON.parse_string(str(nc)) if nc != null else []
+		d["net_calls_from_game"] = d["net_calls"].filter(func(x): return not x.get("from_sdk", false)).size()
 	return d
 
 func publish() -> void:
@@ -98,6 +102,15 @@ func publish() -> void:
 
 func _bind_js() -> void:
 	JavaScriptBridge.eval("window.PKD_QA = window.PKD_QA || {};")
+	# TT-AC-53 (SPEC v1.0.1) debug runtime half: count every fetch / XHR / sendBeacon made after boot; a call whose stack
+	# has no CrazyGames SDK frame is attributed to the game (must stay 0). Read via dump().net_calls.
+	JavaScriptBridge.eval("""(function(){ if (window.__pkdNet) return; var L = window.__pkdNet = [];
+	  function rec(api, url){ var st = (new Error()).stack || ''; L.push({api: api, url: String(url).slice(0, 200), t: performance.now(),
+	    from_sdk: /crazygames/i.test(st)}); }
+	  if (window.fetch) { var f = window.fetch; window.fetch = function(u, o){ rec('fetch', u && u.url || u); return f.apply(this, arguments); }; }
+	  if (navigator.sendBeacon) { var b = navigator.sendBeacon.bind(navigator); navigator.sendBeacon = function(u, d){ rec('sendBeacon', u); return b(u, d); }; }
+	  var xo = XMLHttpRequest.prototype.open; XMLHttpRequest.prototype.open = function(m, u){ rec('xhr', u); return xo.apply(this, arguments); };
+	})();""")
 	var qa = JavaScriptBridge.get_interface("window").PKD_QA
 	var defs := {
 		"refresh": func(_a): publish(),

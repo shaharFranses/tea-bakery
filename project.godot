@@ -18,6 +18,7 @@ PkdView="*res://autoload/pkd_view.gd"
 Ads="*res://autoload/ads.gd"
 Store="*res://autoload/store.gd"
 Sfx="*res://autoload/sfx.gd"
+Analytics="*res://autoload/analytics.gd"
 
 [display]
 window/size/viewport_width=390

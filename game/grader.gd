@@ -3,7 +3,7 @@
 ## run()/grade() apply steps until solved; grade = hardest technique used; "T7" = needs guessing (reject for shipped boards).
 ## A board the ladder solves without T7 is unique by construction (the solver count stays as a cross-check).
 ## State: cand = PackedByteArray n*n (1 = still possible), cakes = PackedInt32Array col per row (-1 = none).
-##   T1 last spot (G1) · T2 auto-X after a cake: row, col, patch, 8 neighbours (G1, folded into the T1/placing step)
+##   T1 last spot (G1) · T2 auto-mold after a cake: row, col, color region, 8 neighbours (G1, folded into the T1/placing step)
 ##   T3 confinement (G2) · T4 shared neighbour (G2) · T5 sets k=2,3 (G3) · T6 one-step lookahead (G4) · T7 reject
 ## Pure logic, RefCounted, no autoloads.
 extends RefCounted
@@ -29,7 +29,7 @@ static func unit_label(u: Dictionary) -> String:
 	match u.kind:
 		"row": return "row %d" % (u.id + 1)
 		"column": return "column %s" % COLS[u.id]
-	return "patch %s" % char(97 + u.id)
+	return "color %s" % char(65 + u.id)   # D-02 wording ("color"); Art/GD may name the colors later
 
 static func cell_label(n: int, i: int) -> String:
 	return "%s%d" % [COLS[i % n], i / n + 1]
@@ -76,7 +76,7 @@ static func find_step(n: int, regions: PackedInt32Array, cand: PackedByteArray, 
 			"explanation": "%s has no free cell left." % unit_label(u).capitalize()}
 		open.append({"u": u, "free": f})
 	if open.is_empty(): return {}
-	# T1 last spot (+ T2 auto-X folded in)
+	# T1 last spot (+ T2 auto-mold folded in)
 	for o in open:
 		if o.free.size() == 1:
 			var i: int = o.free[0]
@@ -84,7 +84,7 @@ static func find_step(n: int, regions: PackedInt32Array, cand: PackedByteArray, 
 				"eliminations": _elims(cand, peers(n, regions, i)),
 				"explanation": "%s has one free cell left. Its cake goes here." % unit_label(o.u).capitalize()}
 	if max_grade < 2: return {"technique": "T7", "grade": 5}
-	# T3 confinement: patch within one row/column -> X rest of that line; line within one patch -> X rest of that patch
+	# T3 confinement: patch within one row/column -> mold the rest of that line; line within one patch -> mold the rest of that region
 	for o in open:
 		var u = o.u
 		var f: Array = o.free
@@ -100,7 +100,7 @@ static func find_step(n: int, regions: PackedInt32Array, cand: PackedByteArray, 
 					if not el.is_empty():
 						var ln := ("row %d" % (k + 1)) if kind == "row" else ("column %s" % COLS[k])
 						return {"technique": "T3", "grade": 2, "place": false, "cells": f, "unit": unit_label(u), "eliminations": el,
-							"explanation": "All of %s is in %s, so %s's cake is in %s. Cross out the rest of %s." % [unit_label(u), ln, ln, unit_label(u), ln]}
+							"explanation": "All of %s is in %s, so set empty molds on the rest of %s." % [unit_label(u), ln, ln]}
 		else:
 			var gs := {}
 			for i in f: gs[regions[i]] = true
@@ -110,9 +110,9 @@ static func find_step(n: int, regions: PackedInt32Array, cand: PackedByteArray, 
 				for i in n * n: if regions[i] == g and not (i in u.cells): pcells.append(i)
 				var el := _elims(cand, pcells)
 				if not el.is_empty():
-					var pl := "patch %s" % char(97 + g)
+					var pl := "color %s" % char(65 + g)
 					return {"technique": "T3", "grade": 2, "place": false, "cells": f, "unit": unit_label(u), "eliminations": el,
-						"explanation": "%s's free cells are all in %s, so %s's cake is there. Cross out the rest of %s." % [unit_label(u).capitalize(), pl, pl, pl]}
+						"explanation": "%s's free cells are all in %s, so set empty molds on the rest of %s." % [unit_label(u).capitalize(), pl, pl]}
 	# T4 shared neighbour: a free cell touching every free cell of some unit
 	for o in open:
 		var f: Array = o.free
@@ -125,9 +125,9 @@ static func find_step(n: int, regions: PackedInt32Array, cand: PackedByteArray, 
 			if all: el.append(x)
 		if not el.is_empty():
 			return {"technique": "T4", "grade": 2, "place": false, "cells": f, "unit": unit_label(o.u), "eliminations": el,
-				"explanation": "Whichever cell gets %s's cake, these cells would touch it. Cross them out." % unit_label(o.u)}
+				"explanation": "Whichever cell gets %s's cake would touch these cells, so set empty molds on them." % unit_label(o.u)}
 	if max_grade < 3: return {"technique": "T7", "grade": 5}
-	# T5 sets: k open patches whose free cells lie within k rows (or columns) -> X other cells of those lines
+	# T5 sets: k open patches whose free cells lie within k rows (or columns) -> mold other cells of those lines
 	var open_p := open.filter(func(o): return o.u.kind == "patch")
 	for k in [2, 3]:
 		for combo in _combos(open_p.size(), k):
@@ -144,7 +144,7 @@ static func find_step(n: int, regions: PackedInt32Array, cand: PackedByteArray, 
 					var names := pids.keys().map(func(g): return "patch %s" % char(97 + g))
 					var ln := lines.keys().map(func(v): return str(v + 1) if kind == "row" else COLS[v])
 					return {"technique": "T5", "grade": 3, "place": false, "cells": [], "unit": ", ".join(names), "eliminations": el,
-						"explanation": "%s fit only in %ss %s, so those %ss' cakes are theirs. Cross out the rest of them." % [" and ".join(names), kind, "-".join(ln), kind]}
+						"explanation": "%s fit only in %ss %s, so set empty molds on the rest of %ss %s." % [" and ".join(names), kind, "-".join(ln), kind, "-".join(ln)]}
 	if max_grade < 4: return {"technique": "T7", "grade": 5}
 	# T6 one-step lookahead: a cake here would leave some open unit with no free cell
 	for x in n * n:
@@ -158,7 +158,7 @@ static func find_step(n: int, regions: PackedInt32Array, cand: PackedByteArray, 
 				if not gone.has(i): left = true; break
 			if not left:
 				return {"technique": "T6", "grade": 4, "place": false, "cells": [x], "unit": unit_label(o.u), "eliminations": [x],
-					"explanation": "A cake on %s would leave %s with nowhere to go. Cross it out." % [cell_label(n, x), unit_label(o.u)]}
+					"explanation": "A cake on %s would leave %s with nowhere to go, so set an empty mold on it." % [cell_label(n, x), unit_label(o.u)]}
 	return {"technique": "T7", "grade": 5}
 
 static func _combos(m: int, k: int) -> Array:
@@ -204,23 +204,23 @@ static func first_step_summary(n: int, regions: PackedInt32Array) -> Dictionary:
 	var s := find_step(n, regions, st.cand, st.cakes)
 	return {"technique": s.get("technique", ""), "cells": s.get("cells", []), "eliminations": s.get("eliminations", [])}
 
-## Hint engine (SPEC §6 / HN-20; SD next_hint pattern). Player state: cakes as Vector2i list, marks as Vector2i list.
-## 1) "fix": a player cake that is not in the solution, or an X on a solution cell. 2) else the easiest next deduction
-## from the player's own state (their X marks count as eliminations, auto-X of their cakes applied).
-static func next_hint(n: int, regions: PackedInt32Array, solution: PackedInt32Array, player_cakes: Array, player_marks: Array) -> Dictionary:
+## Hint engine (SPEC v1.0 §6 / HN-20; SD next_hint pattern). Player state: cakes and player molds as Vector2i lists.
+## 1) "fix": a player cake that is not in the solution, or a player mold on a solution cell. 2) else the easiest next
+## deduction from the player's own state (their molds count as eliminations, auto-molds of their cakes applied).
+static func next_hint(n: int, regions: PackedInt32Array, solution: PackedInt32Array, player_cakes: Array, player_molds: Array) -> Dictionary:
 	for p in player_cakes:
 		if solution[p.x] != p.y:
 			return {"technique": "fix", "cells": [p.x * n + p.y], "eliminations": [], "place": false,
-				"explanation": "This cake doesn't belong to the solution. Let's lift it."}
-	for p in player_marks:
+				"explanation": "This cake doesn't fit the recipe, so let's lift it."}
+	for p in player_molds:
 		if solution[p.x] == p.y:
 			return {"technique": "fix", "cells": [p.x * n + p.y], "eliminations": [], "place": false,
-				"explanation": "This X hides a cake spot. Let's clear it."}
+				"explanation": "This empty mold hides a cake spot, so let's clear it."}
 	var st := fresh(n)
 	var cand: PackedByteArray = st.cand; var cakes: PackedInt32Array = st.cakes
 	for p in player_cakes:
 		var i: int = p.x * n + p.y
 		cakes[p.x] = p.y; cand[i] = 0
 		for j in peers(n, regions, i): cand[j] = 0
-	for p in player_marks: cand[p.x * n + p.y] = 0
+	for p in player_molds: cand[p.x * n + p.y] = 0
 	return find_step(n, regions, cand, cakes)

@@ -19,9 +19,9 @@ func test_spec_example_grade2_and_steps():
 	assert_true("T4" in g.techniques and "T3" in g.techniques)
 	var s0 = g.steps[0]
 	assert_eq(s0.technique, "T3", "step 1: lemon confined to column E")
-	assert_eq(s0.eliminations, [19, 24], "X E4, E5")
+	assert_eq(s0.eliminations, [19, 24], "mold E4, E5")
 	assert_eq(g.steps[1].technique, "T3", "step 2: mint confined to row 3")
-	assert_eq(g.steps[1].eliminations, [12, 13, 14], "X C3, D3, E3")
+	assert_eq(g.steps[1].eliminations, [12, 13, 14], "mold C3, D3, E3")
 	print("SPEC_EXAMPLE grade=%d steps=%s" % [g.grade, str(g.steps.map(func(s): return s.technique))])
 
 func test_tutorial_grade_le_2():
@@ -54,7 +54,7 @@ func test_next_hint_fix_and_deduction():
 	var h = Grader.next_hint(5, reg, sol, [Vector2i(0, 0)], [])
 	assert_eq(h.technique, "fix", "wrong cake -> fix first")
 	h = Grader.next_hint(5, reg, sol, [], [Vector2i(0, 2)])
-	assert_eq(h.technique, "fix", "X on a solution cell -> fix")
+	assert_eq(h.technique, "fix", "player mold on a solution cell -> fix")
 	h = Grader.next_hint(5, reg, sol, [], [])
 	assert_eq(h.technique, "T3")
 	# HN-20: 8 consecutive hint+apply from empty reproduce the ladder and solve the board

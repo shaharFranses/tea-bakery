@@ -33,9 +33,9 @@ with sync_playwright() as p:
     # canvas px == CSS px at the 390 base (canvas_items/expand, 390 wide)
     x, y = cell_xy(g, 0, 0)
     pg.touchscreen.tap(x, y); pg.wait_for_timeout(400); g1 = dump(pg)["game"]
-    res["tap1_marks_X"] = g1["marks"] == [[0, 0]] and g1["cakes"] == []
+    res["tap1_sets_mold"] = g1["molds"] == [[0, 0]] and g1["cakes"] == [] and g1["cells"][0] == "mold"
     pg.touchscreen.tap(x, y); pg.wait_for_timeout(400); g2 = dump(pg)["game"]
-    res["tap2_places_cake"] = g2["cakes"] == [[0, 0]] and g2["marks"] == []
+    res["tap2_places_cake"] = g2["cakes"] == [[0, 0]] and g2["molds"] == []
     x2, y2 = cell_xy(g, 1, 1)
     for _ in range(2): pg.touchscreen.tap(x2, y2); pg.wait_for_timeout(400)
     g3 = dump(pg)["game"]

@@ -10,12 +10,16 @@ here = os.path.dirname(os.path.abspath(__file__)); root = os.path.dirname(here);
 import pck_strings
 out = sys.argv[1]; builds = sys.argv[2:]; os.makedirs(out, exist_ok=True)
 SPEC = "/workspace/pipeline-ops/games/tea-and-tarts/SPEC.md"
-synced = json.load(open(f"{root}/data/banned_user_text.json"))["banned_user_text"]
+_doc = json.load(open(f"{root}/data/banned_user_text.json"))
+synced = _doc["banned_user_text"]; retired = _doc.get("retired_mark_text", [])
 fails = []
 if os.path.exists(SPEC):
     m = re.search(r'"banned_user_text":\s*(\[.*?\])\s*\n', open(SPEC).read())
     if m and json.loads(m.group(1)) != synced: fails.append("data/banned_user_text.json out of sync with SPEC §3.5: resync")
+    m2 = re.search(r'"retired_mark_text":\s*(\[.*?\])\s*\n', open(SPEC).read())
+    if m2 and json.loads(m2.group(1)) != retired: fails.append("retired_mark_text out of sync with SPEC §3.5: resync")
 pats = [(f"spec:{p}", re.compile(p.encode(), re.I)) for p in synced]
+pats += [(f"retired_mark:{p}", re.compile(p.encode(), re.I)) for p in retired]   # v1.0: no X mark in user text
 pats.append(("qa:tt_title_scan.PAT", re.compile(rb"tea[\s_\-]*(?:&amp;|&|and)[\s_\-]*tarts", re.I)))
 hits = []; titles = {}
 def scan(where, b):
@@ -36,6 +40,9 @@ for d in builds: args += ["--dir", d]
 qa_rc = subprocess.run(args).returncode
 if st: fails.append("tt_title_scan selftest failed")
 if qa_rc: fails.append("tt_title_scan --dir found hits")
+# CONTROLS.md is user-facing copy (H6): same patterns
+for f in ("CONTROLS.md",):
+    if os.path.exists(f"{root}/{f}"): scan(f, open(f"{root}/{f}", "rb").read())
 fails += [f"{h['where']}: /{h['pattern']}/ '{h['match']}' ...{h['context']}..." for h in hits]
 json.dump({"pass": not fails, "titles": titles, "patterns": [n for n, _ in pats], "hits": hits, "fails": fails}, open(f"{out}/user_text_scan.json", "w"), indent=1)
 print(f"user-text scan: {'PASS' if not fails else 'FAIL'}: {len(hits)} banned hits in {len(builds)} builds; titles {titles}")

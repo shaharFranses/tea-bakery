@@ -16,6 +16,8 @@ const UiLayout = preload("res://game/ui_layout.gd")
 const Clock = preload("res://game/clock.gd")
 const Daily = preload("res://game/daily.gd")
 const AdPolicy = preload("res://game/ad_policy.gd")
+const Cells = preload("res://game/cells.gd")
+const Settings = preload("res://game/settings.gd")
 
 var intro_done := false
 var n := 5
@@ -29,6 +31,10 @@ var mode := "chapter"            # chapter | free | daily
 var daily = Daily.new()
 var ad_policy = AdPolicy.new(0, 0)
 var save_data: Dictionary = {}
+var settings = Settings.new()
+var order_btn: Button
+var automold_btn: Button
+var board_t0_ms := 0
 var last_daily_result: Dictionary = {}
 
 @onready var margin: MarginContainer = $Margin
@@ -55,6 +61,7 @@ func _ready() -> void:
 	session_start_ms = int(Time.get_unix_time_from_system() * 1000.0)
 	save_data = Store.load_data()
 	daily.from_dict(save_data.get("daily", {}))
+	settings.from_dict(save_data.get("settings", {}))
 	ad_policy.chapters_completed = int(save_data.get("chapters_completed", 0))
 	_build_ui()
 	_relayout()
@@ -110,7 +117,7 @@ func _build_ui() -> void:
 	vb.add_child(label)
 	var hint := Label.new(); hint.name = "Hint"; hint_label = hint
 	hint.text = Cfg.RULES_TEXT
-	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_font_size_override("font_size", 16)   # D-02: rules >= 16 px
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(hint)
@@ -129,6 +136,7 @@ func _build_ui() -> void:
 	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	board.custom_minimum_size = Vector2(300, 300)
 	board.cell_tapped.connect(tap_cell)
+	board.cell_right_clicked.connect(right_click_cell)
 	board.resized.connect(_update_size_buttons)
 	vb.add_child(board)
 	status = Label.new(); status.name = "Status"
@@ -152,6 +160,15 @@ func _build_ui() -> void:
 	mute.custom_minimum_size = Vector2(110, 48); mute.add_theme_font_size_override("font_size", 16)
 	mute.toggled.connect(func(on): Sfx.set_user_muted(on); mute.text = "Sound: off" if on else "Sound: on")
 	row.add_child(mute)
+	order_btn = Button.new(); order_btn.name = "TapOrder"; order_btn.toggle_mode = true
+	order_btn.custom_minimum_size = Vector2(150, 48); order_btn.add_theme_font_size_override("font_size", 16)
+	order_btn.toggled.connect(func(on): set_tap_order(Cells.ORDER_CAKE_FIRST if on else Cells.ORDER_MOLD_FIRST))
+	row.add_child(order_btn)
+	automold_btn = Button.new(); automold_btn.name = "AutoMolds"; automold_btn.toggle_mode = true
+	automold_btn.custom_minimum_size = Vector2(150, 48); automold_btn.add_theme_font_size_override("font_size", 16)
+	automold_btn.toggled.connect(func(on): set_auto_mold(not on))
+	row.add_child(automold_btn)
+	_sync_setting_buttons()
 	# wide layout containers (empty until _relayout moves the nodes in)
 	wide_root = Control.new(); wide_root.name = "Wide"; wide_root.visible = false
 	wide_root.set_anchors_preset(Control.PRESET_FULL_RECT); wide_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -187,6 +204,8 @@ func open_daily(date: String) -> bool:
 ## Daily completion -> streak (U1). forced_date: QA re-fire for V8 (counts at most once per date).
 func complete_daily(forced_date: String = "") -> Dictionary:
 	last_daily_result = daily.complete(Clock.local_date(), forced_date)
+	if last_daily_result.counted:
+		Analytics.daily_complete(last_daily_result.date, n, (Time.get_ticks_msec() - board_t0_ms) / 1000.0, 0, last_daily_result.streak)
 	save_data["daily"] = daily.to_dict(); Store.save(save_data)
 	Dbg.hit("daily complete %s" % JSON.stringify(last_daily_result))
 	return last_daily_result
@@ -277,14 +296,39 @@ func _on_resized() -> void:
 	_update_size_buttons()
 
 func clear_board() -> void:
-	board.cells.fill(BoardView.EMPTY); moves = 0; won = false; _refresh()
+	board.cells.fill(Cells.EMPTY); moves = 0; won = false; _refresh()
 
+## One tap: empty -> mold -> cake -> empty, or with Settings "Tap order: cake first" empty -> cake -> mold -> empty (D-12).
 func tap_cell(r: int, c: int) -> void:
 	if won: return
 	var i := r * n + c
-	board.cells[i] = (board.cells[i] + 1) % 3     # empty -> X -> cake -> empty
+	board.cells[i] = Cells.next_state(board.cells[i], settings.tap_order)
 	moves += 1
 	_refresh()
+
+## Desktop right-click: toggles the empty mold (empty <-> mold), never a cake (D-12).
+func right_click_cell(r: int, c: int) -> void:
+	if won: return
+	var i := r * n + c
+	board.cells[i] = Cells.right_click(board.cells[i])
+	moves += 1
+	_refresh()
+
+func set_tap_order(order: String) -> void:
+	settings.tap_order = order; _save_settings(); _sync_setting_buttons(); _refresh()
+
+func set_auto_mold(on: bool) -> void:
+	settings.auto_mold = on; _save_settings(); _sync_setting_buttons(); _refresh()
+
+func _save_settings() -> void:
+	save_data["settings"] = settings.to_dict(); Store.save(save_data)
+
+func _sync_setting_buttons() -> void:
+	if order_btn == null: return
+	order_btn.set_pressed_no_signal(settings.tap_order == Cells.ORDER_CAKE_FIRST)
+	order_btn.text = "Tap order: cake first" if settings.tap_order == Cells.ORDER_CAKE_FIRST else "Tap order: mold first"
+	automold_btn.set_pressed_no_signal(not settings.auto_mold)
+	automold_btn.text = "Auto-molds: on" if settings.auto_mold else "Auto-molds: off"
 
 func set_cell(r: int, c: int, v: int) -> void:
 	board.cells[r * n + c] = v; _refresh()
@@ -292,7 +336,7 @@ func set_cell(r: int, c: int, v: int) -> void:
 func cakes() -> Array:
 	var out := []
 	for i in n * n:
-		if board.cells[i] == BoardView.CAKE: out.append(Vector2i(i / n, i % n))
+		if board.cells[i] == Cells.CAKE: out.append(Vector2i(i / n, i % n))
 	return out
 
 func _refresh() -> void:
@@ -300,6 +344,7 @@ func _refresh() -> void:
 	var bad := Rules.conflicts(n, puzzle.regions, cs)
 	board.conflict_cells = {}
 	for p in bad: board.conflict_cells[p] = true
+	board.auto = Cells.auto_molds(n, puzzle.regions, board.cells, settings.auto_mold)
 	var was_won := won
 	won = Rules.is_solution(n, puzzle.regions, cs)
 	board.won = won
@@ -308,23 +353,26 @@ func _refresh() -> void:
 		status.text = "Tray baked! Golden and perfect."
 		if not was_won:
 			Dbg.hit("WIN n=%d seed=%d moves=%d" % [n, seed_value, moves])
+			Analytics.board_complete(board_id(), "daily" if mode == "daily" else "chapter", n, int(puzzle.get("grade", 0)),
+				(Time.get_ticks_msec() - board_t0_ms) / 1000.0, 0, 0, false)
 			if mode == "daily" and daily.open_date != "":
 				var r := complete_daily()
 				status.text = "Bake of the Day done! Streak: %d" % r.streak + ("\nA fresh streak starts today." if r.fresh_line else "")
 	elif not bad.is_empty():
 		status.text = "Those cakes would stick together in the oven."
 	else:
-		status.text = "%d x %d tray: %d of %d cakes placed. Tap: X, cake, clear." % [n, n, cs.size(), n]
+		status.text = "%d x %d tray: %d of %d cakes placed. Tap: %s." % [n, n, cs.size(), n,
+			"cake, mold, clear" if settings.tap_order == Cells.ORDER_CAKE_FIRST else "mold, cake, clear"]
 
 func _preset_state(st: String) -> void:
 	var sol: PackedInt32Array = puzzle.solution
 	match st:
 		"solved":
-			for r in n: board.cells[r * n + sol[r]] = BoardView.CAKE
+			for r in n: board.cells[r * n + sol[r]] = Cells.CAKE
 		"almost":
-			for r in n - 1: board.cells[r * n + sol[r]] = BoardView.CAKE
+			for r in n - 1: board.cells[r * n + sol[r]] = Cells.CAKE
 		"conflict":
-			board.cells[0] = BoardView.CAKE; board.cells[n + 1] = BoardView.CAKE
+			board.cells[0] = Cells.CAKE; board.cells[n + 1] = Cells.CAKE
 	_refresh()
 
 func _on_intro_finished() -> void:
@@ -386,6 +434,8 @@ func _board_interactive() -> void:
 	var id := board_id()
 	perf_mark("pkd:transition_end", {"board_id": id})
 	perf_mark("pkd:board_interactive", {"board_id": id})
+	board_t0_ms = Time.get_ticks_msec()
+	Analytics.board_start(id, "daily" if mode == "daily" else "chapter", n, int(puzzle.get("grade", 0)), false)   # no-op sink (§12.4)
 
 ## Chapter-end midgame slot: every decision (allowed or denied, SPEC §13.1 BR-3 reason codes) is emitted on
 ## Ads.decided (the debug hooks record it in dump().ads_decisions[]); requests the ad only if allowed.

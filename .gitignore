@@ -33,3 +33,4 @@ Thumbs.db
 !engine/pkd_web_release_slim.zip
 dist/
 qa/results/ci-*/
+__pycache__/

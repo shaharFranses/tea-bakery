@@ -8,7 +8,8 @@
 # Full viewport x input matrix: deferred to the thin slice (CoS 2026-10-25).
 set -uo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd); cd "$ROOT"
-GATE=0; PORT=${PKD_PORT:-8900}; SLUG=${PKD_SLUG:-tea-bakery}; NOBUILD=0; LIVE=""
+GATE=0; PORT=${PKD_PORT:-8900}; SLUG=${PKD_SLUG:-$(tr -d "[:space:]" < SLUG)};   # the ONE slug source: ./SLUG (repo/zip/gated-dir name; may become teacake-lane)
+ NOBUILD=0; LIVE=""
 while [ $# -gt 0 ]; do case $1 in --gate) GATE=1;; --port) PORT=$2; shift;; --slug) SLUG=$2; shift;; --no-build) NOBUILD=1;; --live) LIVE=$2; shift;; esac; shift; done
 PY=${PKD_PY:-/workspace/pwvenv/bin/python}; ZPY=${PKD_ZPY:-/workspace/zvenv/bin/python};   # zvenv: zstandard for pck scripts
  GODOT=${GODOT:-godot}; export GODOT
@@ -46,6 +47,7 @@ serve() { tools/serve_unit.sh start build/web-debug "$PORT" && tools/serve_unit.
 smoke() { $PY ci/browser_smoke.py "http://127.0.0.1:$PORT" "$R" debug; a=$?; $PY ci/browser_smoke.py "http://127.0.0.1:$((PORT+1))" "$R" release; b=$?; [ $a = 0 ] && [ $b = 0 ]; }
 game_smoke() { $PY ci/game_smoke.py "http://127.0.0.1:$PORT" "$R"; }
 layout() { $PY ci/layout_smoke.py "http://127.0.0.1:$PORT" "$R" qa_shots; }   # >=44 CSS px targets, >=12 px text at 390x844/800x450/1280x720
+netcalls() { $ZPY qa/net_calls_scan.py "$R/net_calls_scan.json" build/web-debug build/web-release; }   # TT-AC-53 v1.0.1 static half
 no_old_title() { $ZPY qa/user_text_scan.py "$R" build/web-debug build/web-release && python3 qa/title_scan_ci.py "$R" build/web-debug build/web-release; }   # SPEC §3.5 banned_user_text + QA NAME-01 scanner; source tree too
 br() { $PY ci/br_smoke.py "http://127.0.0.1:$PORT" "http://127.0.0.1:$((PORT+1))" "$R"; }   # SPEC §13.1 BR-1..BR-3
 release_flags() { $PY ci/release_flags_smoke.py "http://127.0.0.1:$((PORT+1))" "$R"; }
@@ -60,6 +62,7 @@ step 5 "browser smoke + console-zero + screenshots" smoke
 step 6 "game smoke (tutorial, taps, conflict, win, seed, 8x8 cap)" game_smoke
 step 6b "responsive layout: 44px targets / 12px text at 390x844, 800x450, 1280x720" layout
 step 6c "BR-1 perf lines (release+debug), BR-2 set_date/retry_daily, BR-3 set_session_s/ads_decisions" br
+step 6d "TT-AC-53 (v1.0.1): no sendBeacon/fetch/XHR in our code (pck + html head)" netcalls
 step 7 "banned user text absent (SPEC §3.5 + QA NAME-01) in title/pck/html/js + source" no_old_title
 step 8 "release: QA URL flags inert + intro skip by tap/click/key" release_flags
 [ $GATE = 1 ] && [ ${#FAILS[@]} = 0 ] && step 9 "freeze gate + CG zip" gate

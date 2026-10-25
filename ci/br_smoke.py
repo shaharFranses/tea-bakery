@@ -76,6 +76,9 @@ with sync_playwright() as p:
     g2 = dump(pg)["game"]; notes["v8"] = {k: g2[k] for k in ("bakes", "streak", "total_bakes", "last_daily")}
     res["br2_v8_retry_rejected_streak_unchanged"] = g2["last_daily"].get("counted") is False and g2["total_bakes"] == 2 and g2["streak"] == 2
     res["br2_day_change_path"] = any("day change" in h for h in dump(pg)["hitlog"])
+    dd = dump(pg); notes["net_calls"] = dd.get("net_calls")
+    res["ac53_runtime_zero_game_network_calls"] = dd.get("net_calls_from_game") == 0 and isinstance(dd.get("net_calls"), list)
+    res["ac53_analytics_sink_noop_ring_filled"] = dd["game"]["analytics_sink"] == "noop" and any(e["event"] == "board_start" for e in dd["game"]["analytics"])
     ctx.close(); br.close()
 json.dump({"checks": res, "notes": notes}, open(f"{out}/br_smoke.json", "w"), indent=1)
 for k, v in res.items(): print(("PASS " if v else "FAIL ") + k)
