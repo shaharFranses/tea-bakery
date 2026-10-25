@@ -3,7 +3,7 @@
 extends RefCounted
 
 const WORKING_NAME := "tea-bakery"            # title TBD (SM 10-25); never ship the dropped title
-const TITLE_PLACEHOLDER := "Tea Bakery"       # on-screen placeholder until Growth picks the title
+const TITLE_PLACEHOLDER := "tea-bakery"       # stub = working name, no game title (DAY0 / QA R-04) until Growth picks one
 
 # Board sizes (§9 D-04): mobile max 8x8 (44 px cells at 390 px), 9x9 desktop only
 const MIN_N := 5

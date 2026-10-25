@@ -44,7 +44,9 @@ audit() { $PY qa/release_audit.py build/web-release "$R/release_audit.txt"; }
 serve() { tools/serve_unit.sh start build/web-debug "$PORT" && tools/serve_unit.sh start build/web-release "$((PORT+1))"; }
 smoke() { $PY ci/browser_smoke.py "http://127.0.0.1:$PORT" "$R" debug; a=$?; $PY ci/browser_smoke.py "http://127.0.0.1:$((PORT+1))" "$R" release; b=$?; [ $a = 0 ] && [ $b = 0 ]; }
 game_smoke() { $PY ci/game_smoke.py "http://127.0.0.1:$PORT" "$R"; }
-no_old_title() { ! grep -rlaiE 'tea ?& ?tarts|tea &amp; tarts' build/web-debug build/web-release && echo "no dropped-title strings in build output"; }
+# same pattern as QA's /workspace/tea-and-tarts-qa/tt_title_scan.py (tea…(&|&amp;|and)…tarts, case-insensitive) + standalone "tarts"
+no_old_title() { ! grep -rlaiP 'tea[\s_\-]*(&amp;|&|and)[\s_\-]*tarts|\btarts\b' build/web-debug build/web-release && echo "no dropped-title strings in build output"; }
+release_flags() { $PY ci/release_flags_smoke.py "http://127.0.0.1:$((PORT+1))" "$R"; }
 gate() { G=$(tools/freeze_gate.sh build/web-release "$SLUG" | tail -1) && echo "gated: $G" && echo "$G" > "$R/GATED_DIR" && tools/cg_zip.sh "$G" "$SLUG"; }
 
 step 0 preflight preflight
@@ -55,7 +57,8 @@ step 4 "serve :$PORT/:$((PORT+1))" serve
 step 5 "browser smoke + console-zero + screenshots" smoke
 step 6 "game smoke (tutorial, taps, conflict, win, seed, 8x8 cap)" game_smoke
 step 7 "dropped title absent from build output" no_old_title
-[ $GATE = 1 ] && [ ${#FAILS[@]} = 0 ] && step 8 "freeze gate + CG zip" gate
+step 8 "release: QA URL flags inert + intro skip by tap/click/key" release_flags
+[ $GATE = 1 ] && [ ${#FAILS[@]} = 0 ] && step 9 "freeze gate + CG zip" gate
 VERDICT=$([ ${#FAILS[@]} = 0 ] && echo PASS || echo FAIL)
 printf '%s\n' "${STEPS[@]}" > "$R/steps.txt"
 $PY ci/gate_packet.py "$R" "$VERDICT" "$PORT" "$SLUG" "$GATE"
