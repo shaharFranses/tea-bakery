@@ -13,6 +13,9 @@ const Rules = preload("res://game/rules.gd")
 const BoardView = preload("res://scenes/board_view.gd")
 const Cfg = preload("res://game/tt_config.gd")
 const UiLayout = preload("res://game/ui_layout.gd")
+const Clock = preload("res://game/clock.gd")
+const Daily = preload("res://game/daily.gd")
+const AdPolicy = preload("res://game/ad_policy.gd")
 
 var intro_done := false
 var n := 5
@@ -22,6 +25,11 @@ var moves := 0
 var won := false
 var taps := 0
 var session_start_ms := 0
+var mode := "chapter"            # chapter | free | daily
+var daily = Daily.new()
+var ad_policy = AdPolicy.new(0, 0)
+var save_data: Dictionary = {}
+var last_daily_result: Dictionary = {}
 
 @onready var margin: MarginContainer = $Margin
 var label: Label
@@ -45,6 +53,9 @@ var hint_label: Label
 func _ready() -> void:
 	Dbg.main = self
 	session_start_ms = int(Time.get_unix_time_from_system() * 1000.0)
+	save_data = Store.load_data()
+	daily.from_dict(save_data.get("daily", {}))
+	ad_policy.chapters_completed = int(save_data.get("chapters_completed", 0))
 	_build_ui()
 	_relayout()
 	PkdView.insets_changed.connect(_on_resized)
@@ -148,22 +159,43 @@ func _build_ui() -> void:
 	wide_root.add_child(panel)
 
 func new_board(size: int, s: int) -> void:
-	n = clampi(size, Gen.MIN_N, max_size()); seed_value = s
+	n = clampi(size, Gen.MIN_N, max_size()); seed_value = s; mode = "free"
 	_set_puzzle(Gen.generate(n, s))
 	Dbg.hit("board n=%d seed=%d (%.0f ms, %d reshapes)" % [n, s, puzzle.ms, puzzle.reshapes])
 
 func load_tutorial() -> void:
 	var t := Gen.tutorial()
-	n = t.n; seed_value = t.seed
+	n = t.n; seed_value = t.seed; mode = "chapter"
 	_set_puzzle(t)
 	Dbg.hit("board 1: tutorial 5x5")
 
+## Bake of the Day for `date` (device-local; fixed when OPENED, U1/V9). Returns false if already done (not replayable).
+func open_daily(date: String) -> bool:
+	if not daily.open(date):
+		Dbg.hit("daily %s already baked: not replayable" % date)
+		return false
+	var sz := 6
+	_mark_transition_start()
+	n = sz; seed_value = Gen.seed_from_string("daily-" + date); mode = "daily"
+	_set_puzzle(Gen.generate(n, seed_value))
+	Dbg.hit("daily %s open n=%d" % [date, n])
+	return true
+
+## Daily completion -> streak (U1). forced_date: QA re-fire for V8 (counts at most once per date).
+func complete_daily(forced_date: String = "") -> Dictionary:
+	last_daily_result = daily.complete(Clock.local_date(), forced_date)
+	save_data["daily"] = daily.to_dict(); Store.save(save_data)
+	Dbg.hit("daily complete %s" % JSON.stringify(last_daily_result))
+	return last_daily_result
+
 func _set_puzzle(p: Dictionary) -> void:
+	if intro_done: _mark_transition_start()
 	puzzle = p
 	board.setup(n, puzzle.regions)
 	moves = 0; won = false
 	_update_size_buttons()
 	_refresh()
+	if intro_done: _board_interactive.call_deferred()
 
 ## Largest board for this device: 8 on phones/touch, 9 on desktop only if 9x9 cells stay >= 44 px.
 func max_size() -> int:
@@ -271,7 +303,11 @@ func _refresh() -> void:
 	board.queue_redraw()
 	if won:
 		status.text = "Tray baked! Golden and perfect."
-		if not was_won: Dbg.hit("WIN n=%d seed=%d moves=%d" % [n, seed_value, moves])
+		if not was_won:
+			Dbg.hit("WIN n=%d seed=%d moves=%d" % [n, seed_value, moves])
+			if mode == "daily" and daily.open_date != "":
+				var r := complete_daily()
+				status.text = "Bake of the Day done! Streak: %d" % r.streak + ("\nA fresh streak starts today." if r.fresh_line else "")
 	elif not bad.is_empty():
 		status.text = "Those cakes would stick together in the oven."
 	else:
@@ -295,12 +331,15 @@ func _on_intro_finished() -> void:
 	Dbg.hit("intro finished")
 	_gameplay_start()
 	print("[PKD] intro finished")
+	_mark_transition_start()
+	_board_interactive.call_deferred()   # board 1 accepts input now
 
 ## CrazyGames SDK v3 gameplayStart, once, when board 1 is playable, through the Ads gate (held during the intro;
 ## only reaches the page in "sdk" mode, i.e. on CrazyGames hosts or ?cgsdk=1; PKD_CG itself no-ops without the SDK).
 func _gameplay_start() -> void:
 	if gameplay_started: return
 	gameplay_started = true
+	Clock.start_session()     # U2: session_s counts from the first gameplayStart of this page load
 	Ads.set_context("play")   # -> Ads.sdk("gameplayStart") in sdk mode; no-op without the SDK (mock / localhost)
 	Dbg.hit("gameplayStart (board 1)")
 
@@ -318,6 +357,30 @@ func _apply_safe_area() -> void:
 		backdrop.visible = landscape and backdrop.texture != null
 		backdrop_fill.visible = landscape
 
+## BR-1 release-safe perf markers (PERF-46 b/c): pkd:transition_start when a board transition begins; when the next
+## board accepts input: pkd:board_interactive {detail:{board_id}} + exactly one console line + pkd:transition_end.
+var _transition_open := false
+func _mark_transition_start() -> void:
+	if _transition_open: return
+	_transition_open = true
+	if OS.has_feature("web"): JavaScriptBridge.eval("performance.mark('pkd:transition_start')")
+
+func _board_interactive() -> void:
+	await get_tree().process_frame          # the new board has been drawn and takes input from here
+	if not _transition_open: return
+	_transition_open = false
+	var id := board_id()
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("performance.mark('pkd:board_interactive', {detail: {board_id: %s}}); performance.mark('pkd:transition_end')" % JSON.stringify(id))
+	print("[PKD] board interactive ", id)
+
+## Chapter-end midgame slot: every decision (denials included) goes to the ads log (BR-3); requests the ad if allowed.
+func chapter_end_slot(chapter: int) -> Dictionary:
+	var e: Dictionary = ad_policy.decide(chapter, Clock.session_ms(), Ads.available(), "chapter_end", mode if mode != "free" else "chapter")
+	Ads.log_decision(e)
+	if e.decision == "requested": Ads.midgame("chapter_end")
+	return e
+
 ## QA hooks live in debug/tt_qa_game.gd (debug export only). In release these return nothing.
 const QA_GAME := "res://debug/tt_qa_game.gd"
 func qa_state() -> Dictionary:
@@ -327,6 +390,7 @@ func qa_show(cmd: String) -> void:
 	if Dbg.hooks and ResourceLoader.exists(QA_GAME): load(QA_GAME).show(self, cmd)
 
 func board_id() -> String:
+	if mode == "daily": return "daily-" + (daily.open_date if daily.open_date != "" else "done")
 	return "c1-b1" if puzzle.get("tutorial", false) else "gen-%d-%d" % [n, seed_value]
 
 func preset(st: String) -> void:

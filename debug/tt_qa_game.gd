@@ -3,20 +3,25 @@
 ##  H1  PKD_QA.dump().game schema           -> state(main)
 ##  H2  PKD_QA.show("board:<id>" | "gen:N,seed" | "solve_next" | "solve" | "home" | "daily:YYYY-MM-DD" | "tap:r,c" | "clear" | "new")
 ##  H3  ?qa=1&date=YYYY-MM-DD (local-date override) &session_offset_s=N (session clock offset)
+##  BR-2 show("now:YYYY-MM-DDTHH:MM") device-local clock at runtime, no reload; show("force_daily_complete") (V8)
+##  BR-3 show("session_s:N") U2 session clock at runtime; show("chapter_end:K") runs the midgame decision (logged)
 ##  H4  ?qa=1&ads=mock_available|mock_unavailable|mock_error|mock_timeout (Ads mock mode; mock has a 0.6 s ad delay)
 ## Not implemented yet (no feature to hook): undo, hints, streak/meta, analytics ring, packs/daily, per-region texture ids.
 extends RefCounted
 
 const Gen = preload("res://game/generator.gd")
 const Cfg = preload("res://game/tt_config.gd")
+const Clock = preload("res://game/clock.gd")
 
 static func apply_url(params: Dictionary) -> void:
 	if params.has("ads"): Ads.set_mode(str(params["ads"]))                 # H4
-	if params.has("session_offset_s"): Dbg.clock_offset_ms = int(params["session_offset_s"]) * 1000   # H3
+	if params.has("session_offset_s"):                                                                 # H3
+		Dbg.clock_offset_ms = int(params["session_offset_s"]) * 1000
+		Clock.add_session_offset_ms(int(params["session_offset_s"]) * 1000)
+	if params.has("date"): Clock.set_local_now(str(params["date"]) + "T12:00")                          # H3
 
 static func qa_date(params: Dictionary) -> String:
-	var d := str(params.get("date", ""))
-	return d if d != "" else Time.get_date_string_from_system()
+	return Clock.local_date()
 
 static func _cell_kind(v: int) -> String:
 	return ["empty", "x_player", "cake"][v] if v >= 0 and v < 3 else "?"
@@ -51,7 +56,8 @@ static func state(main) -> Dictionary:
 	var gp: Vector2 = b.global_position
 	var hooks = Dbg.hooks
 	var params: Dictionary = hooks.params if hooks else {}
-	return {"screen": "board", "board_id": main.board_id(), "mode": "chapter" if main.puzzle.get("tutorial", false) else "free",
+	var sm: Dictionary = main.daily.summary(Clock.local_date())
+	return {"screen": "board", "board_id": main.board_id(), "mode": main.mode,
 		"intro_done": main.intro_done, "taps": main.taps, "n": main.n, "seed": main.seed_value, "max_size": main.max_size(),
 		"tutorial": main.puzzle.get("tutorial", false), "regions": Array(main.puzzle.regions), "cells": cells,
 		"cakes": main.cakes().map(func(p): return [p.x, p.y]),
@@ -60,8 +66,11 @@ static func state(main) -> Dictionary:
 		"undo_len": 0, "undo_hash": "", "board_rect": [(gp.x + br.position.x) * _css(main), (gp.y + br.position.y) * _css(main), br.size.x * _css(main), br.size.y * _css(main)],
 		"cell_css": b.cell_size() * _css(main), "css_per_unit": _css(main), "layout": main.layout_mode_name,
 		"viewport_logical": [main.get_viewport_rect().size.x, main.get_viewport_rect().size.y], "ui": _ui(main), "hint": null, "timer_visible": false,
-		"active_s": (Dbg.now_ms() - main.session_start_ms) / 1000.0, "session_s": (Dbg.now_ms() - main.session_start_ms) / 1000.0,
-		"date": qa_date(params), "streak": null, "best_streak": null, "total_bakes": null, "unlocked": null,
+		"active_s": Clock.session_s(), "session_s": Clock.session_s(), "session_started": Clock.session_started(),
+		"date": qa_date(params), "local_now": Clock.local_datetime(), "streak": sm.streak, "best_streak": sm.best_streak,
+		"total_bakes": sm.total_bakes, "bakes": main.daily.bakes, "daily_open": main.daily.open_date,
+		"daily_done_today": main.daily.is_done(Clock.local_date()), "last_daily": main.last_daily_result, "unlocked": null,
+		"ad_policy": {"chapters_completed": main.ad_policy.chapters_completed, "last_midgame_session_ms": main.ad_policy.last_midgame_ms},
 		"save_key": Store.KEY, "analytics": [], "ads_log": Ads.call_log, "ads_mode": Ads.mode, "sdk_log": Ads.sdk_log,
 		"gameplay_started": main.gameplay_started, "backdrop": main.backdrop.visible, "backdrop_asset": main.backdrop.texture != null,
 		"gen_ms": main.puzzle.get("ms", 0.0), "reshapes": main.puzzle.get("reshapes", 0),
@@ -87,7 +96,22 @@ static func show(main, cmd: String) -> String:
 		var id := cmd.substr(6)
 		if id == "tutorial" or id == "c1-b1": main.load_tutorial()
 		else: res = "unsupported: no chapter packs yet (%s)" % id
-	elif cmd.begins_with("daily:"): res = "unsupported: no daily pool yet"
+	elif cmd.begins_with("daily:"):
+		var d := cmd.substr(6)
+		res = "open %s" % d if main.open_daily(d) else "refused: %s already baked (not replayable)" % d
+	elif cmd.begins_with("now:"):                                        # BR-2
+		res = "now %s" % Clock.local_datetime() if Clock.set_local_now(cmd.substr(4)) else "bad datetime"
+	elif cmd == "force_daily_complete":                                 # BR-2 (V8)
+		var d2: String = main.daily.open_date
+		if d2 == "" and main.mode == "daily" and not main.daily.bakes.is_empty(): d2 = main.daily.bakes[-1]
+		if d2 == "": d2 = Clock.local_date()
+		res = JSON.stringify(main.complete_daily(d2))
+	elif cmd.begins_with("session_s:"):                                 # BR-3
+		Clock.set_session_s(cmd.substr(10).to_float()); res = "session_s %.3f" % Clock.session_s()
+	elif cmd.begins_with("chapter_end:"):                               # BR-3: completes chapter K, runs the slot decision
+		var k := cmd.substr(12).to_int()
+		main.ad_policy.on_chapter_completed(k)
+		res = JSON.stringify(main.chapter_end_slot(k))
 	elif cmd.begins_with("gen:"):
 		var p := cmd.substr(4).split(",")
 		var n := p[0].to_int(); var s := p[1].to_int() if p.size() > 1 else 1

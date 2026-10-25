@@ -79,8 +79,17 @@ func _log(kind: String, origin: String, result: String) -> void:
 	var e = {"t_ms": Time.get_ticks_msec(), "ts": int(Time.get_unix_time_from_system() * 1000.0),
 		"kind": kind, "origin": origin, "context": context, "play_open": play_open(), "mode": mode, "result": result}
 	call_log.append(e)
-	print("[PKD][ads] ", JSON.stringify(e))
+	if OS.is_debug_build(): print("[PKD][ads] ", JSON.stringify(e))   # release console stays clean (BR-1)
 	logged.emit(e)
+	changed.emit()
+
+## Ad-policy decision (game/ad_policy.gd decide()), denials included, into the same ads log (BR-3).
+func log_decision(e: Dictionary) -> void:
+	var x := e.duplicate()
+	x["t_ms"] = Time.get_ticks_msec(); x["result"] = x.get("decision", ""); x["mode_ads"] = mode
+	call_log.append(x)
+	if OS.is_debug_build(): print("[PKD][ads] ", JSON.stringify(x))
+	logged.emit(x)
 	changed.emit()
 
 ## Player-requested rewarded ad. Allowed only from pause panels (play_panel) or results.
