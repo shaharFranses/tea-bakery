@@ -1,0 +1,102 @@
+## Ads adapter over CrazyGames SDK v3 (glue in web/head_include.html). Autoload "Ads".
+## Release: "sdk" on CrazyGames hosts, otherwise "none" (rewarded reports unavailable, never grants).
+## Debug builds additionally load res://debug/ads_mock.gd (excluded from the release export).
+extends Node
+
+signal changed
+signal logged(entry: Dictionary)
+signal ad_started
+signal ad_finished
+
+const TIMEOUT_S = 8.0
+const MOCK_PATH = "res://debug/ads_mock.gd"
+var timeout_s: float = TIMEOUT_S   # tests may shorten
+
+var mode: String = "none"       # none | sdk | (debug only) mock modes
+var context: String = "menu"    # menu | play | play_panel | results
+var call_log: Array = []
+var busy: bool = false
+var mock = null
+
+func _ready() -> void:
+	if OS.has_feature("web") and _js_bool("window.PKD_CG && window.PKD_CG.portal()"):
+		mode = "sdk"
+	elif OS.is_debug_build() and ResourceLoader.exists(MOCK_PATH):
+		mock = load(MOCK_PATH).new()
+		mode = mock.DEFAULT_MODE
+
+func play_open() -> bool:
+	return context == "play" or context == "play_panel"
+
+func set_context(c: String) -> void:
+	context = c
+	if mode == "sdk":
+		JavaScriptBridge.eval("window.PKD_CG.gameplay(%s)" % ("true" if c == "play" else "false"))
+
+func modes() -> Array:
+	return (["none", "sdk"] + (mock.MODES if mock else []))
+
+func set_mode(m: String) -> void:
+	if m in modes():
+		mode = m
+		_log("mode", m, "set")
+		changed.emit()
+
+func available() -> bool:
+	if mode == "sdk": return _js_bool("window.PKD_CG && window.PKD_CG.available()")
+	if mock and mock.handles(mode): return mock.available(mode)
+	return false
+
+func _js_bool(expr: String) -> bool:
+	if not OS.has_feature("web"): return false
+	return str(JavaScriptBridge.eval("(%s) ? 'y' : 'n'" % expr)) == "y"
+
+func _log(kind: String, origin: String, result: String) -> void:
+	var e = {"t_ms": Time.get_ticks_msec(), "ts": int(Time.get_unix_time_from_system() * 1000.0),
+		"kind": kind, "origin": origin, "context": context, "play_open": play_open(), "mode": mode, "result": result}
+	call_log.append(e)
+	print("[SD][ads] ", JSON.stringify(e))
+	logged.emit(e)
+	changed.emit()
+
+## Player-requested rewarded ad. Allowed only from pause panels (play_panel) or results.
+func rewarded(origin: String) -> bool:
+	if not (context == "play_panel" or context == "results"):
+		_log("rewarded", origin, "blocked_context")
+		return false
+	return await _request("rewarded", origin)
+
+## Midgame (interstitial). Never during active play.
+func midgame(origin: String) -> bool:
+	if play_open():
+		_log("midgame", origin, "blocked_play_open")
+		return false
+	return await _request("midgame", origin)
+
+func _request(kind: String, origin: String) -> bool:
+	if busy or not available():
+		_log(kind, origin, "unavailable")
+		return false
+	busy = true
+	ad_started.emit()   # audio muted for the whole ad (CrazyGames requirement)
+	_log(kind, origin, "requested")
+	var ok = false
+	var timed_out = false
+	var t0 = Time.get_ticks_msec()
+	if mode == "sdk":
+		var id = int(JavaScriptBridge.eval("window.PKD_CG.request('%s')" % kind))
+		var st = "pending"
+		while st == "pending" and Time.get_ticks_msec() - t0 < timeout_s * 1000:
+			await get_tree().create_timer(0.1).timeout
+			st = str(JavaScriptBridge.eval("window.PKD_CG.status(%d)" % id))
+		ok = st == "finished"
+		timed_out = st == "pending"
+	elif mock:
+		var r: String = await mock.request(self, mode)
+		ok = r == "finished"
+		timed_out = r == "timeout"
+	var res = "finished" if ok else ("timeout" if timed_out else "error")
+	_log(kind, origin, res)
+	busy = false
+	ad_finished.emit()
+	return ok

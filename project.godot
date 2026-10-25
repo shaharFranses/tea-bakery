@@ -1,0 +1,37 @@
+; PKD Godot 4.3 web starter. 390x844 portrait first (Playbook v1 D0-06).
+config_version=5
+
+[application]
+config/name="Tea & Tarts: Bakery Logic Puzzle"
+config/version="0.0.1"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+boot_splash/show_image=true
+boot_splash/image="res://pkd_boot_splash.png"
+boot_splash/fullsize=true
+boot_splash/bg_color=Color(0.117647, 0.105882, 0.227451, 1)
+config/icon="res://brand/icon.svg"
+
+[autoload]
+Dbg="*res://autoload/dbg.gd"
+PkdView="*res://autoload/pkd_view.gd"
+Ads="*res://autoload/ads.gd"
+Store="*res://autoload/store.gd"
+Sfx="*res://autoload/sfx.gd"
+
+[display]
+window/size/viewport_width=390
+window/size/viewport_height=844
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[input_devices]
+pointing/emulate_touch_from_mouse=false
+pointing/emulate_mouse_from_touch=true
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=false
+environment/defaults/default_clear_color=Color(0.117647, 0.105882, 0.227451, 1)

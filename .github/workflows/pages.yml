@@ -1,0 +1,35 @@
+# Deploys the committed, QA-gated web/ folder to GitHub Pages. It does NOT re-export:
+# a CI re-export changes the pck hash, so QA's PASS would no longer apply (ff-retro/build.md, SD build retro).
+# Adapted from flick-freight .github/workflows/pages.yml. Repo setting needed once: Pages source = "GitHub Actions".
+name: Deploy frozen web build to GitHub Pages
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check frozen build
+        run: |
+          test -s web/index.html && test -s web/index.wasm && test -s web/index.pck
+          touch web/.nojekyll
+          cd web && sha256sum -c SHA256SUMS
+          echo "deploying pck $(sha256sum index.pck | cut -c1-16)"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4

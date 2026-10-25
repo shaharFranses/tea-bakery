@@ -1,0 +1,7 @@
+# Regexes for console warnings/errors that do not count against console-zero. Keep this short; justify each line.
+# Chrome headless software GL notice (box only, not a game error):
+GPU stall due to ReadPixels
+Automatic fallback to software WebGL has been deprecated
+# Chrome autoplay policy: Godot creates its AudioContext at boot; PKD_AUDIO (html/head_include.html) resumes it on the
+# first gesture. Expected on every browser without a user gesture; real audio unlock is checked on Shahar's phone (D0-25).
+The AudioContext was not allowed to start

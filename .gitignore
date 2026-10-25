@@ -1,0 +1,35 @@
+# Godot 4
+.godot/
+*.translation
+export.cfg
+export_credentials.cfg
+.import/
+mono_crash.*.json
+
+# Web export output (build artifacts, not source) - never commit
+export/
+build/
+*.wasm
+*.pck
+*.zip
+*.tpz
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+*.log
+
+# Deploy tool state
+.vercel/
+.netlify/
+
+# PKD starter: web/ holds the frozen gated build and IS committed; the slim engine template is committed.
+!web/*.wasm
+!web/*.pck
+!engine/pkd_web_release_slim.zip
+dist/
+qa/results/ci-*/
