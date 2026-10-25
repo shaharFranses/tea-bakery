@@ -11,11 +11,12 @@ window.PKD_CG = (function () {
       window.CrazyGames.SDK.init().then(function () {
         env = window.CrazyGames.SDK.environment; ok = true; settled = true;
         /* TT-AC-32: honour the portal's muteAudio setting, now and on every settings change. It is one more
-           independent mute reason in PKD_AUDIO (effective mute = sdk OR hidden OR blur OR ad); never a toggle. */
+           independent mute reason "portal" in PKD_AUDIO (effective mute = portal OR hidden OR blur OR ad); never a toggle.
+           Poki / GameDistribution adapters call PKD_AUDIO.setPortalMute() the same way. */
         try {
-          var sdkMute = function (s) { if (window.PKD_AUDIO) window.PKD_AUDIO.setSdkMute(!!(s && s.muteAudio)); };
-          sdkMute(window.CrazyGames.SDK.game.settings);
-          window.CrazyGames.SDK.game.addSettingsChangeListener(sdkMute);
+          var portalMute = function (s) { if (window.PKD_AUDIO) window.PKD_AUDIO.setPortalMute(!!(s && s.muteAudio)); };
+          portalMute(window.CrazyGames.SDK.game.settings);
+          window.CrazyGames.SDK.game.addSettingsChangeListener(portalMute);
         } catch (e) {}
         try { window.CrazyGames.SDK.game.loadingStart(); } catch (e) {}
         if (stopPending) { try { window.CrazyGames.SDK.game.loadingStop(); } catch (e) {} }
@@ -44,6 +45,7 @@ window.PKD_CG = (function () {
       return id;
     },
     status: function (id) { return st[id] || 'none'; },
+    muted: function () { return !!(window.PKD_AUDIO && window.PKD_AUDIO.state().portalMute); },
     gameplay: function (on) { try { if (cg()) { on ? cg().game.gameplayStart() : cg().game.gameplayStop(); } } catch (e) {} },
     save: function (k, v) {
       try { localStorage.setItem(k, v); } catch (e) {}
@@ -113,9 +115,9 @@ document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, t
   /* Track every Web Audio context Godot creates, and gate it: running only when
      no ad is playing AND the tab is visible AND the window has focus. Ad state is authoritative. */
   var ctxs = window.__pkdAudioCtxs = [];
-  var st = { ad: false, focused: true, sdkMute: false };
+  var st = { ad: false, focused: true, portalMute: false };
   /* Every gate is an independent reason; audio runs only when none is active (none can override another). */
-  function shouldRun() { return !st.ad && !st.sdkMute && !document.hidden && st.focused; }
+  function shouldRun() { return !st.ad && !st.portalMute && !document.hidden && st.focused; }
   function apply() {
     var run = shouldRun();
     ctxs.forEach(function (c) {
@@ -139,8 +141,8 @@ document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, t
   });
   window.PKD_AUDIO = {
     setAd: function (on) { st.ad = !!on; apply(); },
-    setSdkMute: function (on) { st.sdkMute = !!on; apply(); },
-    state: function () { return { ad: st.ad, sdkMute: st.sdkMute, hidden: document.hidden, focused: st.focused, run: shouldRun(), contexts: ctxs.map(function (c) { return c.state; }) }; },
+    setPortalMute: function (on) { st.portalMute = !!on; apply(); },
+    state: function () { return { ad: st.ad, portalMute: st.portalMute, hidden: document.hidden, focused: st.focused, run: shouldRun(), contexts: ctxs.map(function (c) { return c.state; }) }; },
     apply: apply
   };
   document.addEventListener('visibilitychange', apply, true);

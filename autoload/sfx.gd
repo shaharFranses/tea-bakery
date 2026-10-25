@@ -29,6 +29,8 @@ func set_reason(reason: String, active: bool) -> void:
 	AudioServer.set_bus_mute(0, state.set_reason(reason, active))
 
 func set_user_muted(on: bool) -> void: set_reason("user", on)
+## Portal SDK mute (starter hook 89d3081 name): reason "portal".
+func set_portal_muted(on: bool) -> void: set_reason("portal", on)
 func is_muted() -> bool: return AudioServer.is_bus_mute(0)
 
 func play(stream: AudioStream) -> void:
@@ -49,9 +51,10 @@ func _process(delta: float) -> void:
 	_poll = 0.0
 	set_reason("hidden", str(JavaScriptBridge.eval("document.hidden ? 'y' : 'n'")) == "y")
 	set_reason("blur", str(JavaScriptBridge.eval("window.PKD_AUDIO ? (window.PKD_AUDIO.state().focused ? 'y' : 'n') : 'u'")) == "n")
-	# CrazyGames muteAudio (TT-AC-32): set in PKD_AUDIO by PKD_CG's settings listener; its own reason, so showing the
-	# tab never unmutes while the portal says muted, and a portal unmute never unmutes a hidden tab.
-	set_reason("sdk", str(JavaScriptBridge.eval("window.PKD_AUDIO && window.PKD_AUDIO.state().sdkMute ? 'y' : 'n'")) == "y")
+	# Portal mute (CrazyGames muteAudio, TT-AC-32; Poki/GD later): PKD_CG's settings listener sets it in PKD_AUDIO.
+	# Its own reason "portal", so showing the tab never unmutes while the portal says muted, and a portal unmute
+	# never unmutes a hidden tab. Without the SDK (localhost, Pages, ?qa=1 without cgmute) it stays false.
+	set_portal_muted(str(JavaScriptBridge.eval("window.PKD_CG && window.PKD_CG.muted() ? 'y' : 'n'")) == "y")
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED: set_reason("hidden", true)
