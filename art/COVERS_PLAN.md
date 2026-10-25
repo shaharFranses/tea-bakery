@@ -1,6 +1,6 @@
 # tea-bakery: covers, thumbnails and previews plan (TT Art)
 2026-10-25, Asia/Jerusalem. Specs come from `portal/PORTAL_ASSET_SPECS.md` (TT Portal Ops, §1–§6). Its source tags (CG-COV, FF-PB, POKI-THUMB, GD-DES and so on) are reused here. Style: `docs/art/STYLE_GUIDE.md` (B2, locked).
-**Hard rules:** no text except the game title. Until the title is chosen every asset is `notext`; the dashed boxes in the concepts only mark where the title will go. No logos: no PKD, no store or app icons. No borders. No sprinkles, no rectangular frosted pastry, no "pop" anything. No faces. No coffee, sea or harbour. Avoid colours near #83FFE7. **Covers must match the gated build:** every exported asset is stamped with the build commit.
+**Hard rules:** no text except the game title. Until the title is chosen every asset is `notext`; the dashed boxes in the concepts only mark where the title will go. No logos: no PKD, no store or app icons. No borders. No sprinkles, no rectangular frosted pastry, no "pop" anything. **No Tunnock's look-alikes:** no red/silver foil-wrapped dome teacakes, and no foil wrapping on any cake (Growth, 2026-10-25). No faces. No coffee, sea or harbour. Avoid colours near #83FFE7. **Covers must match the gated build:** every exported asset is stamped with the build commit.
 
 ## 1. Deliverables (one master set → all portals, per spec §5)
 | Portal | Asset | Size | Format | Text | Source |
@@ -31,17 +31,35 @@ A board in progress (5×5) on a gingham tea table, three fanned recipe cards (le
 - **Risk:** busier. The square and 200×120 versions need a re-stack (board + one card), because the plain centre crop cuts the cards.
 - The cards' name ribbons stay blank on covers ("title only" rule).
 
-### Test design (for Growth to own)
-- **Metric:** CG cover CTR (impressions → clicks) as primary; secondary is click → `gameplayStart` and the share playing longer than 2 min, from our analytics hooks.
-- ⚠️ **CrazyGames publishes no cover A/B tool,** and asks that covers be updated "occasionally, not too often" (CG-COV). Proposal: run A for the first 7 days after Basic Launch, then swap to B for 7 days, with the same preview videos. Read CTR from the CG developer dashboard. This is sequential, so it is confounded by launch-week traffic; Growth decides whether that's acceptable or whether to ask CG for a split.
-- **Poki** runs its own fit test on the static thumbnail. Submit the winner, or A, which is safer for text-free small tiles.
-- The loser's assets stay archived. When the title lands, only the winner gets a `title` variant.
+### Launch cover and challenger (Growth, 2026-10-25)
+**Launch with A "Golden tray"** (Growth's lean). **B "Recipe book table" is the challenger.** All CG covers and previews at launch are A only.
+
+### Test design (Growth's input, 2026-10-25)
+- **Launch with one cover (A).** Wait about the first 7 days of CG Basic Launch for traffic to settle before testing.
+- **Then alternate A / B / A / B in 3–4 day blocks, on matching weekdays** (each block covers the same weekday mix, e.g. Mon–Thu vs Mon–Thu). **Change nothing else in the build or listing during the test:** no build updates, description, tags, title or preview changes. Swap only the 3 covers. The previews stay the same, opening on the static cover; B's previews would need a re-cut of the opening frame, so for the test both use A's previews unless Growth says otherwise. ⚠️ A preview that opens on cover A while the B cover shows is a mismatch; Growth/Portal Ops to decide (option: re-cut B's opening 0.5 s).
+- **Deciding metric: engaged plays per impression** = cover CTR × the share of clickers who play past ~1 min (from `gameplayStart` + the analytics session timer). **Guardrail:** average playtime must not drop.
+- **Approvals:** asking CrazyGames for a split test, or **any listing change** (including each cover swap), needs **Shahar's OK and goes through CoS**. TT Art prepares the files only and never uploads.
+- **Poki** runs its own thumbnail A/B tests during soft release. Hand Poki both A and B (text-free 1080²) when soft release starts.
+
+### Thumbnail-size sanity check: `art/covers/grid_test.png`
+A mock CrazyGames browse grid: 6×3 tiles at 230×130 on a dark background. A sits at row 1 / col 4 and B at row 3 / col 2, among 16 placeholder covers I drew in plain styles (sudoku, blocks, cupcakes, pancakes and so on; no real covers). The grid is shown at actual size and as a "glance" version (¼ scale + blur). Script: `art/tools/grid_test.py`.
+**Verdict: A reads faster than B, but both are weaker than the bold placeholders.**
+- **A** is one large pastel patchwork square with dots, which reads as "puzzle board". It is the only clear silhouette of either concept at glance size.
+- **B** splits attention between the board, three cards and a kettle. At 230×130 the cards turn into pale rectangles, and at glance size B is a beige blur.
+- **Both concepts** lose to the saturated placeholders: a pale rosewater/cream background on a dark grid, a hero only about 35–40% of the tile height, and an empty top band (the title placeholder).
+- **Fixes before the launch masters (Mon 26):**
+  1. Scale A's tray to about 60–65% of the frame height and crop tighter.
+  2. Deepen the background: a raspberry-to-rosewater vignette or a darker wall, so the tray pops against CG's dark grid (stay away from #83FFE7).
+  3. Raise the cake count and size on the tray so the berry dots read.
+  4. Keep the title band compact.
+
+  B gets the same treatment as the challenger (board as hero, one card instead of three). Then re-run the grid test.
 
 ## 3. Week-1 schedule (2026-10-25 → 10-31, Asia/Jerusalem)
 | Day | Work | Owner | Needs |
 |---|---|---|---|
-| Sun 25 | Concepts A/B rendered (done); send to Growth | TT Art | — |
-| Mon 26 | Growth picks the test order. Build 3840×2160 landscape + 1600×2400 portrait masters for **both** concepts (notext) from the gated build commit | TT Art / Growth | gated build sha (TT Godot Build) |
+| Sun 25 | Concepts A/B rendered and grid test done; Growth picked A to launch | TT Art / Growth | — |
+| Mon 26 | Apply the grid-test fixes (bigger hero, deeper background) and re-run the grid. Build 3840×2160 landscape + 1600×2400 portrait masters: **A (launch)** and B (challenger), notext, from the gated build commit | TT Art | gated build sha (TT Godot Build) |
 | Tue 27 | Export all static sizes (CG ×3, Poki 1080², GD ×5) for A and B; check them against spec §4/§6 (no text, no borders, crops, #83FFE7, sharpness) | TT Art → TT Portal Ops review | — |
 | Wed 28 | **60 fps** gameplay capture (no cursor, no audio) from the build with the B2 art integrated: wide 1920×1080 + portrait 1080×1620. Pick 3 Poki screenshots | TT Art + TT Godot Build | a board build with the P0–P2 art integrated |
 | Thu 29 | Cut the CG previews (16–18 s, landscape + portrait, opening on cover A). Draft the Poki 1:1 5 s animated thumbnail (needed only before global release) | TT Art | — |
@@ -51,5 +69,5 @@ A board in progress (5×5) on a gingham tea table, three fanned recipe cards (le
 ## 4. Open questions
 1. Gated build sha with the art integrated: the covers must match it (FF redid its covers on submit day).
 2. Title: the timing of the `title` variants and the lettering (hand-set in DM Serif Display, or custom).
-3. Growth: whether a sequential A/B on CG is acceptable, and whether to ask CG for a split test.
+3. Asking CG for a split test, and every cover swap: Shahar's OK via CoS. Preview opening frames during the B blocks: Growth / Portal Ops.
 4. Unverified (spec §7): CG image size limit and formats beyond PNG, GD JPG, and Poki thumbnail format and size limit.

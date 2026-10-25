@@ -68,7 +68,7 @@ Everything is drawn by us; no base pack.
 | Backdrop portrait + wide | `backdrop/backdrop_portrait.webp`, `backdrop_landscape.webp` | ✓ |
 | Icons: home, settings, undo, hint, 🎬 rewarded, reset, sound, music, close, lock, streak teacup (+ back, check, book, play, help, sound/music off) | `ui/icons/icon_*` | ✓ |
 | Tutorial pointer hand | `ui/pointer_hand` | ✓ |
-**Shape rules:** tarts are round, fluted, lattice or slice-shaped. No rectangular frosted pastry, no sprinkles, no "pop" anything (Kellogg POP-TARTS filings). Adult cozy: no faces, mascots or toy shapes. Inland tea room only: **no coffee, sea or harbour** (TT-AC-38), and no Sudoku Dash look.
+**Shape rules:** tarts are round, fluted, lattice or slice-shaped. No rectangular frosted pastry, no sprinkles, no "pop" anything (Kellogg POP-TARTS filings). **No Tunnock's teacake look-alikes:** no red/silver foil-wrapped dome teacakes and no foil wrapping on any cake. This is the same kind of rule as Pop-Tarts (Growth, 2026-10-25). The current assets and both cover concepts were checked: nothing is foil-wrapped, and the only domes are the macaron shell and the scone's cream, both unwrapped and pastel. Adult cozy: no faces, mascots or toy shapes. Inland tea room only: **no coffee, sea or harbour** (TT-AC-38), and no Sudoku Dash look.
 
 ## 5. Per-cell and per-screen states
 - **Cell** (draw order):
