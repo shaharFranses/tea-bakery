@@ -12,6 +12,7 @@ const Gen = preload("res://game/generator.gd")
 const Rules = preload("res://game/rules.gd")
 const BoardView = preload("res://scenes/board_view.gd")
 const Cfg = preload("res://game/tt_config.gd")
+const UiLayout = preload("res://game/ui_layout.gd")
 
 var intro_done := false
 var n := 5
@@ -33,13 +34,20 @@ var backdrop: TextureRect
 var backdrop_fill: ColorRect
 var gameplay_started := false
 const BACKDROP_PATHS := ["res://assets/backdrop/backdrop_landscape.png", "res://assets/backdrop/backdrop_landscape.webp"]
-const COLUMN_MAX_W := 480.0   # portrait play column width on landscape screens
+var layout_mode_name := ""     # "portrait" | "wide" (game/ui_layout.gd)
+var vb: VBoxContainer          # portrait column (inside $Margin)
+var wide_root: Control         # wide: board left (positioned by UiLayout.wide_split), panel right
+var panel: VBoxContainer
+var sizes: HFlowContainer
+var row: HFlowContainer
+var hint_label: Label
 
 func _ready() -> void:
 	Dbg.main = self
 	session_start_ms = int(Time.get_unix_time_from_system() * 1000.0)
 	_build_ui()
-	PkdView.insets_changed.connect(_apply_safe_area)
+	_relayout()
+	PkdView.insets_changed.connect(_on_resized)
 	_apply_safe_area()
 	get_viewport().size_changed.connect(_on_resized)
 	var qs := Dbg.toggle("seed", "")
@@ -78,7 +86,7 @@ func _build_ui() -> void:
 		if ResourceLoader.exists(path):
 			backdrop.texture = load(path); break
 	add_child(backdrop); move_child(backdrop, 2)
-	var vb := VBoxContainer.new()
+	vb = VBoxContainer.new()
 	vb.name = "VBox"
 	vb.add_theme_constant_override("separation", 12)
 	margin.add_child(vb)
@@ -86,15 +94,15 @@ func _build_ui() -> void:
 	label.add_theme_font_size_override("font_size", 28)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(label)
-	var hint := Label.new(); hint.name = "Hint"
+	var hint := Label.new(); hint.name = "Hint"; hint_label = hint
 	hint.text = Cfg.RULES_TEXT
 	hint.add_theme_font_size_override("font_size", 14)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(hint)
-	var sizes := HBoxContainer.new(); sizes.name = "Sizes"
-	sizes.alignment = BoxContainer.ALIGNMENT_CENTER
-	sizes.add_theme_constant_override("separation", 8)
+	sizes = HFlowContainer.new(); sizes.name = "Sizes"
+	sizes.alignment = FlowContainer.ALIGNMENT_CENTER
+	sizes.add_theme_constant_override("h_separation", 8); sizes.add_theme_constant_override("v_separation", 8)
 	vb.add_child(sizes)
 	for k in range(Gen.MIN_N, Gen.MAX_N + 1):
 		var b := Button.new(); b.name = "Size%d" % k; b.text = "%dx%d" % [k, k]
@@ -112,10 +120,11 @@ func _build_ui() -> void:
 	status = Label.new(); status.name = "Status"
 	status.add_theme_font_size_override("font_size", 16)
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(status)
-	var row := HBoxContainer.new(); row.name = "Buttons"
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 10)
+	row = HFlowContainer.new(); row.name = "Buttons"
+	row.alignment = FlowContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("h_separation", 10); row.add_theme_constant_override("v_separation", 10)
 	vb.add_child(row)
 	button = Button.new(); button.name = "Play"; button.text = "New tray"
 	button.custom_minimum_size = Vector2(110, 48); button.add_theme_font_size_override("font_size", 16)
@@ -129,6 +138,14 @@ func _build_ui() -> void:
 	mute.custom_minimum_size = Vector2(110, 48); mute.add_theme_font_size_override("font_size", 16)
 	mute.toggled.connect(func(on): Sfx.set_user_muted(on); mute.text = "Sound: off" if on else "Sound: on")
 	row.add_child(mute)
+	# wide layout containers (empty until _relayout moves the nodes in)
+	wide_root = Control.new(); wide_root.name = "Wide"; wide_root.visible = false
+	wide_root.set_anchors_preset(Control.PRESET_FULL_RECT); wide_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(wide_root)
+	panel = VBoxContainer.new(); panel.name = "Panel"
+	panel.add_theme_constant_override("separation", 10)
+	panel.minimum_size_changed.connect(func(): if layout_mode_name == "wide": _fit_panel.call_deferred())
+	wide_root.add_child(panel)
 
 func new_board(size: int, s: int) -> void:
 	n = clampi(size, Gen.MIN_N, max_size()); seed_value = s
@@ -167,7 +184,60 @@ func _update_size_buttons() -> void:
 		b.visible = b.get_meta("n") <= mx
 		b.button_pressed = b.get_meta("n") == n
 
+## Responsive re-layout (game/ui_layout.gd): logical viewport never smaller than CSS px, portrait column or wide split.
+var _in_relayout := false
+func _page_css() -> Vector2:
+	var w := get_window()
+	var px := Vector2(w.size)
+	var dpr := 1.0
+	if OS.has_feature("web"):
+		var v = JavaScriptBridge.eval("window.devicePixelRatio || 1")
+		dpr = float(v) if v != null else 1.0
+	return px / maxf(dpr, 0.01)
+
+func _relayout() -> void:
+	if _in_relayout: return
+	_in_relayout = true
+	var css := _page_css()
+	var ls := UiLayout.logical_size(css)
+	var w := get_window()
+	if Vector2i(ls) != w.content_scale_size: w.content_scale_size = Vector2i(ls)
+	var m := UiLayout.mode(css)
+	if m != layout_mode_name:
+		layout_mode_name = m
+		var movers := [label, hint_label, sizes, board, status, row]
+		for c in movers: c.get_parent().remove_child(c)
+		if m == "wide":
+			wide_root.add_child(board)
+			for c in [label, hint_label, sizes, status, row]: panel.add_child(c)
+			board.size_flags_vertical = Control.SIZE_FILL
+		else:
+			for c in movers: vb.add_child(c)
+			board.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		margin.visible = m == "portrait"; wide_root.visible = m == "wide"
+		Dbg.hit("layout %s css=%dx%d logical=%dx%d" % [m, css.x, css.y, ls.x, ls.y])
+	if m == "wide":
+		var sp := UiLayout.wide_split(get_viewport_rect().size, PkdView.safe_margins())
+		board.custom_minimum_size = Vector2.ZERO
+		board.position = sp.board.position; board.size = sp.board.size
+		panel_rect = sp.panel
+		for c in [sizes, row, status, hint_label, label]: c.custom_minimum_size.x = sp.panel.size.x
+		_fit_panel()
+		_fit_panel.call_deferred()   # flow containers report their wrapped height only after one layout pass
+	else:
+		board.custom_minimum_size = Vector2(300, 300)
+		for c in [sizes, row, status, hint_label, label]: c.custom_minimum_size.x = 0
+	_in_relayout = false
+
+var panel_rect := Rect2()
+func _fit_panel() -> void:
+	if layout_mode_name != "wide": return
+	panel.size = Vector2(panel_rect.size.x, 0)   # shrink to content, then centre vertically in the panel column
+	panel.size = Vector2(panel_rect.size.x, maxf(panel.get_combined_minimum_size().y, 0))
+	panel.position = Vector2(panel_rect.position.x, panel_rect.position.y + maxf(0.0, (panel_rect.size.y - panel.size.y) / 2.0))
+
 func _on_resized() -> void:
+	_relayout()
 	_apply_safe_area()
 	_update_size_buttons()
 
@@ -238,9 +308,8 @@ func _apply_safe_area() -> void:
 	var m = PkdView.safe_margins()
 	var vs := get_viewport_rect().size
 	var landscape := vs.x > vs.y
-	# landscape: centred portrait column on the backdrop; portrait: full width
-	var side := 16.0
-	if landscape: side = max(16.0, (vs.x - COLUMN_MAX_W) / 2.0)
+	# portrait column: full width, capped at the 480 logical max (tablet portrait scales up via ui_layout)
+	var side := maxf(16.0, (vs.x - UiLayout.PORTRAIT_MAX_W) / 2.0)
 	margin.add_theme_constant_override("margin_top", int(16 + m[0]))
 	margin.add_theme_constant_override("margin_right", int(side + m[1]))
 	margin.add_theme_constant_override("margin_bottom", int(16 + m[2]))

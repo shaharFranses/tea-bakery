@@ -21,14 +21,18 @@ static func qa_date(params: Dictionary) -> String:
 static func _cell_kind(v: int) -> String:
 	return ["empty", "x_player", "cake"][v] if v >= 0 and v < 3 else "?"
 
+## CSS px per logical unit (final canvas transform / devicePixelRatio).
+static func _css(main: Control) -> float:
+	var scale := main.get_viewport().get_final_transform().get_scale().x
+	if OS.has_feature("web"):
+		var dpr = JavaScriptBridge.eval("window.devicePixelRatio || 1")
+		return scale / float(dpr if dpr != null else 1.0)
+	return scale
+
 static func _ui(main: Control) -> Array:
 	var out := []
 	var stack: Array = [main]
-	var scale := main.get_viewport().get_final_transform().get_scale().x
-	var css := 1.0
-	if OS.has_feature("web"):
-		var dpr = JavaScriptBridge.eval("window.devicePixelRatio || 1")
-		css = scale / float(dpr if dpr != null else 1.0)
+	var css := _css(main)
 	while not stack.is_empty():
 		var n: Node = stack.pop_back()
 		for c in n.get_children(): stack.append(c)
@@ -53,8 +57,9 @@ static func state(main) -> Dictionary:
 		"cakes": main.cakes().map(func(p): return [p.x, p.y]),
 		"marks": range(main.n * main.n).filter(func(i): return b.cells[i] == 1).map(func(i): return [i / main.n, i % main.n]),
 		"conflicts": b.conflict_cells.keys().map(func(p): return [p.x, p.y]), "solved": main.won, "won": main.won, "moves": main.moves,
-		"undo_len": 0, "undo_hash": "", "board_rect": [gp.x + br.position.x, gp.y + br.position.y, br.size.x, br.size.y],
-		"cell_css": b.cell_size(), "ui": _ui(main), "hint": null, "timer_visible": false,
+		"undo_len": 0, "undo_hash": "", "board_rect": [(gp.x + br.position.x) * _css(main), (gp.y + br.position.y) * _css(main), br.size.x * _css(main), br.size.y * _css(main)],
+		"cell_css": b.cell_size() * _css(main), "css_per_unit": _css(main), "layout": main.layout_mode_name,
+		"viewport_logical": [main.get_viewport_rect().size.x, main.get_viewport_rect().size.y], "ui": _ui(main), "hint": null, "timer_visible": false,
 		"active_s": (Dbg.now_ms() - main.session_start_ms) / 1000.0, "session_s": (Dbg.now_ms() - main.session_start_ms) / 1000.0,
 		"date": qa_date(params), "streak": null, "best_streak": null, "total_bakes": null, "unlocked": null,
 		"save_key": Store.KEY, "analytics": [], "ads_log": Ads.call_log, "ads_mode": Ads.mode, "sdk_log": Ads.sdk_log,
