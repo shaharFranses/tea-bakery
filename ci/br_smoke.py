@@ -8,7 +8,7 @@ BR-2 (debug ?qa=1): PKD_QA.set_date() runtime date via the day-change path; V9 (
   -> counts for 11-03, 11-04 still open); V8 PKD_QA.retry_daily() rejected, streak/total unchanged.
 BR-3 (debug ?qa=1): PKD_QA.set_session_s(N); every decision in dump().ads_decisions[] {t,session_s,origin,allowed,reason};
   edges 299/300 s (SPEC v1.0 floor) and 179/180 s gap; no decision without a chapter-end slot (nothing on a timer)."""
-import json, os, re, sys
+import json, math, os, re, sys
 from playwright.sync_api import sync_playwright
 dbg, rel, out = sys.argv[1].rstrip("/"), sys.argv[2].rstrip("/"), sys.argv[3]; os.makedirs(out, exist_ok=True)
 PERF_RE = re.compile(r"^pkd:perf pkd:(transition_start|transition_end|board_interactive) \d+\.\d$")
@@ -59,13 +59,16 @@ with sync_playwright() as p:
     res["br3_no_decision_without_slot"] = dump(pg)["ads_decisions"] == []
     ev("window.PKD_QA.set_session_s(299)"); ev("window.PKD_QA.show('chapter_end:1')")   # floor: denied session_s<300
     ev("window.PKD_QA.set_session_s(300)"); ev("window.PKD_QA.show('chapter_end:1')")   # allowed
-    ev("window.PKD_QA.set_session_s(479)"); ev("window.PKD_QA.show('chapter_end:2')")   # 179 s: gap<180s
-    ev("window.PKD_QA.set_session_s(480)"); ev("window.PKD_QA.show('chapter_end:2')")   # 180 s: ok
+    # gap edges anchored on the RECORDED allowed decision (wall clock keeps running between set_session_s and the slot;
+    # under CI load that slip reached ~0.4 s and made a fixed 480 land at 179.9 s after the shown midgame)
+    pg.wait_for_timeout(200); s1 = dump(pg)["ads_decisions"][-1]["session_s"]; notes["gap_anchor_s"] = s1
+    ev(f"window.PKD_QA.set_session_s({math.floor(s1) + 179})"); ev("window.PKD_QA.show('chapter_end:2')")   # <=179 s: gap<180s
+    ev(f"window.PKD_QA.set_session_s({math.ceil(s1) + 180})"); ev("window.PKD_QA.show('chapter_end:2')")    # >=180 s: ok
     pg.wait_for_timeout(300); d = dump(pg)["ads_decisions"]; notes["ads_decisions"] = d
     res["br3_entry_shape"] = bool(d) and all(sorted(e.keys()) == ["allowed", "origin", "reason", "session_s", "t"] for e in d)
     res["br3_299_denied_300_allowed"] = len(d) >= 2 and d[0]["reason"] == "session_s<300" and not d[0]["allowed"] and d[1]["reason"] == "ok" and d[1]["allowed"]
     res["br3_179_gap_180_ok"] = len(d) == 4 and d[2]["reason"] == "gap<180s" and d[3]["reason"] == "ok"
-    res["br3_set_session_s_runtime"] = abs(dump(pg)["game"]["session_s"] - 480) < 5
+    res["br3_set_session_s_runtime"] = abs(dump(pg)["game"]["session_s"] - (math.ceil(s1) + 180)) < 5
     # ---- BR-2: V9 + V8
     ev("window.PKD_QA.set_date('2026-11-02')"); ev("window.PKD_QA.show('daily:2026-11-02')"); ev("window.PKD_QA.show('solve')")
     ev("window.PKD_QA.set_date('2026-11-03T23:58')"); ev("window.PKD_QA.show('daily:2026-11-03')")
@@ -78,6 +81,8 @@ with sync_playwright() as p:
     res["br2_day_change_path"] = any("day change" in h for h in dump(pg)["hitlog"])
     dd = dump(pg); notes["net_calls"] = dd.get("net_calls")
     res["ac53_runtime_zero_game_network_calls"] = dd.get("net_calls_from_game") == 0 and isinstance(dd.get("net_calls"), list)
+    ev("fetch('index.html').catch(()=>0)"); pg.wait_for_timeout(200)   # positive control: the debug counter does see a game-origin fetch
+    res["ac53_runtime_counter_selftest"] = dump(pg).get("net_calls_from_game") == 1
     res["ac53_analytics_sink_noop_ring_filled"] = dd["game"]["analytics_sink"] == "noop" and any(e["event"] == "board_start" for e in dd["game"]["analytics"])
     ctx.close(); br.close()
 json.dump({"checks": res, "notes": notes}, open(f"{out}/br_smoke.json", "w"), indent=1)
