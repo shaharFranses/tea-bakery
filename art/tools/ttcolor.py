@@ -4,13 +4,13 @@ import numpy as np
 UI = [  # name, hex, use
  ("rosewater_bg",  "#F6E3DE", "App background / wallpaper base"),
  ("clotted_cream", "#FFF8EC", "Panels, recipe card, empty-cell lift"),
- ("earl_grey_ink", "#43283A", "Text, icons, region borders, X-marks (plum-brown, never navy/black)"),
+ ("earl_grey_ink", "#43283A", "Text, icons, mold + cake outlines (plum-brown, never navy/black)"),
  ("raspberry_jam", "#B0365A", "Primary buttons (Play, Hint), cake frosting"),
  ("sage_leaf",     "#55724E", "Secondary buttons, toggles, success ticks"),
  ("pewter_tray",   "#A8A09F", "Serving-tray rim (silver plate, not wood)"),
- ("toasted_crust", "#C9803A", "Stars, streak flame, 'baked' solved glow"),
+ ("toasted_crust", "#C9803A", "Solved glow / golden tray, progress dots, streak accents"),
  ("cherry_alert",  "#A61E2E", "Conflict ring + hatch (always with ! badge, never colour-only)"),
- ("honey_chip",    "#EDBB80", "Star/coin chip fill with ink text (7.5:1); crust is too dark for cream text"),
+ ("honey_chip",    "#EDBB80", "Info chip fill (day / streak / board n of 5) with ink text (7.5:1)"),
 ]
 # 9 dough-patch regions (9x9 boards need 9). name, hex, pattern
 REGIONS = [
