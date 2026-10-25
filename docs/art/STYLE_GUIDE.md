@@ -10,3 +10,6 @@ Structure lifted from the sudoko_dash style guide (SD Art retro: reuse templates
 6. **Cover / store art**: concept per the Player Profile §5; code-drawn or hand-set lettering (FF/SD Art retros)
 7. **Size budget**: art share of the ≤20 MB first download; WebP lossy for large backgrounds
 8. **Brand**: PKD intro + `pkd_boot_splash.png` only; never the Godot default icon/splash; the PKD intro is never in covers/previews
+
+## Portrait layout notes (TT Art, 2026-10-25; ruling 10:19)
+Rules and body text: **16 px Lexend minimum (TT-AC-07), up to 3 lines on phones**. The coach/rules bubble grows from 72 to 88 px for 3 lines. Room comes from the vertical gaps (8/8/12 → 4/4/8 on 640 px tall phones), **never** from the font size, the board (≥352 px; 358 px at 390) or the 44 px tap targets. The wide layout is unchanged. Full numbers: `art/HANDOFF_GODOT.md` (P2, "Portrait layout notes"). This guide is reconciled in the art docs drop.

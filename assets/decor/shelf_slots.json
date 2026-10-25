@@ -1,0 +1,40 @@
+{
+ "shelf_size": [
+  360,
+  160
+ ],
+ "baseline_y": 128,
+ "anchor": "decor sprite bottom-centre; decor canvas baseline is at 0.94 of its height",
+ "slots": {
+  "1": {
+   "x": 34,
+   "size": 56
+  },
+  "2": {
+   "x": 92,
+   "size": 72
+  },
+  "4": {
+   "x": 152,
+   "size": 60
+  },
+  "5": {
+   "x": 210,
+   "size": 68
+  },
+  "7": {
+   "x": 266,
+   "size": 64
+  },
+  "8": {
+   "x": 324,
+   "size": 58
+  },
+  "3": {
+   "overlay": "shelf_gingham_drape"
+  },
+  "6": {
+   "overlay": "shelf_bunting_garland"
+  }
+ }
+}
