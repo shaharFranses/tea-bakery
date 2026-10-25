@@ -44,8 +44,7 @@ audit() { $PY qa/release_audit.py build/web-release "$R/release_audit.txt"; }
 serve() { tools/serve_unit.sh start build/web-debug "$PORT" && tools/serve_unit.sh start build/web-release "$((PORT+1))"; }
 smoke() { $PY ci/browser_smoke.py "http://127.0.0.1:$PORT" "$R" debug; a=$?; $PY ci/browser_smoke.py "http://127.0.0.1:$((PORT+1))" "$R" release; b=$?; [ $a = 0 ] && [ $b = 0 ]; }
 game_smoke() { $PY ci/game_smoke.py "http://127.0.0.1:$PORT" "$R"; }
-# same pattern as QA's /workspace/tea-and-tarts-qa/tt_title_scan.py (tea…(&|&amp;|and)…tarts, case-insensitive) + standalone "tarts"
-no_old_title() { ! grep -rlaiP 'tea[\s_\-]*(&amp;|&|and)[\s_\-]*tarts|\btarts\b' build/web-debug build/web-release && echo "no dropped-title strings in build output"; }
+no_old_title() { python3 qa/title_scan_ci.py "$R" build/web-debug build/web-release; }   # QA NAME-01 scanner (qa/tt_title_scan.py)
 release_flags() { $PY ci/release_flags_smoke.py "http://127.0.0.1:$((PORT+1))" "$R"; }
 gate() { G=$(tools/freeze_gate.sh build/web-release "$SLUG" | tail -1) && echo "gated: $G" && echo "$G" > "$R/GATED_DIR" && tools/cg_zip.sh "$G" "$SLUG"; }
 

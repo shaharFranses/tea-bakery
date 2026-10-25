@@ -43,3 +43,17 @@ func test_hints():
 	assert_eq(p.hint_offer(3, "chapter", false), "none", "hidden when ad unavailable/adblocked")
 	p.on_board_start()
 	assert_eq(p.hint_offer(3, "chapter", true), "free", "free hint resets each board")
+
+## The policy itself enforces >= 3 min between interstitials (fake clock); the SDK cap is only a backstop.
+func test_policy_enforces_3min_gap_with_fake_clock():
+	var clock := 0
+	var p = AdPolicy.new(clock, 0)
+	for ch in range(1, 6): p.on_chapter_completed(ch)
+	clock = 6 * MIN
+	assert_eq(p.chapter_end_offer(1, clock, true), "midgame"); p.on_midgame_shown(clock)
+	for dt in [1000, 60 * 1000, 179 * 1000, 179999]:
+		assert_eq(p.chapter_end_offer(2, clock + dt, true), "none", "gap %d ms < 180000" % dt)
+	assert_eq(p.chapter_end_offer(2, clock + 180000, true), "midgame", "exactly 3 min later")
+	p.on_midgame_shown(clock + 180000)
+	assert_eq(p.chapter_end_offer(3, clock + 180000 + 90000, true), "none")
+	assert_eq(p.chapter_end_offer(3, clock + 360000, true), "midgame")
