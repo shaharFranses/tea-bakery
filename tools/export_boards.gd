@@ -12,7 +12,7 @@ const TtRng = preload("res://game/tt_rng.gd")
 const GRADER_PATH = "res://game/grader.gd"
 
 func _entry(n: int, seed_value: int, band: int) -> Dictionary:
-	var p: Dictionary = Gen.generate(n, seed_value)   # band targeting: pending grader (REUSE map item 3)
+	var p: Dictionary = Gen.generate_band(n, band, seed_value) if band > 0 else Gen.generate(n, seed_value)
 	var e := {"n": n, "seed": seed_value, "regions": Array(p.regions), "solution": Array(p.solution),
 		"solution_count": Solver.new().count(n, p.regions, 2)}
 	if band > 0: e["requested_band"] = band

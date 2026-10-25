@@ -1,0 +1,1515 @@
+{
+ "band": 4,
+ "boards": [
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0000",
+   "n": 9,
+   "regions": [
+    "ccccccaaa",
+    "ggcccbaaa",
+    "gccceaadd",
+    "ggggeeddd",
+    "gggffeeed",
+    "gggffffff",
+    "gggffffhh",
+    "ggghhhfhh",
+    "ggihhhhhh"
+   ],
+   "seed": 0,
+   "solution": [
+    7,
+    5,
+    1,
+    8,
+    6,
+    3,
+    0,
+    4,
+    2
+   ],
+   "steps": 15,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0001",
+   "n": 9,
+   "regions": [
+    "bbbbacccc",
+    "bbbbbcccc",
+    "bbbdccccc",
+    "gbbdccccc",
+    "gdddeeccc",
+    "gdddeeffh",
+    "ggddeeefh",
+    "igggeeehh",
+    "iggghhhhh"
+   ],
+   "seed": 1,
+   "solution": [
+    4,
+    2,
+    6,
+    3,
+    5,
+    7,
+    1,
+    8,
+    0
+   ],
+   "steps": 18,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0002",
+   "n": 9,
+   "regions": [
+    "bbcccccac",
+    "bccffcccc",
+    "bccfccccc",
+    "bcffffcdd",
+    "eeeefffgd",
+    "eeefffggg",
+    "eehfffggg",
+    "hehffffgg",
+    "hhhffiigg"
+   ],
+   "seed": 2,
+   "solution": [
+    7,
+    0,
+    4,
+    8,
+    1,
+    3,
+    6,
+    2,
+    5
+   ],
+   "steps": 19,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0003",
+   "n": 9,
+   "regions": [
+    "bbcddddda",
+    "bccdddddd",
+    "bbcccdddd",
+    "fffcddddd",
+    "fffeedddd",
+    "fffggdggd",
+    "ffffgggdd",
+    "fffggghhd",
+    "iifghhhhh"
+   ],
+   "seed": 3,
+   "solution": [
+    8,
+    0,
+    3,
+    6,
+    4,
+    2,
+    5,
+    7,
+    1
+   ],
+   "steps": 24,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0004",
+   "n": 9,
+   "regions": [
+    "bbbbbbdda",
+    "bbbbbdddd",
+    "cbbbeeedd",
+    "cbeeeeddd",
+    "geeeeeeef",
+    "geeeeeeff",
+    "ggggggeff",
+    "gghggiiff",
+    "gggggiiii"
+   ],
+   "seed": 4,
+   "solution": [
+    8,
+    3,
+    0,
+    6,
+    1,
+    7,
+    4,
+    2,
+    5
+   ],
+   "steps": 15,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0005",
+   "n": 9,
+   "regions": [
+    "aaabbbbbb",
+    "eaeeebcbb",
+    "eeeecccdd",
+    "eddddcddd",
+    "eeedddddd",
+    "eeefidiii",
+    "eeiiidiig",
+    "hiiiiiiig",
+    "iiiiiiigg"
+   ],
+   "seed": 5,
+   "solution": [
+    2,
+    7,
+    4,
+    6,
+    1,
+    3,
+    8,
+    0,
+    5
+   ],
+   "steps": 21,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0006",
+   "n": 9,
+   "regions": [
+    "cccccbaab",
+    "cccccbbbb",
+    "cfccceeee",
+    "cfffcdeee",
+    "ccfffeeee",
+    "cffffeeee",
+    "ffffgggee",
+    "hhhhgggge",
+    "ihhggggge"
+   ],
+   "seed": 6,
+   "solution": [
+    6,
+    8,
+    3,
+    5,
+    7,
+    1,
+    4,
+    2,
+    0
+   ],
+   "steps": 15,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0007",
+   "n": 9,
+   "regions": [
+    "aaaaeeeee",
+    "cabbeeeee",
+    "cccceeeee",
+    "cddggeeee",
+    "ddgggefee",
+    "ddggeeffh",
+    "ddggggffh",
+    "gggggiffh",
+    "gggggiiff"
+   ],
+   "seed": 7,
+   "solution": [
+    1,
+    3,
+    0,
+    2,
+    5,
+    7,
+    4,
+    8,
+    6
+   ],
+   "steps": 26,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0008",
+   "n": 9,
+   "regions": [
+    "aabbbbbbb",
+    "abbbbddbb",
+    "cbbbbdddd",
+    "cdddddddd",
+    "ggeeddddd",
+    "gggeddhfh",
+    "ggghhhhhh",
+    "gghhiihhi",
+    "gghhhiiii"
+   ],
+   "seed": 8,
+   "solution": [
+    1,
+    4,
+    0,
+    5,
+    3,
+    7,
+    2,
+    6,
+    8
+   ],
+   "steps": 16,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0009",
+   "n": 9,
+   "regions": [
+    "ddddaaabb",
+    "ddddccbbb",
+    "eedddcbfb",
+    "eedddfbfb",
+    "egdfffbfb",
+    "egdffffff",
+    "eggfffffh",
+    "ggffffffh",
+    "iifffffhh"
+   ],
+   "seed": 9,
+   "solution": [
+    4,
+    7,
+    5,
+    3,
+    0,
+    6,
+    2,
+    8,
+    1
+   ],
+   "steps": 20,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0010",
+   "n": 9,
+   "regions": [
+    "aabbbbeee",
+    "ddbccbcee",
+    "ddbfcccee",
+    "ddffcceee",
+    "fffffeeie",
+    "fffffeeii",
+    "ffffhhgii",
+    "fffihhgii",
+    "fffiiiiii"
+   ],
+   "seed": 10,
+   "solution": [
+    0,
+    2,
+    5,
+    1,
+    8,
+    3,
+    6,
+    4,
+    7
+   ],
+   "steps": 23,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0011",
+   "n": 9,
+   "regions": [
+    "bbbbcccae",
+    "bbbcceeee",
+    "bbbbcccee",
+    "bdbbcceee",
+    "bdbcceeee",
+    "ffccceeee",
+    "ffffheegg",
+    "fhhhhhhgg",
+    "ffhhiihgg"
+   ],
+   "seed": 11,
+   "solution": [
+    7,
+    2,
+    4,
+    1,
+    6,
+    0,
+    8,
+    3,
+    5
+   ],
+   "steps": 20,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0012",
+   "n": 9,
+   "regions": [
+    "ccccccadb",
+    "cccccccdb",
+    "ecccccddd",
+    "eeeecccdd",
+    "eeeegcccd",
+    "fffeggcdd",
+    "fhhhhgcgg",
+    "hhhhggggg",
+    "hhihggggg"
+   ],
+   "seed": 12,
+   "solution": [
+    6,
+    8,
+    4,
+    7,
+    3,
+    1,
+    5,
+    0,
+    2
+   ],
+   "steps": 19,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0013",
+   "n": 9,
+   "regions": [
+    "aaabccccc",
+    "abbbccccc",
+    "abddddccc",
+    "ddddccccc",
+    "dddeecccc",
+    "ddeehffgg",
+    "hdhhhhfig",
+    "hdhhhhhii",
+    "hhhhhhhii"
+   ],
+   "seed": 13,
+   "solution": [
+    0,
+    2,
+    6,
+    1,
+    3,
+    5,
+    8,
+    4,
+    7
+   ],
+   "steps": 25,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0014",
+   "n": 9,
+   "regions": [
+    "bbbaaaaaa",
+    "bdddaaaea",
+    "ddddcgeea",
+    "ddfdggeaa",
+    "dfffggeaa",
+    "dffggggga",
+    "ffffggggg",
+    "ffigggggh",
+    "ffiiigggg"
+   ],
+   "seed": 14,
+   "solution": [
+    7,
+    0,
+    4,
+    1,
+    6,
+    2,
+    5,
+    8,
+    3
+   ],
+   "steps": 17,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0015",
+   "n": 9,
+   "regions": [
+    "bbbbaaacc",
+    "bbdddaccc",
+    "bgdddaaec",
+    "gggddeeee",
+    "ggggdefee",
+    "gggggffee",
+    "gggggfeee",
+    "ggggffhhe",
+    "iggggghhe"
+   ],
+   "seed": 15,
+   "solution": [
+    4,
+    1,
+    8,
+    3,
+    7,
+    5,
+    2,
+    6,
+    0
+   ],
+   "steps": 19,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0016",
+   "n": 9,
+   "regions": [
+    "bbbbbbbda",
+    "ccbbbbddd",
+    "ccbffbddd",
+    "ccffffddd",
+    "cceffdddd",
+    "ceeffdffd",
+    "cggffdfff",
+    "ggghffffi",
+    "ggghfffii"
+   ],
+   "seed": 16,
+   "solution": [
+    8,
+    5,
+    0,
+    6,
+    2,
+    4,
+    1,
+    3,
+    7
+   ],
+   "steps": 16,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0017",
+   "n": 9,
+   "regions": [
+    "cccaaaaad",
+    "bccccaaad",
+    "cccccdddd",
+    "ecccccddg",
+    "eecccddgg",
+    "efffgdddg",
+    "efffggdgg",
+    "effhhgggg",
+    "effhhgggi"
+   ],
+   "seed": 17,
+   "solution": [
+    5,
+    0,
+    2,
+    6,
+    1,
+    3,
+    7,
+    4,
+    8
+   ],
+   "steps": 14,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0018",
+   "n": 9,
+   "regions": [
+    "bbbbeeaac",
+    "bddeeecac",
+    "bbdeeeccc",
+    "dddeeeece",
+    "dddeeeece",
+    "fdfeeeeee",
+    "fffffggee",
+    "fhfhigggg",
+    "hhhhiiggg"
+   ],
+   "seed": 18,
+   "solution": [
+    7,
+    0,
+    8,
+    1,
+    4,
+    2,
+    6,
+    3,
+    5
+   ],
+   "steps": 22,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0019",
+   "n": 9,
+   "regions": [
+    "ffffbbbaa",
+    "fbbbbbbac",
+    "ffedddbac",
+    "feeedddgg",
+    "feehhhdgg",
+    "fehhhhdgg",
+    "eehhhiggg",
+    "eiihhiigg",
+    "eeiiiiiig"
+   ],
+   "seed": 19,
+   "solution": [
+    7,
+    1,
+    8,
+    4,
+    2,
+    0,
+    6,
+    3,
+    5
+   ],
+   "steps": 22,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0020",
+   "n": 9,
+   "regions": [
+    "bbbbaaaaa",
+    "bbbbbbaaa",
+    "cbbbbbaad",
+    "ceebbbbdd",
+    "eeebbbbdd",
+    "eeeegbddf",
+    "hiiggggff",
+    "hhigggggf",
+    "hhiiggggf"
+   ],
+   "seed": 20,
+   "solution": [
+    6,
+    4,
+    0,
+    7,
+    2,
+    8,
+    5,
+    1,
+    3
+   ],
+   "steps": 22,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0021",
+   "n": 9,
+   "regions": [
+    "eeaaabbbb",
+    "eeaacccbb",
+    "eeaccbbbf",
+    "eeeccffdf",
+    "eeeefffff",
+    "geeefffff",
+    "geeehhfff",
+    "gehhhhhhh",
+    "ghhhihhhh"
+   ],
+   "seed": 21,
+   "solution": [
+    2,
+    8,
+    3,
+    7,
+    1,
+    5,
+    0,
+    6,
+    4
+   ],
+   "steps": 22,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0022",
+   "n": 9,
+   "regions": [
+    "accbbbbbd",
+    "ccbbbbbbd",
+    "cceebbbdd",
+    "eeeeffffd",
+    "eeehhfffg",
+    "eehhhfffg",
+    "ehhhfffgg",
+    "ehhhfffgg",
+    "hhhhhhiig"
+   ],
+   "seed": 22,
+   "solution": [
+    0,
+    4,
+    1,
+    8,
+    2,
+    5,
+    7,
+    3,
+    6
+   ],
+   "steps": 12,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0023",
+   "n": 9,
+   "regions": [
+    "eebbbbaaa",
+    "eebdbbbaa",
+    "eedddfaac",
+    "eeddfffgg",
+    "eddffffgg",
+    "eedhffggg",
+    "hehhhfgig",
+    "hhhhffgii",
+    "hhhffiiii"
+   ],
+   "seed": 23,
+   "solution": [
+    7,
+    2,
+    8,
+    3,
+    0,
+    4,
+    6,
+    1,
+    5
+   ],
+   "steps": 19,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0024",
+   "n": 9,
+   "regions": [
+    "aebbbbbbb",
+    "eeeegbbbb",
+    "eeeegdbcc",
+    "eegggdbcf",
+    "heeegddff",
+    "hhhgggdfi",
+    "hhhhggggi",
+    "hhiiiiiii",
+    "hhhiiiiii"
+   ],
+   "seed": 24,
+   "solution": [
+    0,
+    6,
+    8,
+    5,
+    2,
+    7,
+    4,
+    1,
+    3
+   ],
+   "steps": 21,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0025",
+   "n": 9,
+   "regions": [
+    "bbccaaaaa",
+    "bbccaaaea",
+    "bbbccccea",
+    "bfbcceeed",
+    "bfbgcceee",
+    "fffgceeee",
+    "fffggeeee",
+    "hffgggeee",
+    "hffieeeee"
+   ],
+   "seed": 25,
+   "solution": [
+    7,
+    1,
+    5,
+    8,
+    6,
+    2,
+    4,
+    0,
+    3
+   ],
+   "steps": 16,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0026",
+   "n": 9,
+   "regions": [
+    "ddddaaaaa",
+    "bddaaaaac",
+    "bddagaacc",
+    "ddgggaeec",
+    "ddgggeeee",
+    "dgggffeeh",
+    "gggggeeeh",
+    "ggggggeeh",
+    "gggiihhhh"
+   ],
+   "seed": 26,
+   "solution": [
+    5,
+    0,
+    7,
+    1,
+    6,
+    4,
+    2,
+    8,
+    3
+   ],
+   "steps": 20,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0027",
+   "n": 9,
+   "regions": [
+    "cccccbbba",
+    "cccccbcbb",
+    "cccccccbb",
+    "eeccddddd",
+    "eeeccdfff",
+    "eeeccddff",
+    "egehcffff",
+    "ggghhffff",
+    "giihhhhff"
+   ],
+   "seed": 27,
+   "solution": [
+    8,
+    5,
+    3,
+    6,
+    0,
+    7,
+    1,
+    4,
+    2
+   ],
+   "steps": 25,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0028",
+   "n": 9,
+   "regions": [
+    "daaaaaaaa",
+    "dddaaaaab",
+    "dddaacccc",
+    "dddddchcc",
+    "dddeeehcc",
+    "fdgggehhh",
+    "iggeeeehg",
+    "iggeeeghg",
+    "iiggggggg"
+   ],
+   "seed": 28,
+   "solution": [
+    4,
+    8,
+    6,
+    3,
+    5,
+    0,
+    2,
+    7,
+    1
+   ],
+   "steps": 17,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0029",
+   "n": 9,
+   "regions": [
+    "aaacccccb",
+    "aaaaaccbb",
+    "ccccaccbb",
+    "cccccccbd",
+    "ecffffidd",
+    "egffffidd",
+    "egfffiiii",
+    "ehhhiiiii",
+    "hhiiiiiii"
+   ],
+   "seed": 29,
+   "solution": [
+    2,
+    7,
+    5,
+    8,
+    0,
+    4,
+    1,
+    3,
+    6
+   ],
+   "steps": 18,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0030",
+   "n": 9,
+   "regions": [
+    "bbaaaaccc",
+    "bbeeeedcc",
+    "eeeeeeddc",
+    "eeefffddg",
+    "eehffffgg",
+    "hhhfffffg",
+    "hhffhffgg",
+    "hhfhhfggg",
+    "hhhhhiggg"
+   ],
+   "seed": 30,
+   "solution": [
+    2,
+    0,
+    8,
+    6,
+    1,
+    4,
+    7,
+    3,
+    5
+   ],
+   "steps": 19,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0031",
+   "n": 9,
+   "regions": [
+    "bdaaacccc",
+    "bddaccccc",
+    "dddaecffc",
+    "ddgeecfff",
+    "dggefffii",
+    "dgggfffii",
+    "dgghhhiii",
+    "dghhhhiii",
+    "ggggiiiii"
+   ],
+   "seed": 31,
+   "solution": [
+    4,
+    0,
+    8,
+    1,
+    3,
+    6,
+    2,
+    5,
+    7
+   ],
+   "steps": 16,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0032",
+   "n": 9,
+   "regions": [
+    "dddbbbaac",
+    "dddbbbbec",
+    "dddddebec",
+    "dddddebec",
+    "ffdddeeee",
+    "gffddeeee",
+    "gffhdeeee",
+    "gghheeeee",
+    "gihhheeee"
+   ],
+   "seed": 32,
+   "solution": [
+    7,
+    5,
+    8,
+    4,
+    6,
+    2,
+    0,
+    3,
+    1
+   ],
+   "steps": 22,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0033",
+   "n": 9,
+   "regions": [
+    "abbbbbbbb",
+    "acbbbbbbb",
+    "ccbbbbbbb",
+    "cfffbdbbe",
+    "fffffbbge",
+    "fffhhhhge",
+    "ffffhhigi",
+    "fhhfhiiii",
+    "fhhhhhiii"
+   ],
+   "seed": 33,
+   "solution": [
+    0,
+    3,
+    1,
+    5,
+    8,
+    2,
+    7,
+    4,
+    6
+   ],
+   "steps": 19,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0034",
+   "n": 9,
+   "regions": [
+    "bbbbbaadd",
+    "bbbbccadd",
+    "bbbbcdddd",
+    "bbecccddd",
+    "feeeecddd",
+    "ffeeecddd",
+    "ffeeecddg",
+    "hffeeeigg",
+    "fffeeeigg"
+   ],
+   "seed": 34,
+   "solution": [
+    5,
+    2,
+    4,
+    7,
+    3,
+    1,
+    8,
+    0,
+    6
+   ],
+   "steps": 13,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0035",
+   "n": 9,
+   "regions": [
+    "aaaeebbbb",
+    "aaaaebbbb",
+    "aaaceeebb",
+    "dddcccebb",
+    "ddffeeebb",
+    "fddfeeebb",
+    "ffffgeebb",
+    "ffffghhii",
+    "ffffgggii"
+   ],
+   "seed": 35,
+   "solution": [
+    2,
+    7,
+    3,
+    1,
+    5,
+    0,
+    4,
+    6,
+    8
+   ],
+   "steps": 20,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0036",
+   "n": 9,
+   "regions": [
+    "ccccdddda",
+    "ccccddbbb",
+    "cccdddfff",
+    "cccdggfff",
+    "echggffff",
+    "hhhggffff",
+    "hhgggggff",
+    "hhhgggggg",
+    "hhhgigggg"
+   ],
+   "seed": 36,
+   "solution": [
+    8,
+    6,
+    1,
+    3,
+    0,
+    7,
+    5,
+    2,
+    4
+   ],
+   "steps": 14,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0037",
+   "n": 9,
+   "regions": [
+    "bbbbbbbaa",
+    "cbcbbbddd",
+    "cccebdddd",
+    "eeeebdfdd",
+    "eeeefffhh",
+    "eeeeffhhh",
+    "geeehffhh",
+    "geeehfhhh",
+    "ggghhhhii"
+   ],
+   "seed": 37,
+   "solution": [
+    7,
+    3,
+    1,
+    5,
+    2,
+    4,
+    0,
+    6,
+    8
+   ],
+   "steps": 22,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0038",
+   "n": 9,
+   "regions": [
+    "eeeeaaabb",
+    "eeeaaabbd",
+    "eeeccabbd",
+    "eeeeeeebd",
+    "eeeeeeddd",
+    "geeeeeeff",
+    "ggeehhhff",
+    "geeehhhff",
+    "iehhhhhhh"
+   ],
+   "seed": 38,
+   "solution": [
+    4,
+    6,
+    3,
+    8,
+    2,
+    7,
+    1,
+    5,
+    0
+   ],
+   "steps": 18,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  },
+  {
+   "band": 4,
+   "grade": 4,
+   "id": "9-g4-0039",
+   "n": 9,
+   "regions": [
+    "ddaaaabbb",
+    "dddaccbbb",
+    "ddddcccce",
+    "fddddeeee",
+    "ffdedeeee",
+    "ffeeeeehe",
+    "ffffegghh",
+    "ffffeiggh",
+    "ffffeighh"
+   ],
+   "seed": 39,
+   "solution": [
+    2,
+    7,
+    4,
+    1,
+    3,
+    0,
+    6,
+    8,
+    5
+   ],
+   "steps": 18,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6"
+   ]
+  }
+ ],
+ "format": 1,
+ "gen": "ttgen-0.2",
+ "n": 9
+}
