@@ -8,6 +8,7 @@
 extends RefCounted
 
 const TtRng = preload("res://game/tt_rng.gd")
+const Grader = preload("res://game/grader.gd")
 const Rules = preload("res://game/rules.gd")
 const Solver = preload("res://game/solver.gd")
 
@@ -125,3 +126,34 @@ static func _reshape(n: int, reg: PackedInt32Array, alt: PackedInt32Array, plant
 		reg[i] = targets[rng.below(targets.size())]
 		return true
 	return false
+
+
+## Bands per size (tt_config VALID_BANDS).
+static func valid_bands(n: int) -> Array:
+	return Cfg.VALID_BANDS.get(n, [])
+
+## Board in grade band `band` (G1..G4) for (n, seed): tries sub-seeds seed*1009+attempt, grades each unique board with the
+## §16.3 ladder (T7 boards never accepted), returns the first in band, else the closest-grade board found (SD
+## sudoku.gd generate() pattern) with band_hit=false. budget_ms > 0 stops early (returns best so far, timed_out=true;
+## {} only if nothing at all was found in time). Deterministic for (n, band, seed) when it completes within the attempts.
+static func generate_band(n: int, band: int, seed_value: int, max_attempts: int = Cfg.BAND_MAX_ATTEMPTS, budget_ms: float = -1.0) -> Dictionary:
+	var t0 := Time.get_ticks_usec()
+	var best := {}; var best_d := 99
+	for a in max_attempts:
+		if budget_ms > 0.0 and (Time.get_ticks_usec() - t0) / 1000.0 > budget_ms:
+			if not best.is_empty(): best["timed_out"] = true
+			return best
+		var p := generate(n, seed_value * 1009 + a)
+		if p.is_empty(): continue
+		var g := Grader.grade(n, p.regions)
+		if not g.solved: continue                 # needs T7 (guessing): never ship
+		p["grade"] = g.grade; p["techniques"] = g.techniques; p["steps"] = g.steps.size()
+		p["band"] = band; p["seed"] = seed_value; p["attempt"] = a
+		p["ms"] = (Time.get_ticks_usec() - t0) / 1000.0
+		var d := absi(g.grade - band)
+		if d < best_d: best = p; best_d = d
+		if d == 0:
+			p["band_hit"] = true
+			return p
+	if not best.is_empty(): best["band_hit"] = false
+	return best

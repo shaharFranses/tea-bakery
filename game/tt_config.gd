@@ -11,6 +11,12 @@ const MAX_N := 9
 const MAX_N_MOBILE := 8
 const MIN_TAP_PX := 44.0
 const DIFFICULTY_SIZES := {"easy": 5, "medium": 6, "hard": 7, "expert": 8, "master": 9}
+# Grade bands per size (SPEC §3.5 chapter table + daily caps; G1..G4, §16.3). GD tunes (D-06). 9x9 = desktop only.
+const VALID_BANDS := {5: [1, 2], 6: [1, 2, 3], 7: [1, 2, 3], 8: [1, 2, 3, 4], 9: [2, 3, 4]}
+# Runtime generation (SPEC D-21: v1 ships packs; runtime only as a small-board convenience, SD puzzle_source pattern)
+const RUNTIME_MAX_N := 6
+const RUNTIME_BUDGET_MS := 30.0
+const BAND_MAX_ATTEMPTS := 60
 
 # Rules text (§2, ≤3 lines, 12px+)
 const RULES_TEXT := "One cake in every row, column and dough patch.\nCakes can't touch, not even at the corners."
