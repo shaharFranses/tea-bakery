@@ -1,4 +1,4 @@
-## Tea & Tarts puzzle generator: deterministic for (size, seed).
+## tea-bakery puzzle generator: deterministic for (size, seed).
 ##  1. random valid cake placement (one per row/col, no touching), from our own seeded RNG (tt_rng.gd);
 ##  2. grow n dough patches out from the n cakes (random frontier growth, 4-connected);
 ##  3. solver counts solutions (stop at 2). While not unique: take the other solution, move one of its cake
@@ -13,7 +13,19 @@ const Solver = preload("res://game/solver.gd")
 
 const SIZES := {"easy": 5, "medium": 6, "hard": 7, "expert": 8, "master": 9}
 const MIN_N := 5
-const MAX_N := 9
+const MAX_N := 9            # 9x9 is desktop only (SPEC §9 D-04 / SM 10-25): see MAX_N_MOBILE
+const MAX_N_MOBILE := 8     # 358 px board / 8 = 44.75 px cells, keeps the 44 px tap rule at 390x844
+
+## Tutorial / board 1 (SPEC §4 worked example, validated unique by the solver in tests/test_puzzle.gd).
+const TUTORIAL := {"n": 5, "rows": ["AAACC", "BBACC", "DDACC", "DDDCC", "DDEEC"], "solution": [2, 0, 4, 1, 3]}
+
+static func tutorial() -> Dictionary:
+	var n: int = TUTORIAL.n
+	var reg := PackedInt32Array()
+	for row in TUTORIAL.rows:
+		for ch in row: reg.append(ch.unicode_at(0) - 65)
+	return {"n": n, "seed": -1, "regions": reg, "solution": PackedInt32Array(TUTORIAL.solution),
+		"regrows": 0, "reshapes": 0, "nodes": 0, "ms": 0.0, "tutorial": true}
 const MAX_REGROWS := 200
 
 static func difficulty_size(name: String) -> int:

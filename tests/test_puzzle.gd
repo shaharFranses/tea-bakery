@@ -1,4 +1,4 @@
-## Tea & Tarts generator / solver / rules tests (GUT, headless). TT_SEEDS env var overrides seeds per size (default 200).
+## tea-bakery generator / solver / rules tests (GUT, headless). TT_SEEDS env var overrides seeds per size (default 200).
 extends GutTest
 
 const Gen = preload("res://game/generator.gd")
@@ -113,3 +113,11 @@ func test_regions_valid_rejects_disconnected_patch():
 	assert_false(Rules.regions_valid(n, reg), "disconnected patch")
 	reg = PackedInt32Array(); for i in 25: reg.append(0)
 	assert_false(Rules.regions_valid(n, reg), "missing patches")
+
+func test_tutorial_board_unique_and_valid():
+	var t = Gen.tutorial()
+	assert_true(Rules.regions_valid(t.n, t.regions))
+	var sols: Array = Solver.new().solve(t.n, t.regions, 2)
+	assert_eq(sols.size(), 1, "tutorial board has exactly one solution")
+	assert_eq(sols[0], t.solution)
+	assert_true(Rules.is_solution(t.n, t.regions, Rules.cols_to_cells(t.solution)))

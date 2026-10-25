@@ -1,6 +1,9 @@
-## Tea & Tarts main scene (Day-0 skeleton + minimal playable board).
+## tea-bakery main scene (Day-0 skeleton + minimal playable board). Working name only: the title is TBD (SM 10-25).
+## Board 1 = SPEC §4 tutorial board (no menu before it, SPEC §6); "New tray" = seeded generated boards.
+## Mobile boards capped at 8x8 (44 px cells); 9x9 only on desktop where cells stay >= 44 px (SPEC §9 D-04).
+## CrazyGames gameplayStart fires once when board 1 becomes playable (after the intro), via PKD_CG (no-op without the SDK).
 ## PKD intro in overlay mode (pikeydi-logo/godot/INTEGRATION.md §2A); ?intro=0 skips it.
-## QA (debug builds, ?qa=1): &seed=<int|text> &size=5..9 &state=solved|almost|conflict ; PKD_QA.show("solve"|"clear"|"new"|"tap:r,c").
+## QA (debug builds, ?qa=1): &seed=<int|text> (skips the tutorial) &size=5..9 &state=solved|almost|conflict ; PKD_QA.show("solve"|"clear"|"new"|"tap:r,c").
 ## Nothing here pauses the tree (FF boot-hang lesson).
 extends Control
 
@@ -24,16 +27,25 @@ var board: Control
 var button: Button      # "New tray" (starter's 44px button contract)
 var mute: Button
 var size_buttons: Array = []
+var backdrop: TextureRect
+var backdrop_fill: ColorRect
+var gameplay_started := false
+const BACKDROP_PATHS := ["res://assets/backdrop/backdrop_landscape.png", "res://assets/backdrop/backdrop_landscape.webp"]
+const COLUMN_MAX_W := 480.0   # portrait play column width on landscape screens
 
 func _ready() -> void:
 	Dbg.main = self
 	_build_ui()
 	PkdView.insets_changed.connect(_apply_safe_area)
 	_apply_safe_area()
-	n = clampi(Dbg.toggle("size", "5").to_int(), Gen.MIN_N, Gen.MAX_N)
+	get_viewport().size_changed.connect(_on_resized)
 	var qs := Dbg.toggle("seed", "")
-	seed_value = Gen.seed_from_string(qs) if qs != "" else _fresh_seed()
-	new_board(n, seed_value)
+	var qsize := Dbg.toggle("size", "")
+	if qs != "" or qsize != "":
+		n = clampi((qsize if qsize != "" else "5").to_int(), Gen.MIN_N, max_size())
+		new_board(n, Gen.seed_from_string(qs) if qs != "" else _fresh_seed())
+	else:
+		load_tutorial()
 	var st := Dbg.toggle("state", "")
 	if st != "": _qa_state_preset(st)
 	if Dbg.toggle("intro", "1") == "0":
@@ -48,16 +60,30 @@ func _fresh_seed() -> int:
 	return int(Time.get_unix_time_from_system()) & 0x7FFFFFFF
 
 func _build_ui() -> void:
+	# Landscape desktop backdrop hook (ART asset in res://assets/backdrop/, see README.txt there).
+	backdrop_fill = ColorRect.new(); backdrop_fill.name = "BackdropFill"
+	backdrop_fill.color = Color("2a2440"); backdrop_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backdrop_fill.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(backdrop_fill); move_child(backdrop_fill, 1)
+	backdrop = TextureRect.new(); backdrop.name = "Backdrop"
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	for path in BACKDROP_PATHS:
+		if ResourceLoader.exists(path):
+			backdrop.texture = load(path); break
+	add_child(backdrop); move_child(backdrop, 2)
 	var vb := VBoxContainer.new()
 	vb.name = "VBox"
 	vb.add_theme_constant_override("separation", 12)
 	margin.add_child(vb)
-	label = Label.new(); label.name = "Title"; label.text = "Tea & Tarts"
+	label = Label.new(); label.name = "Title"; label.text = "Tea Bakery"   # working title placeholder; final title TBD
 	label.add_theme_font_size_override("font_size", 28)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(label)
 	var hint := Label.new(); hint.name = "Hint"
-	hint.text = "One tart per row, column and dough patch. Tarts never touch, not even diagonally. Tap: X, tart, clear."
+	hint.text = "One cake in every row, column and dough patch.\nCakes can't touch, not even at the corners."
 	hint.add_theme_font_size_override("font_size", 14)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -70,12 +96,14 @@ func _build_ui() -> void:
 		var b := Button.new(); b.name = "Size%d" % k; b.text = "%dx%d" % [k, k]
 		b.custom_minimum_size = Vector2(60, 44); b.toggle_mode = true
 		b.add_theme_font_size_override("font_size", 14)
+		b.set_meta("n", k)
 		b.pressed.connect(func(): new_board(k, _fresh_seed()))
 		sizes.add_child(b); size_buttons.append(b)
 	board = BoardView.new(); board.name = "Board"
 	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	board.custom_minimum_size = Vector2(300, 300)
 	board.cell_tapped.connect(tap_cell)
+	board.resized.connect(_update_size_buttons)
 	vb.add_child(board)
 	status = Label.new(); status.name = "Status"
 	status.add_theme_font_size_override("font_size", 16)
@@ -99,13 +127,41 @@ func _build_ui() -> void:
 	row.add_child(mute)
 
 func new_board(size: int, s: int) -> void:
-	n = clampi(size, Gen.MIN_N, Gen.MAX_N); seed_value = s
-	puzzle = Gen.generate(n, s)
+	n = clampi(size, Gen.MIN_N, max_size()); seed_value = s
+	_set_puzzle(Gen.generate(n, s))
+	Dbg.hit("board n=%d seed=%d (%.0f ms, %d reshapes)" % [n, s, puzzle.ms, puzzle.reshapes])
+
+func load_tutorial() -> void:
+	var t := Gen.tutorial()
+	n = t.n; seed_value = t.seed
+	_set_puzzle(t)
+	Dbg.hit("board 1: tutorial 5x5")
+
+func _set_puzzle(p: Dictionary) -> void:
+	puzzle = p
 	board.setup(n, puzzle.regions)
 	moves = 0; won = false
-	for b in size_buttons: b.button_pressed = b.name == "Size%d" % n
+	_update_size_buttons()
 	_refresh()
-	Dbg.hit("board n=%d seed=%d (%.0f ms, %d reshapes)" % [n, s, puzzle.ms, puzzle.reshapes])
+
+## Largest board for this device: 8 on phones/touch, 9 on desktop only if 9x9 cells stay >= 44 px.
+func max_size() -> int:
+	var mobile := OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile") \
+		or DisplayServer.is_touchscreen_available()
+	if mobile: return Gen.MAX_N_MOBILE
+	var side: float = board.board_rect().size.x if board and board.size.x > 0 else 0.0
+	if side > 0.0 and side / 9.0 < 44.0: return Gen.MAX_N_MOBILE
+	return Gen.MAX_N
+
+func _update_size_buttons() -> void:
+	var mx := max_size()
+	for b in size_buttons:
+		b.visible = b.get_meta("n") <= mx
+		b.button_pressed = b.get_meta("n") == n
+
+func _on_resized() -> void:
+	_apply_safe_area()
+	_update_size_buttons()
 
 func clear_board() -> void:
 	board.cells.fill(BoardView.EMPTY); moves = 0; won = false; _refresh()
@@ -139,9 +195,9 @@ func _refresh() -> void:
 		status.text = "Tray baked! Golden and perfect."
 		if not was_won: Dbg.hit("WIN n=%d seed=%d moves=%d" % [n, seed_value, moves])
 	elif not bad.is_empty():
-		status.text = "Those tarts would stick together."
+		status.text = "Those cakes would stick together in the oven."
 	else:
-		status.text = "%d x %d tray: %d of %d tarts placed" % [n, n, cs.size(), n]
+		status.text = "%d x %d tray: %d of %d cakes placed. Tap: X, cake, clear." % [n, n, cs.size(), n]
 
 func _qa_state_preset(st: String) -> void:
 	var sol: PackedInt32Array = puzzle.solution
@@ -158,14 +214,32 @@ func _on_intro_finished() -> void:
 	intro_done = true
 	Store.loading_stop()      # CrazyGames loadingStop: intro finished AND scene ready
 	Dbg.hit("intro finished")
+	_gameplay_start()
 	print("[PKD] intro finished")
+
+## CrazyGames SDK v3 gameplayStart, once, when board 1 is playable. Guarded: PKD_CG (html/head_include.html)
+## is a no-op without the SDK (localhost, Pages, QA builds), and non-web builds skip it.
+func _gameplay_start() -> void:
+	if gameplay_started: return
+	gameplay_started = true
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.PKD_CG && window.PKD_CG.gameplay && window.PKD_CG.gameplay(true)")
+	Dbg.hit("gameplayStart (board 1)")
 
 func _apply_safe_area() -> void:
 	var m = PkdView.safe_margins()
+	var vs := get_viewport_rect().size
+	var landscape := vs.x > vs.y
+	# landscape: centred portrait column on the backdrop; portrait: full width
+	var side := 16.0
+	if landscape: side = max(16.0, (vs.x - COLUMN_MAX_W) / 2.0)
 	margin.add_theme_constant_override("margin_top", int(16 + m[0]))
-	margin.add_theme_constant_override("margin_right", int(16 + m[1]))
+	margin.add_theme_constant_override("margin_right", int(side + m[1]))
 	margin.add_theme_constant_override("margin_bottom", int(16 + m[2]))
-	margin.add_theme_constant_override("margin_left", int(16 + m[3]))
+	margin.add_theme_constant_override("margin_left", int(side + m[3]))
+	if backdrop:
+		backdrop.visible = landscape and backdrop.texture != null
+		backdrop_fill.visible = landscape
 
 func qa_state() -> Dictionary:
 	var br: Rect2 = board.board_rect()
@@ -173,7 +247,8 @@ func qa_state() -> Dictionary:
 	var marks := []
 	for i in n * n:
 		if board.cells[i] == BoardView.MARK: marks.append([i / n, i % n])
-	return {"intro_done": intro_done, "taps": taps, "n": n, "seed": seed_value, "moves": moves, "won": won,
+	return {"intro_done": intro_done, "taps": taps, "n": n, "max_size": max_size(), "tutorial": puzzle.get("tutorial", false),
+		"gameplay_started": gameplay_started, "backdrop": backdrop.visible, "backdrop_asset": backdrop.texture != null, "seed": seed_value, "moves": moves, "won": won,
 		"cakes": cakes().map(func(p): return [p.x, p.y]), "marks": marks,
 		"conflicts": board.conflict_cells.keys().map(func(p): return [p.x, p.y]),
 		"regions": Array(puzzle.regions), "gen_ms": puzzle.ms, "reshapes": puzzle.reshapes,

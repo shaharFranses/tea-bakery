@@ -1,4 +1,4 @@
-## Tea & Tarts backtracking solver. Row by row with column / patch bitmasks and the no-touch rule
+## tea-bakery backtracking solver. Row by row with column / patch bitmasks and the no-touch rule
 ## (in a row-by-row search, touching can only happen between consecutive rows: |col - prev_col| <= 1).
 ## count() stops at `limit` (use 2 for the uniqueness check). Returns 0 for boards with no solution.
 extends RefCounted

@@ -1,4 +1,4 @@
-## Tea & Tarts board: draws the tray (dough patches, patch borders, X marks, cakes, conflict highlight)
+## tea-bakery board: draws the tray (dough patches, patch borders, X marks, cakes, conflict highlight)
 ## and turns taps into cell cycles: empty -> X mark -> cake -> empty. Code-drawn (no art yet; placeholder palette).
 extends Control
 

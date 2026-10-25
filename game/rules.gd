@@ -1,4 +1,4 @@
-## Tea & Tarts rules (pure, static). Board: n x n, regions = flat PackedInt32Array (row-major, ids 0..n-1).
+## tea-bakery rules (pure, static). Board: n x n, regions = flat PackedInt32Array (row-major, ids 0..n-1).
 ## A solution / placement is a list of Vector2i(row, col) cake cells.
 ## Rules: one cake per row, per column and per dough patch (region); no two cakes touch, diagonals included.
 extends RefCounted

@@ -10,7 +10,7 @@ slim = os.path.join(root, "engine", "pkd_web_release_slim.zip")
 rel_tpl = slim if (os.path.exists(slim) and os.environ.get("PKD_STOCK") != "1") else ""
 dbg_tpl = os.environ.get("PKD_DEBUG_TEMPLATE", "")
 q = lambda s: json.dumps(s)  # Godot cfg strings accept JSON-style escapes
-EXC = "tests/*, tools/*, qa/*, ci/*, addons/gut/*, build/*, web/*, engine/*, metrics/*, docs/*, spec/*, *.md"
+EXC = "tests/*, tools/*, qa/*, ci/*, addons/gut/*, build/*, web/*, engine/*, metrics/*, docs/*, spec/*, *.md, art/*, portal/*"
 def preset(i, name, path, excl, release_tpl, debug_tpl):
     return f'''[preset.{i}]
 

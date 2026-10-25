@@ -1,4 +1,4 @@
-## Tea & Tarts deterministic RNG (xorshift32). Never uses the global randi()/randomize():
+## tea-bakery deterministic RNG (xorshift32). Never uses the global randi()/randomize():
 ## the same seed gives the same sequence on every platform and engine build (pure shifts/xors, masked to 32 bits).
 extends RefCounted
 
