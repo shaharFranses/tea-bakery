@@ -36,9 +36,10 @@ A board in progress (5×5) on a gingham tea table, three fanned recipe cards (le
 
 ### Test design (Growth's input, 2026-10-25)
 - **Launch with one cover (A).** Wait about the first 7 days of CG Basic Launch for traffic to settle before testing.
-- **Then alternate A / B / A / B in 3–4 day blocks, on matching weekdays** (each block covers the same weekday mix, e.g. Mon–Thu vs Mon–Thu). **Change nothing else in the build or listing during the test:** no build updates, description, tags, title or preview changes. Swap only the 3 covers. The previews stay the same, opening on the static cover; B's previews would need a re-cut of the opening frame, so for the test both use A's previews unless Growth says otherwise. ⚠️ A preview that opens on cover A while the B cover shows is a mismatch; Growth/Portal Ops to decide (option: re-cut B's opening 0.5 s).
+- **Then alternate A / B in 3–4 day blocks, matched on weekdays** (Mon–Thu and Fri–Sun blocks; each arm gets the same number of each, see the schedule below). **Change nothing else in the build or listing during the test:** no build updates, description, tags or title. Each switch swaps only the **3 covers + 2 previews** of that arm.
+- **Previews (Growth ruling, 2026-10-25):** each preview set (landscape 1920×1080, portrait 1080×1620) exists in an **A and a B version that differ ONLY in the opening static-cover frame**. The gameplay footage is byte-identical: same capture, same cut, same length; only the first ~0.5 s cover hold and the cover-to-gameplay transition differ. During B blocks, B's covers **and** B's previews go up, so every preview opens on the cover being shown (CG rule).
 - **Deciding metric: engaged plays per impression** = cover CTR × the share of clickers who play past ~1 min (from `gameplayStart` + the analytics session timer). **Guardrail:** average playtime must not drop.
-- **Approvals:** asking CrazyGames for a split test, or **any listing change** (including each cover swap), needs **Shahar's OK and goes through CoS**. TT Art prepares the files only and never uploads.
+- **Approvals:** asking CrazyGames for a split test, or **any listing change**, needs **Shahar's OK and goes through CoS**. **Every block switch is a CG listing change** and goes through Portal Ops. To avoid asking 7 times, Shahar approves the **whole schedule below once, up front**; Portal Ops then executes each switch on its date. Any deviation (a date slip, an extra block, an early stop) goes back to Shahar. TT Art prepares the files only and never uploads.
 - **Poki** runs its own thumbnail A/B tests during soft release. Hand Poki both A and B (text-free 1080²) when soft release starts.
 
 ### Thumbnail-size sanity check: `art/covers/grid_test.png`
@@ -74,6 +75,47 @@ A mock CrazyGames browse grid: 6×3 tiles at 230×130 on a dark background. A si
 
 Then re-run `python3 art/tools/grid_test.py v2`.
 
+### v3 launch cover A3 and re-test (2026-10-25, about 10:45): `art/covers/grid_test_v3.png`
+`concept_A3_960x540.jpg` / `_square_540.jpg`:
+- Tray at **76% of the frame height**, centred, with no side props.
+- Vignette centre darkened to **#E9A9BA**, edges #8E2A4A.
+- Steam on three cakes.
+- A compact dashed title area above the tray, with no text.
+
+The square is a re-stacked 1080² composition, not a crop, with plain-background corners. The grid compares A3, A2 and B2.
+**Verdict: A3 is the best of ours and now level with the single-shape bold placeholders, but still behind the most saturated ones.**
+- At glance size it reads as one framed, multicoloured square in a dark-edged pink tile, about as quickly as the sudoku and donut placeholders.
+- It still has less punch than the bubbles and blocks tiles, which are saturated colour on near-black. Matching that would need off-model saturation, which the cover-must-match-the-build rule rules out.
+- A3 is clearly ahead of A2, and A2 of B2.
+
+**Recommendation:** launch with **A3** as cover A. Rebuild the challenger B on the same recipe (board 76%, one small card, darker centre) before the first B block.
+
+### A/B test schedule: for Shahar's one-time approval (via Portal Ops / CoS)
+**L** = CG Basic Launch go-live (date TBD). The test starts on the **first Monday ≥ L+7** (traffic settled); call it **T**. Example dates assume L = Mon 2026-11-02, so T = Mon 2026-11-09. They shift with the real L.
+| # | Block | Days | Example dates | Arm live | Listing change at block start |
+|---|---|---|---|---|---|
+| 0 | Settle | L → T−1 | Nov 2–8 | **A** (launch) | — (launch upload) |
+| 1 | Mon–Thu | T+0 → T+3 | Nov 9–12 | A | none |
+| 2 | Fri–Sun | T+4 → T+6 | Nov 13–15 | **B** | swap to B: 3 covers + 2 previews |
+| 3 | Mon–Thu | T+7 → T+10 | Nov 16–19 | A | swap to A |
+| 4 | Fri–Sun → Mon–Thu | T+11 → T+17 | Nov 20–26 | **B** | swap to B (one 7-day B run: the counterbalancing flip, so B also gets Mon–Thu) |
+| 5 | Fri–Sun | T+18 → T+20 | Nov 27–29 | A | swap to A |
+| 6 | Mon–Thu | T+21 → T+24 | Nov 30–Dec 3 | **B** | swap to B |
+| 7 | Fri–Sun | T+25 → T+27 | Dec 4–6 | A | swap to A |
+| end | Decision | T+28 | Dec 7 | winner | swap to the winner if it is B (one more listing change, covered by this approval) |
+Totals: each arm gets **2 Mon–Thu + 2 Fri–Sun blocks** (A: blocks 1, 3, 5, 7; B: blocks 2, 4 (both halves), 6). There are **7 listing changes in total** (6 switches + the final winner), all covers and previews only. Nothing else changes: same build sha, description, tags, title, category. Switches happen at 10:00 Asia/Jerusalem on the listed day (Portal Ops).
+**Assets per arm**, all `notext` and stamped with the same build sha:
+- `cg-cover-1920x1080-notext-{A|B}_<sha>.png`
+- `cg-cover-800x1200-notext-{A|B}_<sha>.png`
+- `cg-cover-800x800-notext-{A|B}_<sha>.png`
+- `cg-preview-1920x1080-{A|B}_<sha>.mp4`
+- `cg-preview-1080x1620-{A|B}_<sha>.mp4`
+
+Arm A = concept **A3**. Arm B = the challenger rebuilt on A3's recipe (**B3**: board ~76%, one small card, darker centre), ready before block 2.
+**Stop rules (proposed by TT Art; Growth to confirm the thresholds before the schedule goes to Shahar):**
+- Stop early and revert to A if engaged plays per impression drop by more than 30% on B for a full block, or if average playtime (the guardrail) drops by more than 15%.
+- Otherwise run to the end. Growth reads the results from the CG developer dashboard plus our analytics hooks.
+
 ## 3. Week-1 schedule (2026-10-25 → 10-31, Asia/Jerusalem)
 | Day | Work | Owner | Needs |
 |---|---|---|---|
@@ -81,7 +123,7 @@ Then re-run `python3 art/tools/grid_test.py v2`.
 | Mon 26 | Apply the grid-test fixes (bigger hero, deeper background) and re-run the grid. Build 3840×2160 landscape + 1600×2400 portrait masters: **A (launch)** and B (challenger), notext, from the gated build commit | TT Art | gated build sha (TT Godot Build) |
 | Tue 27 | Export all static sizes (CG ×3, Poki 1080², GD ×5) for A and B; check them against spec §4/§6 (no text, no borders, crops, #83FFE7, sharpness) | TT Art → TT Portal Ops review | — |
 | Wed 28 | **60 fps** gameplay capture (no cursor, no audio) from the build with the B2 art integrated: wide 1920×1080 + portrait 1080×1620. Pick 3 Poki screenshots | TT Art + TT Godot Build | a board build with the P0–P2 art integrated |
-| Thu 29 | Cut the CG previews (16–18 s, landscape + portrait, opening on cover A). Draft the Poki 1:1 5 s animated thumbnail (needed only before global release) | TT Art | — |
+| Thu 29 | Cut the CG previews (16–18 s, landscape + portrait): **A and B versions with identical gameplay, differing only in the opening cover frame**. Draft the Poki 1:1 5 s animated thumbnail (needed only before global release) | TT Art | — |
 | Fri 30 | Portal Ops final check and sha stamping; CG upload set ready (3 covers + 2 previews) | TT Portal Ops | — |
 | Sat 31 | Buffer; title variants if the title is chosen (CG covers and GD 1280s only) | TT Art | title decision |
 
