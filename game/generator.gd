@@ -12,6 +12,7 @@ const Rules = preload("res://game/rules.gd")
 const Solver = preload("res://game/solver.gd")
 
 const Cfg = preload("res://game/tt_config.gd")
+const GEN_VERSION := "ttgen-0.2"
 const SIZES := Cfg.DIFFICULTY_SIZES
 const MIN_N := Cfg.MIN_N
 const MAX_N := Cfg.MAX_N                # 9x9 desktop only (SPEC §9 D-04 / SM 10-25)

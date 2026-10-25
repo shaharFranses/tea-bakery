@@ -17,8 +17,8 @@ func test_rng_deterministic_and_seed_sensitive():
 		sa.append(a.next_u32()); sb.append(b.next_u32()); sc.append(c.next_u32())
 	assert_eq(sa, sb)
 	assert_ne(sa, sc)
-	# golden values: catch accidental RNG changes (would silently change every shared seed / daily board)
-	assert_eq(TtRng.new(1).next_u32(), TtRng.new(1).next_u32())
+
+	# pinned literals: tests/test_vectors.gd + data/test_vectors.json
 
 func test_same_seed_same_puzzle():
 	for n in range(5, 10):
