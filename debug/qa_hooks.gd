@@ -23,6 +23,9 @@ func _ready() -> void:
 	qa_on = params.get("qa", "") == "1"
 	if qa_on: _make_overlay()
 	if OS.has_feature("web"): _bind_js()
+	# ?qa=1&cgmute=1 simulates CrazyGames muteAudio=true without the SDK (TT-AC-32 QA); PKD_QA.cgmute(0|1) changes it live.
+	if OS.has_feature("web") and qa_on and params.has("cgmute"):
+		JavaScriptBridge.eval("window.PKD_AUDIO && window.PKD_AUDIO.setSdkMute(%s)" % ("true" if params["cgmute"] == "1" else "false"))
 	publish.call_deferred()
 
 static func parse_query(q: String) -> Dictionary:
@@ -94,6 +97,7 @@ func _bind_js() -> void:
 		"refresh": func(_a): publish(),
 		"show": func(a): if Dbg.main and Dbg.main.has_method("qa_show"): Dbg.main.qa_show(str(a[0])),
 		"hit": func(a): hitlog(str(a[0])),
+		"cgmute": func(a): JavaScriptBridge.eval("window.PKD_AUDIO && window.PKD_AUDIO.setSdkMute(%s)" % ("true" if str(a[0]) == "1" else "false")),
 	}
 	for k in defs:
 		var f: Callable = defs[k]

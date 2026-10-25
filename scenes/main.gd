@@ -146,8 +146,12 @@ func _set_puzzle(p: Dictionary) -> void:
 
 ## Largest board for this device: 8 on phones/touch, 9 on desktop only if 9x9 cells stay >= 44 px.
 func max_size() -> int:
-	var mobile := OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile") \
-		or DisplayServer.is_touchscreen_available()
+	var mobile := OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile")
+	if OS.has_feature("web") and not mobile:
+		# coarse primary pointer = phone/tablet (incl. touch emulation); fine pointer = desktop mouse/trackpad
+		mobile = str(JavaScriptBridge.eval("matchMedia('(pointer: coarse)').matches ? 'y' : 'n'")) == "y"
+	elif not OS.has_feature("web"):
+		mobile = mobile or DisplayServer.is_touchscreen_available()
 	if mobile: return Gen.MAX_N_MOBILE
 	var side: float = board.board_rect().size.x if board and board.size.x > 0 else 0.0
 	if side > 0.0 and side / 9.0 < 44.0: return Gen.MAX_N_MOBILE
