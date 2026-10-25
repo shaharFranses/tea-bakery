@@ -1,0 +1,68 @@
+{
+ "region_pair_min_dE2000": {
+  "normal": [
+   "strawberry",
+   "rhubarb",
+   12.13
+  ],
+  "deuteranopia": [
+   "butter",
+   "honey",
+   10.29
+  ],
+  "protanopia": [
+   "lavender",
+   "blueberry",
+   10.33
+  ],
+  "tritanopia": [
+   "strawberry",
+   "honey",
+   10.16
+  ]
+ },
+ "region_face_vs_tray_gap_contrast": {
+  "strawberry": 2.02,
+  "butter": 1.17,
+  "pistachio": 1.41,
+  "lavender": 1.62,
+  "honey": 1.82,
+  "blueberry": 2.57,
+  "cocoa": 2.84,
+  "rhubarb": 3.2,
+  "vanilla": 1.19
+ },
+ "mold_stroke_vs_patch_contrast(ink@84%)": {
+  "strawberry": 4.5,
+  "butter": 6.82,
+  "pistachio": 6.02,
+  "lavender": 5.33,
+  "honey": 4.88,
+  "blueberry": 3.73,
+  "cocoa": 3.43,
+  "rhubarb": 3.12,
+  "vanilla": 6.79
+ },
+ "best_of_face_or_rim_vs_gap": {
+  "strawberry": 3.76,
+  "butter": 2.3,
+  "pistachio": 2.71,
+  "lavender": 3.09,
+  "honey": 3.42,
+  "blueberry": 4.63,
+  "cocoa": 5.02,
+  "rhubarb": 5.57,
+  "vanilla": 2.32
+ },
+ "rim_vs_tray_gap_contrast": {
+  "strawberry": 3.76,
+  "butter": 2.3,
+  "pistachio": 2.71,
+  "lavender": 3.09,
+  "honey": 3.42,
+  "blueberry": 4.63,
+  "cocoa": 5.02,
+  "rhubarb": 5.57,
+  "vanilla": 2.32
+ }
+}

@@ -34,3 +34,13 @@ Thumbs.db
 dist/
 qa/results/ci-*/
 __pycache__/
+
+# ART (tea-bakery): proposal images and generated scratch stay local; production art lives in assets/
+art/mocks/
+art/*.png
+art/**/*@2x.png
+art/tools/out/
+art/tools/*.png
+art/tools/.venv/
+art/tools/venv/
+art/**/*.zip
