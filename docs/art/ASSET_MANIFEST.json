@@ -1,0 +1,2268 @@
+{
+ "generated_by": "art/tools/gen_manifest.py",
+ "count": 226,
+ "bytes_total": 3265001,
+ "bytes_if_2x_only": 2370038,
+ "assets": [
+  {
+   "path": "res://assets/board/badge_conflict.png",
+   "px": "128x128",
+   "bytes": 3636,
+   "purpose": "Conflict '!' badge (over cake)",
+   "scene_node": "BoardView cell",
+   "states": "conflict",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/badge_conflict@2x.png",
+   "px": "256x256",
+   "bytes": 7738,
+   "purpose": "Conflict '!' badge (over cake)",
+   "scene_node": "BoardView cell",
+   "states": "conflict",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/badge_solved.png",
+   "px": "128x128",
+   "bytes": 3223,
+   "purpose": "Sage tick (over cake)",
+   "scene_node": "BoardView cell",
+   "states": "solved",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/badge_solved@2x.png",
+   "px": "256x256",
+   "bytes": 7422,
+   "purpose": "Sage tick (over cake)",
+   "scene_node": "BoardView cell",
+   "states": "solved",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/cake_apricot.png",
+   "px": "128x128",
+   "bytes": 23912,
+   "purpose": "B2 cake 'apricot' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/cake_apricot@2x.png",
+   "px": "256x256",
+   "bytes": 58189,
+   "purpose": "B2 cake 'apricot' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/cake_bakewell.png",
+   "px": "128x128",
+   "bytes": 18000,
+   "purpose": "B2 cake 'bakewell' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/cake_bakewell@2x.png",
+   "px": "256x256",
+   "bytes": 42519,
+   "purpose": "B2 cake 'bakewell' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/cake_berry.png",
+   "px": "128x128",
+   "bytes": 22972,
+   "purpose": "v1 cake: berry v2 (D-03)",
+   "scene_node": "BoardView cell, drawn 1.0×cell",
+   "states": "CAKE, given, conflict, solved",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/cake_berry@2x.png",
+   "px": "256x256",
+   "bytes": 54740,
+   "purpose": "v1 cake: berry v2 (D-03)",
+   "scene_node": "BoardView cell, drawn 1.0×cell",
+   "states": "CAKE, given, conflict, solved",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/cake_chocolate.png",
+   "px": "128x128",
+   "bytes": 18804,
+   "purpose": "B2 cake 'chocolate' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/cake_chocolate@2x.png",
+   "px": "256x256",
+   "bytes": 43827,
+   "purpose": "B2 cake 'chocolate' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/cake_custard.png",
+   "px": "128x128",
+   "bytes": 23658,
+   "purpose": "B2 cake 'custard' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/cake_custard@2x.png",
+   "px": "256x256",
+   "bytes": 60467,
+   "purpose": "B2 cake 'custard' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/cake_lemon.png",
+   "px": "128x128",
+   "bytes": 20417,
+   "purpose": "B2 cake 'lemon' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/cake_lemon@2x.png",
+   "px": "256x256",
+   "bytes": 48330,
+   "purpose": "B2 cake 'lemon' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/cake_macaron.png",
+   "px": "128x128",
+   "bytes": 13684,
+   "purpose": "B2 cake 'macaron' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/cake_macaron@2x.png",
+   "px": "256x256",
+   "bytes": 28212,
+   "purpose": "B2 cake 'macaron' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/cake_scone.png",
+   "px": "128x128",
+   "bytes": 12567,
+   "purpose": "B2 cake 'scone' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/cake_scone@2x.png",
+   "px": "256x256",
+   "bytes": 26738,
+   "purpose": "B2 cake 'scone' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/cake_victoria.png",
+   "px": "128x128",
+   "bytes": 10412,
+   "purpose": "B2 cake 'victoria' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/cake_victoria@2x.png",
+   "px": "256x256",
+   "bytes": 20731,
+   "purpose": "B2 cake 'victoria' (not on the v1 board, D-03; reserve)",
+   "scene_node": "— (post-v1 / promo)",
+   "states": "—",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/given_plate.png",
+   "px": "128x128",
+   "bytes": 12918,
+   "purpose": "Plate under a given cake",
+   "scene_node": "BoardView cell",
+   "states": "given",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/given_plate@2x.png",
+   "px": "256x256",
+   "bytes": 27951,
+   "purpose": "Plate under a given cake",
+   "scene_node": "BoardView cell",
+   "states": "given",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/mold.png",
+   "px": "128x128",
+   "bytes": 10959,
+   "purpose": "Empty cake mold (note mark)",
+   "scene_node": "BoardView cell, drawn 0.70×cell",
+   "states": "MOLD (alpha 1.0), MOLD_AUTO (alpha 0.5)",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/mold@2x.png",
+   "px": "256x256",
+   "bytes": 2362,
+   "purpose": "Empty cake mold (note mark)",
+   "scene_node": "BoardView cell, drawn 0.70×cell",
+   "states": "MOLD (alpha 1.0), MOLD_AUTO (alpha 0.5)",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/overlay_conflict.png",
+   "px": "128x128",
+   "bytes": 10883,
+   "purpose": "Conflict hatch + dashed cherry ring (under cake)",
+   "scene_node": "BoardView cell",
+   "states": "conflict",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/overlay_conflict@2x.png",
+   "px": "256x256",
+   "bytes": 18941,
+   "purpose": "Conflict hatch + dashed cherry ring (under cake)",
+   "scene_node": "BoardView cell",
+   "states": "conflict",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/overlay_conflict_unit.png",
+   "px": "128x128",
+   "bytes": 1724,
+   "purpose": "Cherry tint per cell of the shared conflict unit (D-10)",
+   "scene_node": "BoardView cell",
+   "states": "conflict",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/overlay_conflict_unit@2x.png",
+   "px": "256x256",
+   "bytes": 3691,
+   "purpose": "Cherry tint per cell of the shared conflict unit (D-10)",
+   "scene_node": "BoardView cell",
+   "states": "conflict",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/overlay_hint_target.png",
+   "px": "128x128",
+   "bytes": 10998,
+   "purpose": "Pulsing gold ring on hint target",
+   "scene_node": "BoardView cell (tweened)",
+   "states": "hint",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/overlay_hint_target@2x.png",
+   "px": "256x256",
+   "bytes": 28179,
+   "purpose": "Pulsing gold ring on hint target",
+   "scene_node": "BoardView cell (tweened)",
+   "states": "hint",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/overlay_hint_unit.png",
+   "px": "128x128",
+   "bytes": 2034,
+   "purpose": "Gold glow per cell of hinted unit",
+   "scene_node": "BoardView cell",
+   "states": "hint",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/overlay_hint_unit@2x.png",
+   "px": "256x256",
+   "bytes": 4397,
+   "purpose": "Gold glow per cell of hinted unit",
+   "scene_node": "BoardView cell",
+   "states": "hint",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/overlay_solved.png",
+   "px": "128x128",
+   "bytes": 17144,
+   "purpose": "Toasted glow (under cake)",
+   "scene_node": "BoardView cell",
+   "states": "solved",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/overlay_solved@2x.png",
+   "px": "256x256",
+   "bytes": 40064,
+   "purpose": "Toasted glow (under cake)",
+   "scene_node": "BoardView cell",
+   "states": "solved",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/steam_puff.png",
+   "px": "128x128",
+   "bytes": 16470,
+   "purpose": "Solved steam wisp (tweened up + fade)",
+   "scene_node": "BoardView solved FX",
+   "states": "solved",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/steam_puff@2x.png",
+   "px": "256x256",
+   "bytes": 46954,
+   "purpose": "Solved steam wisp (tweened up + fade)",
+   "scene_node": "BoardView solved FX",
+   "states": "solved",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tile_0_strawberry.png",
+   "px": "128x128",
+   "bytes": 5451,
+   "purpose": "Padded cookie tile, region 0 strawberry",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tile_0_strawberry@2x.png",
+   "px": "256x256",
+   "bytes": 12304,
+   "purpose": "Padded cookie tile, region 0 strawberry",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tile_1_butter.png",
+   "px": "128x128",
+   "bytes": 5699,
+   "purpose": "Padded cookie tile, region 1 butter",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tile_1_butter@2x.png",
+   "px": "256x256",
+   "bytes": 12962,
+   "purpose": "Padded cookie tile, region 1 butter",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tile_2_pistachio.png",
+   "px": "128x128",
+   "bytes": 4122,
+   "purpose": "Padded cookie tile, region 2 pistachio",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tile_2_pistachio@2x.png",
+   "px": "256x256",
+   "bytes": 9194,
+   "purpose": "Padded cookie tile, region 2 pistachio",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tile_3_lavender.png",
+   "px": "128x128",
+   "bytes": 6660,
+   "purpose": "Padded cookie tile, region 3 lavender",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tile_3_lavender@2x.png",
+   "px": "256x256",
+   "bytes": 15408,
+   "purpose": "Padded cookie tile, region 3 lavender",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tile_4_honey.png",
+   "px": "128x128",
+   "bytes": 6664,
+   "purpose": "Padded cookie tile, region 4 honey",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tile_4_honey@2x.png",
+   "px": "256x256",
+   "bytes": 14531,
+   "purpose": "Padded cookie tile, region 4 honey",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tile_5_blueberry.png",
+   "px": "128x128",
+   "bytes": 4430,
+   "purpose": "Padded cookie tile, region 5 blueberry",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tile_5_blueberry@2x.png",
+   "px": "256x256",
+   "bytes": 9709,
+   "purpose": "Padded cookie tile, region 5 blueberry",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tile_6_cocoa.png",
+   "px": "128x128",
+   "bytes": 5307,
+   "purpose": "Padded cookie tile, region 6 cocoa",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tile_6_cocoa@2x.png",
+   "px": "256x256",
+   "bytes": 10944,
+   "purpose": "Padded cookie tile, region 6 cocoa",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tile_7_rhubarb.png",
+   "px": "128x128",
+   "bytes": 6097,
+   "purpose": "Padded cookie tile, region 7 rhubarb",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tile_7_rhubarb@2x.png",
+   "px": "256x256",
+   "bytes": 11739,
+   "purpose": "Padded cookie tile, region 7 rhubarb",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tile_8_vanilla.png",
+   "px": "128x128",
+   "bytes": 4713,
+   "purpose": "Padded cookie tile, region 8 vanilla",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tile_8_vanilla@2x.png",
+   "px": "256x256",
+   "bytes": 10290,
+   "purpose": "Padded cookie tile, region 8 vanilla",
+   "scene_node": "BoardView cell face (tile rect = 0.925×cell)",
+   "states": "EMPTY (base for all states)",
+   "drop": "P0",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tray_frame.png",
+   "px": "96x96",
+   "bytes": 4758,
+   "purpose": "9-slice baking tray (margins 32)",
+   "scene_node": "Board tray NinePatchRect",
+   "states": "in-progress",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tray_frame@2x.png",
+   "px": "192x192",
+   "bytes": 12425,
+   "purpose": "9-slice baking tray (margins 32)",
+   "scene_node": "Board tray NinePatchRect",
+   "states": "in-progress",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/board/tray_frame_solved.png",
+   "px": "96x96",
+   "bytes": 4898,
+   "purpose": "9-slice baking tray (margins 32) golden",
+   "scene_node": "Board tray NinePatchRect",
+   "states": "solved",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/board/tray_frame_solved@2x.png",
+   "px": "192x192",
+   "bytes": 12662,
+   "purpose": "9-slice baking tray (margins 32) golden",
+   "scene_node": "Board tray NinePatchRect",
+   "states": "solved",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/badge_free_hint.png",
+   "px": "24x24",
+   "bytes": 1201,
+   "purpose": "Hint button corner badge",
+   "scene_node": "Hint button",
+   "states": "free / rewarded",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/badge_free_hint@2x.png",
+   "px": "48x48",
+   "bytes": 2686,
+   "purpose": "Hint button corner badge",
+   "scene_node": "Hint button",
+   "states": "free / rewarded",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/badge_rewarded.png",
+   "px": "24x24",
+   "bytes": 1245,
+   "purpose": "Hint button corner badge",
+   "scene_node": "Hint button",
+   "states": "free / rewarded",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/badge_rewarded@2x.png",
+   "px": "48x48",
+   "bytes": 2961,
+   "purpose": "Hint button corner badge",
+   "scene_node": "Hint button",
+   "states": "free / rewarded",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_primary_disabled.png",
+   "px": "96x64",
+   "bytes": 1939,
+   "purpose": "9-slice button 'primary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "disabled",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_primary_disabled@2x.png",
+   "px": "192x128",
+   "bytes": 3815,
+   "purpose": "9-slice button 'primary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "disabled",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_primary_normal.png",
+   "px": "96x64",
+   "bytes": 3262,
+   "purpose": "9-slice button 'primary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "normal",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_primary_normal@2x.png",
+   "px": "192x128",
+   "bytes": 5874,
+   "purpose": "9-slice button 'primary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "normal",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_primary_pressed.png",
+   "px": "96x64",
+   "bytes": 2732,
+   "purpose": "9-slice button 'primary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "pressed",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_primary_pressed@2x.png",
+   "px": "192x128",
+   "bytes": 5185,
+   "purpose": "9-slice button 'primary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "pressed",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_round_normal.png",
+   "px": "56x56",
+   "bytes": 4594,
+   "purpose": "Round icon button 56 px",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "normal",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_round_normal@2x.png",
+   "px": "112x112",
+   "bytes": 10554,
+   "purpose": "Round icon button 56 px",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "normal",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_round_pressed.png",
+   "px": "56x56",
+   "bytes": 4038,
+   "purpose": "Round icon button 56 px",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "pressed",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_round_pressed@2x.png",
+   "px": "112x112",
+   "bytes": 8841,
+   "purpose": "Round icon button 56 px",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "pressed",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_secondary_disabled.png",
+   "px": "96x64",
+   "bytes": 1939,
+   "purpose": "9-slice button 'secondary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "disabled",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_secondary_disabled@2x.png",
+   "px": "192x128",
+   "bytes": 3815,
+   "purpose": "9-slice button 'secondary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "disabled",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_secondary_normal.png",
+   "px": "96x64",
+   "bytes": 3208,
+   "purpose": "9-slice button 'secondary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "normal",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_secondary_normal@2x.png",
+   "px": "192x128",
+   "bytes": 5843,
+   "purpose": "9-slice button 'secondary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "normal",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_secondary_pressed.png",
+   "px": "96x64",
+   "bytes": 2640,
+   "purpose": "9-slice button 'secondary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "pressed",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_secondary_pressed@2x.png",
+   "px": "192x128",
+   "bytes": 5176,
+   "purpose": "9-slice button 'secondary' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "pressed",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_tool_disabled.png",
+   "px": "96x64",
+   "bytes": 2469,
+   "purpose": "9-slice button 'tool' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "disabled",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_tool_disabled@2x.png",
+   "px": "192x128",
+   "bytes": 5763,
+   "purpose": "9-slice button 'tool' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "disabled",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_tool_normal.png",
+   "px": "96x64",
+   "bytes": 4031,
+   "purpose": "9-slice button 'tool' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "normal",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_tool_normal@2x.png",
+   "px": "192x128",
+   "bytes": 8708,
+   "purpose": "9-slice button 'tool' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "normal",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/btn_tool_pressed.png",
+   "px": "96x64",
+   "bytes": 3363,
+   "purpose": "9-slice button 'tool' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "pressed",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/btn_tool_pressed@2x.png",
+   "px": "192x128",
+   "bytes": 7299,
+   "purpose": "9-slice button 'tool' (margins 24)",
+   "scene_node": "Button StyleBoxTexture",
+   "states": "pressed",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/chip_honey.png",
+   "px": "64x40",
+   "bytes": 2708,
+   "purpose": "Info chip (margins 20/18); no star chip",
+   "scene_node": "Label bg (Bake of the Day, Board n of 5)",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/chip_honey@2x.png",
+   "px": "128x80",
+   "bytes": 5492,
+   "purpose": "Info chip (margins 20/18); no star chip",
+   "scene_node": "Label bg (Bake of the Day, Board n of 5)",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/coach_bubble.png",
+   "px": "96x72",
+   "bytes": 3722,
+   "purpose": "Coach / hint / rules bubble 9-slice (margins 24; 72→88 px for 3 lines)",
+   "scene_node": "Coach bubble PanelContainer",
+   "states": "coach, hint, rules",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/coach_bubble@2x.png",
+   "px": "192x144",
+   "bytes": 8186,
+   "purpose": "Coach / hint / rules bubble 9-slice (margins 24; 72→88 px for 3 lines)",
+   "scene_node": "Coach bubble PanelContainer",
+   "states": "coach, hint, rules",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/coach_tail.png",
+   "px": "32x24",
+   "bytes": 1331,
+   "purpose": "Bubble tail",
+   "scene_node": "Coach bubble child",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/coach_tail@2x.png",
+   "px": "64x48",
+   "bytes": 2330,
+   "purpose": "Bubble tail",
+   "scene_node": "Coach bubble child",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/panel_card.png",
+   "px": "96x96",
+   "bytes": 3869,
+   "purpose": "9-slice card panel (margins 32)",
+   "scene_node": "PanelContainer StyleBoxTexture",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/panel_card@2x.png",
+   "px": "192x192",
+   "bytes": 8672,
+   "purpose": "9-slice card panel (margins 32)",
+   "scene_node": "PanelContainer StyleBoxTexture",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/panel_modal.png",
+   "px": "96x96",
+   "bytes": 4710,
+   "purpose": "9-slice modal panel (margins 32)",
+   "scene_node": "PanelContainer StyleBoxTexture",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/panel_modal@2x.png",
+   "px": "192x192",
+   "bytes": 10438,
+   "purpose": "9-slice modal panel (margins 32)",
+   "scene_node": "PanelContainer StyleBoxTexture",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/pointer_hand.png",
+   "px": "96x96",
+   "bytes": 9992,
+   "purpose": "Tutorial pointer hand (no face)",
+   "scene_node": "Tutorial overlay",
+   "states": "tutorial c1-b1..b3",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/pointer_hand@2x.png",
+   "px": "192x192",
+   "bytes": 24441,
+   "purpose": "Tutorial pointer hand (no face)",
+   "scene_node": "Tutorial overlay",
+   "states": "tutorial c1-b1..b3",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/progress_dot_off.png",
+   "px": "16x16",
+   "bytes": 514,
+   "purpose": "Chapter progress dot",
+   "scene_node": "Top bar / right panel",
+   "states": "on/off",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/progress_dot_off@2x.png",
+   "px": "32x32",
+   "bytes": 1394,
+   "purpose": "Chapter progress dot",
+   "scene_node": "Top bar / right panel",
+   "states": "on/off",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/progress_dot_on.png",
+   "px": "16x16",
+   "bytes": 607,
+   "purpose": "Chapter progress dot",
+   "scene_node": "Top bar / right panel",
+   "states": "on/off",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/progress_dot_on@2x.png",
+   "px": "32x32",
+   "bytes": 1219,
+   "purpose": "Chapter progress dot",
+   "scene_node": "Top bar / right panel",
+   "states": "on/off",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/toggle_off.png",
+   "px": "64x36",
+   "bytes": 3427,
+   "purpose": "Settings toggle off",
+   "scene_node": "CheckButton icons",
+   "states": "on/off",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/toggle_off@2x.png",
+   "px": "128x72",
+   "bytes": 8581,
+   "purpose": "Settings toggle off",
+   "scene_node": "CheckButton icons",
+   "states": "on/off",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/toggle_on.png",
+   "px": "64x36",
+   "bytes": 3459,
+   "purpose": "Settings toggle on",
+   "scene_node": "CheckButton icons",
+   "states": "on/off",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/toggle_on@2x.png",
+   "px": "128x72",
+   "bytes": 8421,
+   "purpose": "Settings toggle on",
+   "scene_node": "CheckButton icons",
+   "states": "on/off",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_back.png",
+   "px": "48x48",
+   "bytes": 827,
+   "purpose": "Icon 'back' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_back@2x.png",
+   "px": "96x96",
+   "bytes": 1355,
+   "purpose": "Icon 'back' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_back_cream.png",
+   "px": "48x48",
+   "bytes": 562,
+   "purpose": "Icon 'back' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_back_cream@2x.png",
+   "px": "96x96",
+   "bytes": 1158,
+   "purpose": "Icon 'back' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_book.png",
+   "px": "48x48",
+   "bytes": 1533,
+   "purpose": "Icon 'book' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_book@2x.png",
+   "px": "96x96",
+   "bytes": 2483,
+   "purpose": "Icon 'book' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_book_cream.png",
+   "px": "48x48",
+   "bytes": 1381,
+   "purpose": "Icon 'book' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_book_cream@2x.png",
+   "px": "96x96",
+   "bytes": 2253,
+   "purpose": "Icon 'book' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_check.png",
+   "px": "48x48",
+   "bytes": 1289,
+   "purpose": "Icon 'check' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_check@2x.png",
+   "px": "96x96",
+   "bytes": 2314,
+   "purpose": "Icon 'check' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_check_cream.png",
+   "px": "48x48",
+   "bytes": 872,
+   "purpose": "Icon 'check' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_check_cream@2x.png",
+   "px": "96x96",
+   "bytes": 2104,
+   "purpose": "Icon 'check' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_close.png",
+   "px": "48x48",
+   "bytes": 1051,
+   "purpose": "Icon 'close' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_close@2x.png",
+   "px": "96x96",
+   "bytes": 1752,
+   "purpose": "Icon 'close' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_close_cream.png",
+   "px": "48x48",
+   "bytes": 581,
+   "purpose": "Icon 'close' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_close_cream@2x.png",
+   "px": "96x96",
+   "bytes": 1370,
+   "purpose": "Icon 'close' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_help.png",
+   "px": "48x48",
+   "bytes": 2337,
+   "purpose": "Icon 'help' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_help@2x.png",
+   "px": "96x96",
+   "bytes": 5088,
+   "purpose": "Icon 'help' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_help_cream.png",
+   "px": "48x48",
+   "bytes": 1697,
+   "purpose": "Icon 'help' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_help_cream@2x.png",
+   "px": "96x96",
+   "bytes": 4724,
+   "purpose": "Icon 'help' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_hint.png",
+   "px": "48x48",
+   "bytes": 2016,
+   "purpose": "Icon 'hint' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_hint@2x.png",
+   "px": "96x96",
+   "bytes": 4233,
+   "purpose": "Icon 'hint' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_hint_cream.png",
+   "px": "48x48",
+   "bytes": 1690,
+   "purpose": "Icon 'hint' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_hint_cream@2x.png",
+   "px": "96x96",
+   "bytes": 3759,
+   "purpose": "Icon 'hint' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_home.png",
+   "px": "48x48",
+   "bytes": 1896,
+   "purpose": "Icon 'home' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_home@2x.png",
+   "px": "96x96",
+   "bytes": 3051,
+   "purpose": "Icon 'home' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_home_cream.png",
+   "px": "48x48",
+   "bytes": 1472,
+   "purpose": "Icon 'home' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_home_cream@2x.png",
+   "px": "96x96",
+   "bytes": 2754,
+   "purpose": "Icon 'home' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_lock.png",
+   "px": "48x48",
+   "bytes": 1488,
+   "purpose": "Icon 'lock' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_lock@2x.png",
+   "px": "96x96",
+   "bytes": 2913,
+   "purpose": "Icon 'lock' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_lock_cream.png",
+   "px": "48x48",
+   "bytes": 1346,
+   "purpose": "Icon 'lock' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_lock_cream@2x.png",
+   "px": "96x96",
+   "bytes": 2724,
+   "purpose": "Icon 'lock' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_music_off.png",
+   "px": "48x48",
+   "bytes": 2280,
+   "purpose": "Icon 'music_off' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_music_off@2x.png",
+   "px": "96x96",
+   "bytes": 3492,
+   "purpose": "Icon 'music_off' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_music_off_cream.png",
+   "px": "48x48",
+   "bytes": 1705,
+   "purpose": "Icon 'music_off' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_music_off_cream@2x.png",
+   "px": "96x96",
+   "bytes": 3238,
+   "purpose": "Icon 'music_off' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_music_on.png",
+   "px": "48x48",
+   "bytes": 1461,
+   "purpose": "Icon 'music_on' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_music_on@2x.png",
+   "px": "96x96",
+   "bytes": 2656,
+   "purpose": "Icon 'music_on' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_music_on_cream.png",
+   "px": "48x48",
+   "bytes": 1328,
+   "purpose": "Icon 'music_on' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_music_on_cream@2x.png",
+   "px": "96x96",
+   "bytes": 2423,
+   "purpose": "Icon 'music_on' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_play.png",
+   "px": "48x48",
+   "bytes": 913,
+   "purpose": "Icon 'play' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_play@2x.png",
+   "px": "96x96",
+   "bytes": 1386,
+   "purpose": "Icon 'play' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_play_cream.png",
+   "px": "48x48",
+   "bytes": 853,
+   "purpose": "Icon 'play' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_play_cream@2x.png",
+   "px": "96x96",
+   "bytes": 1280,
+   "purpose": "Icon 'play' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_reset.png",
+   "px": "48x48",
+   "bytes": 1779,
+   "purpose": "Icon 'reset' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_reset@2x.png",
+   "px": "96x96",
+   "bytes": 3953,
+   "purpose": "Icon 'reset' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_reset_cream.png",
+   "px": "48x48",
+   "bytes": 1492,
+   "purpose": "Icon 'reset' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_reset_cream@2x.png",
+   "px": "96x96",
+   "bytes": 3573,
+   "purpose": "Icon 'reset' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_rewarded.png",
+   "px": "48x48",
+   "bytes": 1696,
+   "purpose": "Icon 'rewarded' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_rewarded@2x.png",
+   "px": "96x96",
+   "bytes": 3311,
+   "purpose": "Icon 'rewarded' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_rewarded_cream.png",
+   "px": "48x48",
+   "bytes": 1493,
+   "purpose": "Icon 'rewarded' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_rewarded_cream@2x.png",
+   "px": "96x96",
+   "bytes": 3031,
+   "purpose": "Icon 'rewarded' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_settings.png",
+   "px": "48x48",
+   "bytes": 1999,
+   "purpose": "Icon 'settings' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_settings@2x.png",
+   "px": "96x96",
+   "bytes": 3685,
+   "purpose": "Icon 'settings' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_settings_cream.png",
+   "px": "48x48",
+   "bytes": 1577,
+   "purpose": "Icon 'settings' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_settings_cream@2x.png",
+   "px": "96x96",
+   "bytes": 3671,
+   "purpose": "Icon 'settings' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_sound_off.png",
+   "px": "48x48",
+   "bytes": 1582,
+   "purpose": "Icon 'sound_off' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_sound_off@2x.png",
+   "px": "96x96",
+   "bytes": 2902,
+   "purpose": "Icon 'sound_off' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_sound_off_cream.png",
+   "px": "48x48",
+   "bytes": 1321,
+   "purpose": "Icon 'sound_off' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_sound_off_cream@2x.png",
+   "px": "96x96",
+   "bytes": 2771,
+   "purpose": "Icon 'sound_off' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_sound_on.png",
+   "px": "48x48",
+   "bytes": 1673,
+   "purpose": "Icon 'sound_on' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_sound_on@2x.png",
+   "px": "96x96",
+   "bytes": 3616,
+   "purpose": "Icon 'sound_on' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_sound_on_cream.png",
+   "px": "48x48",
+   "bytes": 1149,
+   "purpose": "Icon 'sound_on' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_sound_on_cream@2x.png",
+   "px": "96x96",
+   "bytes": 3246,
+   "purpose": "Icon 'sound_on' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_streak.png",
+   "px": "48x48",
+   "bytes": 2027,
+   "purpose": "Icon 'streak' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_streak@2x.png",
+   "px": "96x96",
+   "bytes": 4125,
+   "purpose": "Icon 'streak' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_streak_cream.png",
+   "px": "48x48",
+   "bytes": 1713,
+   "purpose": "Icon 'streak' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_streak_cream@2x.png",
+   "px": "96x96",
+   "bytes": 3785,
+   "purpose": "Icon 'streak' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_undo.png",
+   "px": "48x48",
+   "bytes": 1711,
+   "purpose": "Icon 'undo' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_undo@2x.png",
+   "px": "96x96",
+   "bytes": 3368,
+   "purpose": "Icon 'undo' (ink)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_undo_cream.png",
+   "px": "48x48",
+   "bytes": 1356,
+   "purpose": "Icon 'undo' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/ui/icons/icon_undo_cream@2x.png",
+   "px": "96x96",
+   "bytes": 3212,
+   "purpose": "Icon 'undo' (cream, on coloured buttons)",
+   "scene_node": "TextureRect / Button.icon",
+   "states": "—",
+   "drop": "P1",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/fonts/DMSerifDisplay-Regular.ttf",
+   "px": "",
+   "bytes": 72212,
+   "purpose": "Font DMSerifDisplay-Regular",
+   "scene_node": "Theme default font / headings",
+   "states": "—",
+   "drop": "P1",
+   "scale": ""
+  },
+  {
+   "path": "res://assets/fonts/Lexend-VariableFont_wght.ttf",
+   "px": "",
+   "bytes": 174528,
+   "purpose": "Font Lexend-VariableFont_wght",
+   "scene_node": "Theme default font / headings",
+   "states": "—",
+   "drop": "P1",
+   "scale": ""
+  },
+  {
+   "path": "res://assets/fonts/OFL-DMSerifDisplay.txt",
+   "px": "",
+   "bytes": 4458,
+   "purpose": "SIL OFL 1.1 licence text (must ship with font)",
+   "scene_node": "—",
+   "states": "—",
+   "drop": "P1",
+   "scale": ""
+  },
+  {
+   "path": "res://assets/fonts/OFL-Lexend.txt",
+   "px": "",
+   "bytes": 4386,
+   "purpose": "SIL OFL 1.1 licence text (must ship with font)",
+   "scene_node": "—",
+   "states": "—",
+   "drop": "P1",
+   "scale": ""
+  },
+  {
+   "path": "res://assets/recipes/recipe_1.png",
+   "px": "240x320",
+   "bytes": 41524,
+   "purpose": "Recipe card ch1: Scones & clotted cream (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_1@2x.png",
+   "px": "480x640",
+   "bytes": 105293,
+   "purpose": "Recipe card ch1: Scones & clotted cream (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_2.png",
+   "px": "240x320",
+   "bytes": 36785,
+   "purpose": "Recipe card ch2: Victoria sponge (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_2@2x.png",
+   "px": "480x640",
+   "bytes": 81577,
+   "purpose": "Recipe card ch2: Victoria sponge (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_3.png",
+   "px": "240x320",
+   "bytes": 39896,
+   "purpose": "Recipe card ch3: Lemon drizzle (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_3@2x.png",
+   "px": "480x640",
+   "bytes": 94947,
+   "purpose": "Recipe card ch3: Lemon drizzle (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_4.png",
+   "px": "240x320",
+   "bytes": 49660,
+   "purpose": "Recipe card ch4: Jam tarts (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_4@2x.png",
+   "px": "480x640",
+   "bytes": 124351,
+   "purpose": "Recipe card ch4: Jam tarts (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_5.png",
+   "px": "240x320",
+   "bytes": 45746,
+   "purpose": "Recipe card ch5: Cherry Bakewell (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_5@2x.png",
+   "px": "480x640",
+   "bytes": 111891,
+   "purpose": "Recipe card ch5: Cherry Bakewell (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_6.png",
+   "px": "240x320",
+   "bytes": 40788,
+   "purpose": "Recipe card ch6: Strawberry shortcake (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_6@2x.png",
+   "px": "480x640",
+   "bytes": 97607,
+   "purpose": "Recipe card ch6: Strawberry shortcake (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_7.png",
+   "px": "240x320",
+   "bytes": 49885,
+   "purpose": "Recipe card ch7: Apple crumble (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_7@2x.png",
+   "px": "480x640",
+   "bytes": 122671,
+   "purpose": "Recipe card ch7: Apple crumble (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_8.png",
+   "px": "240x320",
+   "bytes": 39621,
+   "purpose": "Recipe card ch8: Macarons (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_8@2x.png",
+   "px": "480x640",
+   "bytes": 102396,
+   "purpose": "Recipe card ch8: Macarons (name drawn by label)",
+   "scene_node": "Recipe Book / Chapter end card",
+   "states": "unlocked",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_locked.png",
+   "px": "240x320",
+   "bytes": 19992,
+   "purpose": "Recipe card back (locked)",
+   "scene_node": "Recipe Book card",
+   "states": "locked",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/recipes/recipe_locked@2x.png",
+   "px": "480x640",
+   "bytes": 44866,
+   "purpose": "Recipe card back (locked)",
+   "scene_node": "Recipe Book card",
+   "states": "locked",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/decor_1_teapot.png",
+   "px": "96x96",
+   "bytes": 11008,
+   "purpose": "Décor ch1: teapot",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/decor_1_teapot@2x.png",
+   "px": "192x192",
+   "bytes": 28459,
+   "purpose": "Décor ch1: teapot",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/decor_2_cake_stand.png",
+   "px": "96x96",
+   "bytes": 10896,
+   "purpose": "Décor ch2: cake stand",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/decor_2_cake_stand@2x.png",
+   "px": "192x192",
+   "bytes": 29611,
+   "purpose": "Décor ch2: cake stand",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/decor_3_gingham.png",
+   "px": "96x96",
+   "bytes": 9228,
+   "purpose": "Décor ch3: gingham",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/decor_3_gingham@2x.png",
+   "px": "192x192",
+   "bytes": 18629,
+   "purpose": "Décor ch3: gingham",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/decor_4_doily_teacups.png",
+   "px": "96x96",
+   "bytes": 8802,
+   "purpose": "Décor ch4: doily teacups",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/decor_4_doily_teacups@2x.png",
+   "px": "192x192",
+   "bytes": 23268,
+   "purpose": "Décor ch4: doily teacups",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/decor_5_sweet_peas.png",
+   "px": "96x96",
+   "bytes": 9288,
+   "purpose": "Décor ch5: sweet peas",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/decor_5_sweet_peas@2x.png",
+   "px": "192x192",
+   "bytes": 24126,
+   "purpose": "Décor ch5: sweet peas",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/decor_6_bunting.png",
+   "px": "96x96",
+   "bytes": 5845,
+   "purpose": "Décor ch6: bunting",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/decor_6_bunting@2x.png",
+   "px": "192x192",
+   "bytes": 13794,
+   "purpose": "Décor ch6: bunting",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/decor_7_cuckoo_clock.png",
+   "px": "96x96",
+   "bytes": 7813,
+   "purpose": "Décor ch7: cuckoo clock",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/decor_7_cuckoo_clock@2x.png",
+   "px": "192x192",
+   "bytes": 18041,
+   "purpose": "Décor ch7: cuckoo clock",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/decor_8_copper_kettle.png",
+   "px": "96x96",
+   "bytes": 6733,
+   "purpose": "Décor ch8: copper kettle",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/decor_8_copper_kettle@2x.png",
+   "px": "192x192",
+   "bytes": 15690,
+   "purpose": "Décor ch8: copper kettle",
+   "scene_node": "Home counter shelf / Chapter end drop",
+   "states": "owned",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/shelf_bunting_garland.png",
+   "px": "360x160",
+   "bytes": 13870,
+   "purpose": "Shelf variant: bunting_garland",
+   "scene_node": "Counter shelf overlay",
+   "states": "owned ch3/ch6",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/shelf_bunting_garland@2x.png",
+   "px": "720x320",
+   "bytes": 22352,
+   "purpose": "Shelf variant: bunting_garland",
+   "scene_node": "Counter shelf overlay",
+   "states": "owned ch3/ch6",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/shelf_counter.png",
+   "px": "360x160",
+   "bytes": 3608,
+   "purpose": "Counter shelf (360×160)",
+   "scene_node": "Home + Chapter end + All recipes baked",
+   "states": "—",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/shelf_counter@2x.png",
+   "px": "720x320",
+   "bytes": 8579,
+   "purpose": "Counter shelf (360×160)",
+   "scene_node": "Home + Chapter end + All recipes baked",
+   "states": "—",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/shelf_gingham_drape.png",
+   "px": "360x160",
+   "bytes": 6615,
+   "purpose": "Shelf variant: gingham_drape",
+   "scene_node": "Counter shelf overlay",
+   "states": "owned ch3/ch6",
+   "drop": "P2",
+   "scale": "1x"
+  },
+  {
+   "path": "res://assets/decor/shelf_gingham_drape@2x.png",
+   "px": "720x320",
+   "bytes": 14681,
+   "purpose": "Shelf variant: gingham_drape",
+   "scene_node": "Counter shelf overlay",
+   "states": "owned ch3/ch6",
+   "drop": "P2",
+   "scale": "@2x"
+  },
+  {
+   "path": "res://assets/decor/shelf_slots.json",
+   "px": "",
+   "bytes": 506,
+   "purpose": "Shelf variant: slots",
+   "scene_node": "Counter shelf overlay",
+   "states": "owned ch3/ch6",
+   "drop": "P2",
+   "scale": ""
+  },
+  {
+   "path": "res://assets/backdrop/backdrop_landscape.webp",
+   "px": "1920x1080",
+   "bytes": 22692,
+   "purpose": "Tea-room backdrop (landscape)",
+   "scene_node": "main.gd Backdrop TextureRect",
+   "states": "—",
+   "drop": "P2",
+   "scale": ""
+  },
+  {
+   "path": "res://assets/backdrop/backdrop_portrait.webp",
+   "px": "1080x2340",
+   "bytes": 19758,
+   "purpose": "Tea-room backdrop (portrait)",
+   "scene_node": "main.gd Backdrop TextureRect",
+   "states": "—",
+   "drop": "P2",
+   "scale": ""
+  },
+  {
+   "path": "res://ui/theme/art_palette.gd",
+   "px": "",
+   "bytes": 2596,
+   "purpose": "ArtPalette constants (colours, region seams/rims, board geometry)",
+   "scene_node": "global class ArtPalette (board_view.gd, theme)",
+   "states": "—",
+   "drop": "P1",
+   "scale": ""
+  }
+ ]
+}

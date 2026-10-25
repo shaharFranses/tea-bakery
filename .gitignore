@@ -44,3 +44,4 @@ art/tools/*.png
 art/tools/.venv/
 art/tools/venv/
 art/**/*.zip
+art/covers/out/

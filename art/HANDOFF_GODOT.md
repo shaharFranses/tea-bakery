@@ -134,3 +134,35 @@ Animations (spec §8): flip in by scaling X 0→1 on `recipe_locked` then the ca
 
 ## Sizes
 P2 = 43 files, 1.60 MB on disk. Most of it is the card PNGs: @2x cards are about 100 KB each, 1x about 30 KB. If only `@2x` ships, P2 is about 1.15 MB. Running total for P0+P1+P2, both sets, is **3.25 MB** (**2.36 MB** with `@2x` only, fonts included), against the ≤20 MB budget.
+
+---
+# Docs drop: index and consolidated reference (2026-10-25, about 10:45 Asia/Jerusalem)
+- **Canonical rules:** `docs/art/STYLE_GUIDE.md` (B2, locked). **File list:** `docs/art/ASSET_MANIFEST.md` / `.json` (226 files: path, px, bytes, purpose, scene/node, states, drop; regenerate with `python3 art/tools/gen_manifest.py`). **Provenance:** `docs/art/LICENSES.md`. **Covers:** `art/COVERS_PLAN.md`.
+- **Palette:** `res://ui/theme/art_palette.gd` (`ArtPalette`).
+
+## Import settings (all drops)
+| Kind | Compress | Mipmaps | Fix Alpha Border | Filter (CanvasItem) |
+|---|---|---|---|---|
+| Sprites (board cells, icons, badges, décor, cards, hand) | Lossless | **on** | on | Linear Mipmap |
+| 9-slices (tray_frame*, btn_*, panel_*, chip_honey, coach_bubble) | Lossless | **off** | on | Linear |
+| Backdrops (.webp) | Lossy (keep the source webp) | off | — | Linear |
+| Fonts | — | — | — | MSDF off; antialiased; `FontVariation` wght 400/500/600 for Lexend |
+Load the `@2x` files and let the import scale them down. The 1x files are a fallback; if only `@2x` ships, exclude the non-`@2x` PNGs in the export filter. Expected art in the pck: ≈2.4 MB.
+
+## 9-slice margins (1x px; double them for `@2x`)
+| Texture | Left | Top | Right | Bottom | Content padding |
+|---|---|---|---|---|---|
+| `board/tray_frame`, `tray_frame_solved` (96²) | 32 | 32 | 32 | 32 | 10 / 10 / 10 / 12 |
+| `ui/btn_{primary,secondary,tool}_*` (96×64) | 24 | 24 | 24 | 24 | 16 L/R, 8 T/B; min height 48 |
+| `ui/panel_card`, `panel_modal` (96²) | 32 | 32 | 32 | 32 | 20 |
+| `ui/chip_honey` (64×40) | 20 | 18 | 20 | 18 | 14 L/R |
+| `ui/coach_bubble` (96×72) | 24 | 24 | 24 | 24 | 14 L/R, 12 T/B; **72 → 88 px for 3 lines** |
+Fixed size (not 9-slice): `btn_round_*` 56², toggles 64×36, dots 16, badges 24, `coach_tail` 32×24, `shelf_*` 360×160 (scale uniformly).
+
+## Asks for TT Godot Build (in one place)
+1. Swap the placeholder colours in `board_view.gd` for `ArtPalette`. Draw seams, rims and the cream gap from `REGION_SEAMS` / `REGION_RIMS` / `TRAY_LINING`.
+2. Mold at **0.70×cell** (currently 0.6). Add a cake sprite hook for `cake_berry@2x.png` at 1.0×cell.
+3. Commit the `*.import` files created by your import run (they are untracked, and I didn't touch them), with the settings above.
+4. Coach/rules bubble: 3 lines at 16 px, 72 → 88 px; take the space from the vertical gaps (portrait notes, P2).
+5. Optional: portrait backdrop on phone Home / Recipe Book (`main.gd` shows backdrops in landscape only).
+6. `assets/backdrop/README.txt` still describes the old centred portrait column; update it when convenient (your file).

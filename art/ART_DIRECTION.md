@@ -1,4 +1,5 @@
 # tea-bakery (game #4): art direction proposal v1
+> **Status (2026-10-25):** proposal and decision history. Style B2 is approved and in production. The **canonical rules are now in `docs/art/STYLE_GUIDE.md`**, which wins where the two differ. Shipped files are listed in `docs/art/ASSET_MANIFEST.md`.
 **PROPOSED, pending Shahar's approval** · TT Art · 2026-10-25 (Asia/Jerusalem) · Working name **tea-bakery**. The title is TBD (the old title was dropped over trademark risk), so **no title or wordmark appears in any image**. A dashed placeholder marks the logo area.
 **Inputs:** Player Profile `/workspace/audience/tea-and-tarts.md` (v1). It was **missing at 08:18**, then appeared at 08:20 and is cited below as [PP]. Also `game4-themes.md`, `/workspace/sd_art/*`, `audience/sudoku-dash.md`, `portal/CG_READINESS.md` [CGR] and `portal/trademark-check.md` [TM].
 **Mechanic used** [PP §4]: Queens rules. Board = baking tray, region = dough patch, piece = tart. Place one per row, column and patch, and no two may touch, even diagonally. A single tap cycles empty → ✕ → tart. Boards run from 5×5 to 9×9.
