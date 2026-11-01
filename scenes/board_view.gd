@@ -24,7 +24,7 @@ const MOLD_SPRITE := DIR + "mold@2x.png"
 const CAKE_SPRITE := DIR + "cake_berry@2x.png"     # the v1 cake (berry v2)
 const AUTO_ALPHA := Pal.AUTO_MOLD_ALPHA            # <= 0.6 x the player mold (TT-AC-22)
 const TRAY_GROW := Vector4(10, 10, 10, 12)         # frame rect = board rect grown l/t/r/b (handoff P1)
-const SPRITES := ["mold", "cake_berry", "overlay_conflict", "badge_conflict", "overlay_solved", "badge_solved",
+const SPRITES := ["mold", "cake_berry", "steam_puff", "overlay_conflict", "badge_conflict", "overlay_solved", "badge_solved",
 	"given_plate", "overlay_hint_unit", "overlay_hint_target", "overlay_conflict_unit"]
 
 var n := 5
@@ -42,6 +42,52 @@ var tiles: Array[Texture2D] = []
 var tray_box: StyleBox
 var tray_box_solved: StyleBox
 var hint_phase := 0.0
+## Game feel (SPEC §8): per-cell one-shot animations {i: [kind, t0_ms]}: mold_in 90 ms (0.8->1 + fade), cake_pop 150 ms
+## (0->1.15->1), cake_out 100 ms (1->0), shake 200 ms (2 px wobble once when a conflict appears). Bake: cakes turn
+## golden in reading order (40 ms stagger), then steam puffs rise from 3-5 cakes (0.3 cell, 900 ms).
+const ANIM_MS := {"mold_in": 90, "cake_pop": 150, "cake_out": 100, "shake": 200}
+var anim := {}
+var bake_t0 := -1
+var steam_cells: Array = []
+var shakes_started := 0          # QA/debug counter
+func now_ms() -> int: return Time.get_ticks_msec()
+
+func notify_change(i: int, before: int, after: int) -> void:
+	if after == MOLD: anim[i] = ["mold_in", now_ms()]
+	elif after == CAKE: anim[i] = ["cake_pop", now_ms()]
+	elif before == CAKE: anim[i] = ["cake_out", now_ms()]
+	set_process(true)
+
+func set_conflicts(bad: Array) -> void:
+	var nxt := {}
+	for p in bad:
+		nxt[p] = true
+		if not conflict_cells.has(p):
+			anim[p.x * n + p.y] = ["shake", now_ms()]; shakes_started += 1
+	conflict_cells = nxt
+	set_process(true)
+
+func start_bake(seed_value: int) -> void:
+	bake_t0 = now_ms()
+	var cakes_i := []
+	for i in n * n: if cells[i] == CAKE: cakes_i.append(i)
+	var rng := RandomNumberGenerator.new(); rng.seed = seed_value
+	var k := clampi(3 + rng.randi() % 3, 0, cakes_i.size())
+	steam_cells = []
+	while steam_cells.size() < k:
+		var c: int = cakes_i[rng.randi() % cakes_i.size()]
+		if not (c in steam_cells): steam_cells.append(c)
+	set_process(true)
+
+func stop_bake() -> void:
+	bake_t0 = -1; steam_cells = []
+
+func _anim_k(i: int) -> Array:   # [kind, 0..1 progress] or []
+	if not anim.has(i): return []
+	var a: Array = anim[i]
+	var p := float(now_ms() - int(a[1])) / float(ANIM_MS[a[0]])
+	if p >= 1.0: anim.erase(i); return []
+	return [a[0], p]
 
 func _init() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -54,13 +100,16 @@ func _ready() -> void:
 	tray_box_solved = Slice.make(DIR + "tray_frame_solved@2x.png", Vector4(32, 32, 32, 32), Vector4.ZERO)
 
 func _process(dt: float) -> void:
-	if hint_target.is_empty(): return
-	hint_phase = fmod(hint_phase + dt / 0.9, 1.0); queue_redraw()
+	var busy := not anim.is_empty() or (bake_t0 >= 0 and now_ms() - bake_t0 < 2200)
+	if not hint_target.is_empty():
+		hint_phase = fmod(hint_phase + dt / 0.9, 1.0); busy = true
+	if busy: queue_redraw()
 
 func setup(size: int, reg: PackedInt32Array, given_cells: Array = []) -> void:
 	n = size; regions = reg
 	cells = PackedInt32Array(); cells.resize(n * n); cells.fill(EMPTY)
 	auto = {}; conflict_cells = {}; conflict_units = {}; hint_unit = {}; hint_target = {}; won = false
+	anim = {}; stop_bake()
 	givens = {}
 	for p in given_cells: givens[p.x * n + p.y] = true
 	queue_redraw()
@@ -148,6 +197,9 @@ func _draw() -> void:
 		if c == n - 1 or regions[i + 1] != g: draw_line(Vector2(edge.end.x, edge.position.y + cs * 0.12), Vector2(edge.end.x, edge.end.y - cs * 0.12), rim, rim_w, true)
 		if r == 0 or regions[i - n] != g: draw_line(Vector2(edge.position.x + cs * 0.12, edge.position.y), Vector2(edge.end.x - cs * 0.12, edge.position.y), rim, rim_w, true)
 		if r == n - 1 or regions[i + n] != g: draw_line(Vector2(edge.position.x + cs * 0.12, edge.end.y), Vector2(edge.end.x - cs * 0.12, edge.end.y), rim, rim_w, true)
+	_ranks = {}
+	var rank := 0
+	for j in n * n: if cells[j] == CAKE: _ranks[j] = rank; rank += 1
 	for i in n * n:
 		var r := i / n; var c := i % n
 		var t := tile_rect(o, cs, r, c)
@@ -163,12 +215,38 @@ func _draw() -> void:
 			if bad: _sprite("overlay_conflict", t)
 			elif won: _sprite("overlay_solved", t)
 		var ctr := Vector2(o.x + (c + 0.5) * cs, o.y + (r + 0.5) * cs)
-		if st == MOLD: _sprite("mold", _centred(ctr, mold_side(cs)))
-		elif st == MOLD_AUTO: _sprite("mold", _centred(ctr, mold_side(cs)), AUTO_ALPHA)
+		var ak := _anim_k(i)
+		var sc := 1.0; var al := 1.0
+		if not ak.is_empty():
+			match ak[0]:
+				"mold_in": sc = lerpf(0.8, 1.0, ak[1]); al = ak[1]
+				"cake_pop": sc = lerpf(0.0, 1.15, ak[1] / 0.7) if ak[1] < 0.7 else lerpf(1.15, 1.0, (ak[1] - 0.7) / 0.3)
+				"shake": ctr.x += 2.0 * sin(ak[1] * TAU * 2.0)
+		if st == MOLD: _sprite("mold", _centred(ctr, mold_side(cs) * sc), al)
+		elif st == MOLD_AUTO: _sprite("mold", _centred(ctr, mold_side(cs) * sc), AUTO_ALPHA * al)
+		elif st == EMPTY and not ak.is_empty() and ak[0] == "cake_out":
+			_sprite("cake_berry", _centred(ctr + Vector2(0, cs * 0.02), cake_side(cs) * (1.0 - ak[1])))
 		elif st == CAKE:
-			_sprite("cake_berry", _centred(ctr + Vector2(0, cs * 0.02), cake_side(cs)))
+			var golden := won and bake_t0 >= 0 and now_ms() - bake_t0 >= _reading_rank(i) * 40
+			var mod := Color(1.0, 0.86, 0.6) if golden or (won and bake_t0 < 0) else Color.WHITE
+			var t2: Texture2D = tex.get("cake_berry")
+			if t2: draw_texture_rect(t2, _centred(ctr + Vector2(0, cs * 0.02), cake_side(cs) * sc), false, mod)
 			if bad: _sprite("badge_conflict", t)
 			elif won: _sprite("badge_solved", t)
 		if hint_target.has(i):
 			var k := 0.5 - 0.5 * cos(TAU * hint_phase)
 			_sprite("overlay_hint_target", _centred(t.get_center(), t.size.x * (1.0 + 0.06 * k)), 1.0 - 0.4 * k)
+
+	# steam puffs over the solved tray (drawn over the cakes, never left there: 900 ms each, staggered 120 ms)
+	if won and bake_t0 >= 0:
+		for k in steam_cells.size():
+			var p := float(now_ms() - bake_t0 - 300 - k * 120) / 900.0
+			if p < 0.0 or p > 1.0: continue
+			var ci: int = steam_cells[k]
+			var top := Vector2(o.x + (ci % n + 0.5) * cs, o.y + (ci / n + 0.5) * cs - cake_side(cs) * 0.37)
+			var side := cs * 0.8
+			_sprite("steam_puff", Rect2(top - Vector2(side / 2.0, side + p * 0.3 * cs), Vector2(side, side)), 1.0 - p)
+
+var _ranks := {}
+func _reading_rank(i: int) -> int:
+	return int(_ranks.get(i, 0))

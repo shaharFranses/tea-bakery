@@ -7,9 +7,12 @@
 ##  BR-2 PKD_QA.set_date("YYYY-MM-DD"[ "THH:MM"]) runtime local date via main.check_day() (real rollover path);
 ##       PKD_QA.retry_daily() second completion attempt on today's daily -> rejected, streak unchanged (V8)
 ##  BR-3 PKD_QA.set_session_s(N) runtime U2 session clock; dump().ads_decisions[] = every midgame decision
-##  driver: show("chapter_end:K") completes chapter K and runs the chapter-end slot decision (no chapter flow yet)
+##  driver: show("chapter_end:K") completes chapter K and runs the chapter-end slot decision (synthetic);
+##          the real slot runs on the chapter-end screen buttons: show("end_next") / show("end_home")
+##  thin slice: show("board:cN-bM" | "home" | "recipe_book" | "skip" | "hint" | "hint_watch" | "hint_no" | "undo" |
+##          "reset" | "settings" | "settings_close" | "continue")
 ##  H4  ?qa=1&ads=mock_available|mock_unavailable|mock_error|mock_timeout (Ads mock mode; mock has a 0.6 s ad delay)
-## Not implemented yet (no feature to hook): undo, hints, streak/meta, analytics ring, packs/daily, per-region texture ids.
+## Not implemented yet: daily pool (step 3), "Show me".
 extends RefCounted
 
 const Gen = preload("res://game/generator.gd")
@@ -61,7 +64,12 @@ static func state(main) -> Dictionary:
 	var hooks = Dbg.hooks
 	var params: Dictionary = hooks.params if hooks else {}
 	var sm: Dictionary = main.daily.summary(Clock.local_date())
-	return {"screen": "board", "board_id": main.board_id(), "mode": main.mode,
+	return {"screen": main.screen, "screen_log": main.screen_log, "chapter": main.chapter, "board_no": main.board_no,
+		"givens": main.givens.keys().map(func(i): return [i / main.n, i % main.n]), "card_open": main.card_open, "interactive": main.interactive,
+		"progress": main.progress.to_dict(), "save_writes": Store.save_writes, "corrupt_backed_up": Store.corrupt_backed_up,
+		"shakes_started": b.shakes_started, "baking": b.bake_t0 >= 0, "steam_cells": b.steam_cells.size(), "texture_id": "berry2",
+		"targets": main.board.hint_target.keys().map(func(i): return [i / main.n, i % main.n]), "coach": main.puzzle.get("coach", ""),
+		"bubble_text": main.hint_label.text, "dots_on": range(5).filter(func(k): return main.chapter > 0 and main.progress.is_solved("c%d-b%d" % [main.chapter, k + 1])).size(), "board_id": main.board_id(), "mode": main.mode,
 		"intro_done": main.intro_done, "taps": main.taps, "n": main.n, "seed": main.seed_value, "max_size": main.max_size(),
 		"tutorial": main.puzzle.get("tutorial", false), "regions": Array(main.puzzle.regions), "cells": cells,
 		"cakes": main.cakes().map(func(p): return [p.x, p.y]),
@@ -69,13 +77,13 @@ static func state(main) -> Dictionary:
 		"molds_auto": range(main.n * main.n).filter(func(i): return b.shown(i) == Cells.MOLD_AUTO).map(func(i): return [i / main.n, i % main.n]),
 		"settings": main.settings.to_dict(), "analytics": Analytics.ring, "analytics_sink": Analytics.sink,
 		"conflicts": b.conflict_cells.keys().map(func(p): return [p.x, p.y]), "solved": main.won, "won": main.won, "moves": main.moves,
-		"undo_len": 0, "undo_hash": "", "board_rect": [(gp.x + br.position.x) * _css(main), (gp.y + br.position.y) * _css(main), br.size.x * _css(main), br.size.y * _css(main)],
+		"undo_len": main.history.size(), "undo_hash": str(hash(main.history.back())) if not main.history.is_empty() else "", "board_rect": [(gp.x + br.position.x) * _css(main), (gp.y + br.position.y) * _css(main), br.size.x * _css(main), br.size.y * _css(main)],
 		"cell_css": b.cell_size() * _css(main), "css_per_unit": _css(main), "layout": main.layout_mode_name,
-		"viewport_logical": [main.get_viewport_rect().size.x, main.get_viewport_rect().size.y], "ui": _ui(main), "hint": null, "timer_visible": false,
-		"active_s": Clock.session_s(), "session_s": Clock.session_s(), "session_started": Clock.session_started(),
+		"viewport_logical": [main.get_viewport_rect().size.x, main.get_viewport_rect().size.y], "ui": _ui(main), "hint": main.hint_state, "hint_offer": main.ad_policy.hint_offer(main._hint_chapter(), "daily" if main.mode == "daily" else "chapter", Ads.available()), "timer_visible": main.card_open,
+		"active_s": main.active_ms / 1000.0, "session_s": Clock.session_s(), "session_started": Clock.session_started(),
 		"date": qa_date(params), "local_now": Clock.local_datetime(), "streak": sm.streak, "best_streak": sm.best_streak,
 		"total_bakes": sm.total_bakes, "bakes": main.daily.bakes, "daily_open": main.daily.open_date,
-		"daily_done_today": main.daily.is_done(Clock.local_date()), "last_daily": main.last_daily_result, "unlocked": null,
+		"daily_done_today": main.daily.is_done(Clock.local_date()), "last_daily": main.last_daily_result, "unlocked": {"recipes": main.progress.recipes, "decor": main.progress.decor},
 		"ad_policy": {"chapters_completed": main.ad_policy.chapters_completed, "last_midgame_session_ms": main.ad_policy.last_midgame_ms},
 		"save_key": Store.KEY, "ads_log": Ads.call_log, "ads_decisions": Dbg.hooks.ads_decisions if Dbg.hooks else [], "perf_marks": main.perf_marks, "ads_mode": Ads.mode, "sdk_log": Ads.sdk_log,
 		"gameplay_started": main.gameplay_started, "backdrop": main.backdrop.visible, "backdrop_asset": main.backdrop.texture != null,
@@ -97,17 +105,30 @@ static func show(main, cmd: String) -> String:
 				res = "cake r%d c%d" % [r, sol[r]]; break
 	elif cmd == "clear": main.clear_board()
 	elif cmd == "new": main.new_board(main.n, main.fresh_seed())
-	elif cmd == "home": res = "unsupported: no Home screen yet"
+	elif cmd == "home": main.show_home()
+	elif cmd == "recipe_book": main.show_recipe_book()
+	elif cmd == "continue": main.home_continue_pressed()
+	elif cmd == "skip": main._after_card()
+	elif cmd == "hint": main.request_hint(); res = main.hint_state.text if not main.reward_modal.visible else "rewarded modal"
+	elif cmd == "hint_watch": main._watch_for_hint()
+	elif cmd == "hint_no": main.reward_modal.visible = false
+	elif cmd == "undo": main.undo()
+	elif cmd == "reset": main.clear_board()
+	elif cmd == "settings": main.open_settings()
+	elif cmd == "settings_close": main.close_settings()
+	elif cmd == "end_next": main.chapter_end_continue("next")
+	elif cmd == "end_home": main.chapter_end_continue("home")
 	elif cmd.begins_with("board:"):
 		var id := cmd.substr(6)
-		if id == "tutorial" or id == "c1-b1": main.load_tutorial()
-		else: res = "unsupported: no chapter packs yet (%s)" % id
+		if id == "tutorial": id = "c1-b1"
+		if not main.open_board(id, true): res = "unknown board %s" % id
 	elif cmd.begins_with("daily:"):
 		var d := cmd.substr(6)
 		res = "open %s" % d if main.open_daily(d) else "refused: %s already baked (not replayable)" % d
 	elif cmd.begins_with("chapter_end:"):                               # BR-3: completes chapter K, runs the slot decision
 		var k := cmd.substr(12).to_int()
 		main.ad_policy.on_chapter_completed(k)
+		main.last_chapter_end = k
 		res = JSON.stringify(main.chapter_end_slot(k))
 	elif cmd.begins_with("gen:"):
 		var p := cmd.substr(4).split(",")
