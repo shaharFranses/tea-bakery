@@ -101,17 +101,32 @@ with sync_playwright() as p:
     free = next([r, c] for r in range(g["n"]) for c in range(g["n"]) if [r, c] not in g["givens"])
     show(pg, f"tap:{free[0]},{free[1]}"); pg.wait_for_timeout(2500)
     res["save_debounced_write"] = any(w["reason"] == "debounce" for w in dump(pg)["game"]["save_writes"])
-    pg.close(); pg = boot(ctx, "qa=1&intro=0"); g = dump(pg)["game"]
+    pg.close(); pg = boot(ctx, "qa=1&intro=0&ads=mock_available"); g = dump(pg)["game"]
     res["reload_restores_saved_board"] = g["board_id"] == "c2-b2" and g["cells"][free[0] * g["n"] + free[1]] == "mold"
-    # finish chapter 2 -> AD-17 300 s edge at the real slot (mock ad shown), Home
-    for b in range(1, 6):
-        show(pg, f"board:c2-b{b}"); show(pg, "solve"); pg.wait_for_timeout(100)
-        if b < 5: show(pg, "skip")
-    show(pg, "skip"); pg.wait_for_timeout(500); ge = dump(pg)["game"]
-    res["chapter2_end_no_next"] = ge["screen"] == "chapter_end" and ge["unlocked"]["recipes"] == [1, 2] and not next(u for u in ge["ui"] if u["name"] == "EndNext")["visible"]
-    pg.evaluate("window.PKD_QA.set_session_s(300)"); show(pg, "end_home"); pg.wait_for_timeout(1500)
+    # AD-17 at REAL chapter ends: ch2 end at session 300 s -> ok (mock ad shown) -> Next -> ch3; ch3 end at 479 s
+    # (179 s after the ch2 request) -> gap<180s denied -> Next -> ch4; ch4 end at 480 s (180 s gap) -> ok -> Home.
+    def finish(ch):
+        for b in range(1, 6):
+            show(pg, f"board:c{ch}-b{b}"); show(pg, "solve"); pg.wait_for_timeout(100)
+            if b < 5: show(pg, "skip")
+        show(pg, "skip"); pg.wait_for_timeout(500); return dump(pg)["game"]
+    ge = finish(2)
+    res["chapter2_end_has_next"] = ge["screen"] == "chapter_end" and ge["unlocked"]["recipes"] == [1, 2] and next(u for u in ge["ui"] if u["name"] == "EndNext")["visible"]
+    pg.evaluate("window.PKD_QA.set_session_s(300)"); show(pg, "end_next"); pg.wait_for_timeout(1500)
     d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c2"] = dec
-    res["ad17_300_ad_unavailable_or_ok"] = bool(dec) and dec[-1]["reason"] in ("ok", "ad_unavailable")
+    res["ad17_300_ok_real_chapter2_end"] = bool(dec) and dec[-1]["reason"] == "ok" and dec[-1]["origin"] == "chapter_end"
+    res["next_chapter_opens_c3b1"] = d["game"]["board_id"] == "c3-b1" and d["game"]["screen"] == "board"
+    ge = finish(3)
+    res["chapter3_end_screen"] = ge["screen"] == "chapter_end" and ge["unlocked"]["recipes"] == [1, 2, 3]
+    pg.screenshot(path=f"{out}/game_phone_chapter3_end.png")
+    pg.evaluate("window.PKD_QA.set_session_s(479)"); show(pg, "end_next"); pg.wait_for_timeout(1000)
+    d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c3"] = dec[-1:]
+    res["ad17_179_gap_denied_real_chapter3_end"] = dec[-1]["reason"] == "gap<180s" and dec[-1]["origin"] == "chapter_end" and not dec[-1]["allowed"]
+    res["next_chapter_opens_c4b1"] = d["game"]["board_id"] == "c4-b1"
+    ge = finish(4)
+    pg.evaluate("window.PKD_QA.set_session_s(480)"); show(pg, "end_home"); pg.wait_for_timeout(1500)
+    d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c4"] = dec[-1:]
+    res["ad17_180_gap_ok_real_chapter4_end"] = dec[-1]["reason"] == "ok" and dec[-1]["origin"] == "chapter_end" and dec[-1]["allowed"]
     res["home_after_chapter_end"] = d["game"]["screen"] == "home"
     hd = next(u for u in d["game"]["ui"] if u["name"] == "HomeDaily")
     res["home_daily_unlocked_after_c1"] = hd["enabled"] is True
