@@ -12,6 +12,7 @@ var current_cells: Array = []     # Cells.EMPTY / MOLD / CAKE per cell
 var recipes: Array = []           # chapter numbers whose card is owned
 var decor: Array = []
 var chapters_completed := 0
+var all_baked_seen := false     # §7.2: the "All recipes baked" screen is shown once
 var chapter_stats := {}           # "N" -> {hints_used, hints_free, hints_rewarded, active_s, undo_count, conflicts_shown, t0_unix, sessions}
 
 func is_solved(id: String) -> bool:
@@ -36,6 +37,10 @@ func boot_target() -> String:
 	var nx := next_unsolved()
 	return nx if nx != "" else "home"
 
+## Every shipped chapter completed (§7.2 end state).
+func all_done() -> bool:
+	return recipes.size() >= Chapters.count_available()
+
 ## Marks a board solved. Returns true the first time (false on a replay).
 func mark_solved(id: String) -> bool:
 	if current_id == id: current_id = ""; current_cells = []
@@ -59,7 +64,7 @@ func stats(ch: int) -> Dictionary:
 
 func to_dict() -> Dictionary:
 	return {"solved": solved.duplicate(), "current": {"id": current_id, "cells": current_cells.duplicate()},
-		"unlocked": {"recipes": recipes.duplicate(), "decor": decor.duplicate()}, "chapters_completed": chapters_completed,
+		"unlocked": {"recipes": recipes.duplicate(), "decor": decor.duplicate()}, "chapters_completed": chapters_completed, "all_baked_seen": all_baked_seen,
 		"chapter_stats": chapter_stats.duplicate(true)}
 
 func from_dict(d: Dictionary) -> void:
@@ -75,5 +80,6 @@ func from_dict(d: Dictionary) -> void:
 		for v in u.get("recipes", []): recipes.append(int(v))
 		for v in u.get("decor", []): decor.append(int(v))
 	chapters_completed = int(d.get("chapters_completed", 0))
+	all_baked_seen = bool(d.get("all_baked_seen", false))
 	var cs = d.get("chapter_stats", {})
 	chapter_stats = cs.duplicate(true) if cs is Dictionary else {}

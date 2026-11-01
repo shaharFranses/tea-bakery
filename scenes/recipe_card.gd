@@ -9,6 +9,7 @@ const Pal = preload("res://ui/theme/art_palette.gd")
 
 var chapter := 1
 var unlocked := false
+var compact := false       # spread thumbnails (All recipes baked): art only; names live in the Recipe Book
 var tex: TextureRect
 var name_label: Label
 var ch_label: Label
@@ -37,7 +38,7 @@ func refresh() -> void:
 	tex.texture = load("res://assets/recipes/%s@2x.png" % ("recipe_%d" % chapter if unlocked else "recipe_locked"))
 	ch_label.text = "Chapter %d" % chapter
 	name_label.text = Chapters.RECIPES[chapter - 1] if unlocked else ""
-	name_label.visible = unlocked; ch_label.visible = unlocked
+	name_label.visible = unlocked and not compact; ch_label.visible = unlocked and not compact
 	_place()
 
 const RIBBON := Rect2(32, 232, 174, 48)   # empty ribbon on the 240x320 1x card art

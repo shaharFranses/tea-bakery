@@ -54,7 +54,7 @@ var settings = Settings.new()
 var progress = Progress.new()
 var board_t0_ms := 0
 var last_daily_result: Dictionary = {}
-var screen := "board"            # board | home | recipe_book | chapter_end
+var screen := "board"            # board | home | recipe_book | chapter_end | all_baked | chapter_list
 var screen_log: Array = []       # [screen or board id] in order (TT-AC-05d / -23)
 var givens := {}                 # cell index -> true (immutable plated cakes)
 var history: Array = []          # undo stack of cell snapshots (not saved)
@@ -69,7 +69,7 @@ var idle_s := 0.0
 var last_chapter_end := 0
 var muted := false
 
-const PORTRAIT_BACKDROP_SCREENS := ["home", "recipe_book", "chapter_end"]
+const PORTRAIT_BACKDROP_SCREENS := ["home", "recipe_book", "chapter_end", "all_baked", "chapter_list"]
 const BACKDROP_LANDSCAPE := "res://assets/backdrop/backdrop_landscape.webp"   # desktop / wide
 const BACKDROP_PORTRAIT := "res://assets/backdrop/backdrop_portrait.webp"     # phone Home / Recipe Book / chapter end
 var tex_landscape: Texture2D
@@ -127,6 +127,13 @@ var end_shelf: Control
 var book_grid: GridContainer
 var book_scroll: ScrollContainer
 var book_cards: Array = []
+var home_replay: Button
+var all_screen: Control
+var all_grid: GridContainer
+var all_cards: Array = []
+var all_shelf: Control
+var list_screen: Control
+var list_box: VBoxContainer
 var card_title: Label
 var card_time: Label
 var _js_cbs: Array = []
@@ -349,6 +356,8 @@ func _build_screens() -> void:
 	home_continue.pressed.connect(home_continue_pressed)
 	home_daily = _tool_button("HomeDaily", "Bake of the Day", "streak", "SecondaryButton", h.col)
 	home_daily.pressed.connect(func(): if open_daily(Clock.local_date()): pass)
+	home_replay = _tool_button("HomeReplay", "Replay a chapter", "play", "", h.col)
+	home_replay.pressed.connect(func(): show_chapter_list())
 	var hb := _tool_button("HomeRecipeBook", "Recipe Book", "book", "", h.col)
 	hb.pressed.connect(func(): show_recipe_book())
 	var hs := _tool_button("HomeSettings", "Settings", "settings", "", h.col)
@@ -379,6 +388,36 @@ func _build_screens() -> void:
 	end_next.pressed.connect(func(): chapter_end_continue("next"))
 	end_home = _tool_button("EndHome", "Home", "home", "", eb)
 	end_home.pressed.connect(func(): chapter_end_continue("home"))
+	# All recipes baked (§7.2, TT-AC-51): 8-card spread + full shelf + one line + one "Home" button, shown once
+	var a := _page("AllBaked"); all_screen = a.root
+	a.col.add_child(_title("All recipes baked", "AllTitle", 26))
+	all_grid = GridContainer.new(); all_grid.name = "AllGrid"; all_grid.columns = 4
+	all_grid.add_theme_constant_override("h_separation", 6); all_grid.add_theme_constant_override("v_separation", 6)
+	all_grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; a.col.add_child(all_grid)
+	for ch in range(1, 9):
+		var c := RecipeCard.new(); c.name = "AllCard%d" % ch; all_grid.add_child(c); c.compact = true; c.setup(ch, true); all_cards.append(c)
+	all_shelf = Shelf.new(); all_shelf.name = "AllShelf"; all_shelf.custom_minimum_size = Vector2(320, 142); a.col.add_child(all_shelf)
+	a.col.add_child(_body("New trays every day in Bake of the Day.", "AllLine"))
+	var ah := _tool_button("AllHome", "Home", "home", "PrimaryButton", a.col)
+	ah.pressed.connect(func(): show_home())
+	# Chapter list ("Replay a chapter", §7.2/§9): every solved board, replay rules (no rewards, events or midgame)
+	var cl := _page("ChapterList"); list_screen = cl.root
+	var lb := HBoxContainer.new(); lb.add_theme_constant_override("separation", 8); cl.col.add_child(lb)
+	var lback := _round_button("ListBack", "back", "Back"); lback.pressed.connect(func(): show_home()); lb.add_child(lback)
+	var lt := _title("Replay a chapter", "ListTitle", 24); lt.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lb.add_child(lt)
+	var lsc := TouchScroll.new(); lsc.name = "ListScroll"; lsc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	lsc.size_flags_vertical = Control.SIZE_EXPAND_FILL; cl.col.add_child(lsc)
+	cl.col.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list_box = VBoxContainer.new(); list_box.name = "ListBox"; list_box.add_theme_constant_override("separation", 8); lsc.add_child(list_box)
+	for ch in range(1, 9):
+		var cl_l := _body("Chapter %d · %s" % [ch, Chapters.RECIPES[ch - 1]], "ListCh%d" % ch); list_box.add_child(cl_l)
+		var rowb := HBoxContainer.new(); rowb.name = "ListRow%d" % ch; rowb.add_theme_constant_override("separation", 8)
+		rowb.alignment = BoxContainer.ALIGNMENT_CENTER; list_box.add_child(rowb)
+		for b in range(1, 6):
+			var id := "c%d-b%d" % [ch, b]
+			var bb := Button.new(); bb.name = "Replay_%s" % id.replace("-", "_"); bb.text = "Tray %d" % b
+			bb.custom_minimum_size = Vector2(56, 48); bb.add_theme_font_size_override("font_size", 14)
+			bb.pressed.connect(func(): replay_board(id)); rowb.add_child(bb)
 	# modal layer (over everything except the intro)
 	modal_root = Control.new(); modal_root.name = "Modals"; modal_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	modal_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -431,6 +470,7 @@ func _set_screen_raw(s: String) -> void:
 	margin.visible = on_board and layout_mode_name != "wide"
 	wide_root.visible = on_board and layout_mode_name == "wide"
 	home_screen.visible = s == "home"; book_screen.visible = s == "recipe_book"; end_screen.visible = s == "chapter_end"
+	all_screen.visible = s == "all_baked"; list_screen.visible = s == "chapter_list"
 	screen_log.append(s if not on_board else board_id())
 	if screen_log.size() > 100: screen_log.pop_front()
 	_apply_safe_area()
@@ -459,6 +499,11 @@ func _refresh_home() -> void:
 	home_daily.disabled = not unlocked or done
 	home_daily.text = "Baked · back tomorrow" if done else "Bake of the Day"
 	home_daily.icon = TtTheme.icon("check" if done else "streak", true)
+	# §7.2: once every chapter is done, Bake of the Day is the primary button and "Replay a chapter" appears
+	var all_done: bool = progress.all_done()
+	home_daily.theme_type_variation = "PrimaryButton" if all_done else "SecondaryButton"
+	home_daily.text = "Baked ✓ · back tomorrow" if done and all_done else home_daily.text
+	home_replay.visible = all_done
 	var sm: Dictionary = daily.summary(Clock.local_date())
 	home_streak.text = "Streak: %d · Best: %d" % [sm.streak, sm.best_streak] if unlocked else "Finish chapter 1 to unlock Bake of the Day."
 	home_shelf.set_owned(progress.decor)
@@ -638,6 +683,13 @@ func _relayout() -> void:
 	for c in book_cards: c.custom_minimum_size = Vector2(hs.book * 0.75, hs.book)
 	book_scroll.custom_minimum_size = Vector2(cols * hs.book * 0.75 + 8.0 * (cols - 1), vs.y - 32.0 - 56.0 - 12.0)
 	end_card.custom_minimum_size = Vector2(hs.end * 0.75, hs.end)
+	# All recipes baked: 4x2 spread on phones, one row of 8 on wide; the full shelf is always shown (§7.2)
+	var acols := 8 if m == "wide" else 4; var arows := 8 / acols
+	all_grid.columns = acols
+	var aw := minf(vs.x - 32.0, 480.0 if m == "portrait" else 760.0)
+	var spare_h := vs.y - 32.0 - 34.0 - 48.0 - 24.0 - 142.0 - 6.0 * (arows - 1) - 12.0 * 4
+	var ah := minf((aw - 6.0 * (acols - 1)) / acols * 320.0 / 240.0, spare_h / arows)
+	for c in all_cards: c.custom_minimum_size = Vector2(ah * 0.75, ah)
 	end_shelf.visible = m == "portrait"
 	var short := vs.y < 600.0                      # e.g. the 800x450 CrazyGames embed: compact Home
 	home_shelf.custom_minimum_size.y = 90.0 if short else 142.0
@@ -920,7 +972,30 @@ func chapter_end_continue(dest: String) -> void:
 	if e.allowed: await Ads.midgame("chapter_end")
 	_end_busy = false
 	if dest == "next" and Chapters.available(last_chapter_end + 1): open_board("c%d-b1" % (last_chapter_end + 1))
+	elif progress.all_done() and not progress.all_baked_seen: show_all_baked()
 	else: show_home()
+
+## §7.2 "All recipes baked" (once, after the ch8 chapter end): 8-card spread + full shelf + one line + "Home".
+func show_all_baked() -> void:
+	progress.all_baked_seen = true
+	save_now("all_baked")
+	all_shelf.set_owned(progress.decor)
+	set_screen("all_baked")
+
+## "Replay a chapter" list: solved boards only (§7.2: any solved board).
+func show_chapter_list() -> void:
+	for ch in range(1, 9):
+		for b in range(1, 6):
+			var id := "c%d-b%d" % [ch, b]
+			var bb: Button = list_box.get_node("ListRow%d/Replay_%s" % [ch, id.replace("-", "_")])
+			bb.disabled = not progress.is_solved(id)
+	set_screen("chapter_list")
+
+## Replay one solved board: mode "replay" (no unlocks, no chapter events, no midgame; hints follow the board).
+func replay_board(id: String) -> bool:
+	if not progress.is_solved(id): return false
+	_mark_transition_start()
+	return open_board(id)
 
 ## Midgame decision at the chapter-end slot: every decision (allowed or denied, SPEC §13.1 BR-3 reason codes) is
 ## emitted on Ads.decided (debug hooks record it in dump().ads_decisions[]). Returns the decision; the caller requests.
@@ -1004,7 +1079,7 @@ func _schedule_save() -> void:
 ## Writes now (solve, chapter end, settings, hidden, pagehide, home).
 func save_now(reason: String) -> void:
 	if save_timer: save_timer.stop()
-	if (mode == "chapter") and board_id() != "" and not won:
+	if mode == "chapter" and chapter > 0 and board.cells.size() == n * n and not won:   # (boot-to-Home: no board yet)
 		progress.current_id = board_id()
 		var cc := []
 		for i in n * n: cc.append(0 if givens.has(i) else int(board.cells[i]))

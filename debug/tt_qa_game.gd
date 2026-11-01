@@ -118,6 +118,9 @@ static func show(main, cmd: String) -> String:
 	elif cmd == "settings_close": main.close_settings()
 	elif cmd == "end_next": main.chapter_end_continue("next")
 	elif cmd == "end_home": main.chapter_end_continue("home")
+	elif cmd == "all_baked": main.show_all_baked()
+	elif cmd == "chapter_list": main.show_chapter_list()
+	elif cmd.begins_with("replay:"): res = "ok" if main.replay_board(cmd.substr(7)) else "refused: not solved"
 	elif cmd.begins_with("board:"):
 		var id := cmd.substr(6)
 		if id == "tutorial": id = "c1-b1"
