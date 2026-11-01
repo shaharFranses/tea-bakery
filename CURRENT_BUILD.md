@@ -46,5 +46,5 @@ commit sha and the pck is not byte-reproducible across exports). The frozen comm
 
 ## Last CI (auto)
 <!-- ci:begin -->
-2026-10-25 10:02: CI **PASS** on `96e2144` · release 36.48 MB (wasm 35.38 MB) · packet `qa/results/ci-96e2144/GATE_PACKET.md`
+2026-11-01 11:28: CI **PASS** on `6cf5b9b` · release 39.16 MB (wasm 35.38 MB) · packet `qa/results/ci-6cf5b9b/GATE_PACKET.md`
 <!-- ci:end -->
