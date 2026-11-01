@@ -19,32 +19,37 @@ with sync_playwright() as p:
         pg.goto(f"{base}/index.html?qa=1&intro=0&seed=7&size={size}")
         pg.wait_for_function("() => window.PKD_QA && JSON.parse(window.PKD_QA.dump()).game && JSON.parse(window.PKD_QA.dump()).game.intro_done", timeout=90000)
         pg.wait_for_timeout(600)
-        g = json.loads(pg.evaluate("window.PKD_QA.dump()"))["game"]
-        tag = f"{w}x{h}"; f = []
-        if g.get("layout") != want_mode: f.append(f"layout {g.get('layout')} != {want_mode}")
-        vis = [u for u in g["ui"] if u["visible"]]
-        btns = [u for u in vis if u["type"] in ("Button", "CheckButton", "TextureButton")]
-        for u in vis:
-            x, y, uw, uh = u["rect"]
-            if u["font"] < 12 - 0.01: f.append(f"{u['name']} font {u['font']:.1f} < 12")
-            if x < -0.5 or y < -0.5 or x + uw > w + 0.5 or y + uh > h + 0.5: f.append(f"{u['name']} outside viewport {u['rect']}")
-        for u in btns:
-            if u["rect"][2] < 44 - 0.01 or u["rect"][3] < 44 - 0.01: f.append(f"{u['name']} {u['rect'][2]:.0f}x{u['rect'][3]:.0f} < 44")
-            if ov(u["rect"], g["board_rect"]): f.append(f"{u['name']} overlaps board")
-        for i, a in enumerate(btns):
-            for b in btns[i + 1:]:
-                if ov(a["rect"], b["rect"]): f.append(f"{a['name']} overlaps {b['name']}")
-        cell = g["board_rect"][2] / g["n"]
-        if cell < 44 - 0.01: f.append(f"cell {cell:.1f} < 44 (n={g['n']})")
-        res[tag] = {"pass": not f, "fails": f, "layout": g.get("layout"), "css_per_unit": g.get("css_per_unit"), "n": g["n"],
-                    "cell_css": round(cell, 1), "board_rect": [round(v, 1) for v in g["board_rect"]],
-                    "min_button": [round(min(u["rect"][2] for u in btns), 1), round(min(u["rect"][3] for u in btns), 1)] if btns else None,
-                    "min_font": round(min(u["font"] for u in vis), 1),
-                    "elements": [{"name": u["name"], "rect": [round(v, 1) for v in u["rect"]], "font": round(u["font"], 1)} for u in vis]}
-        pg.screenshot(path=f"{shots}/layout_{tag}.png")
-        print(f"{'PASS' if not f else 'FAIL'} {tag}: layout={g.get('layout')} n={g['n']} cell={cell:.1f} min_btn={res[tag]['min_button']} min_font={res[tag]['min_font']}")
-        for x in f: print("   ", x)
-        fails += f; ctx.close()
+        for scr in ["board", "home", "recipe_book", "chapter_end"]:
+            if scr != "board":
+                pg.evaluate(f"window.PKD_QA.show({json.dumps('chapter_end_screen:1' if scr == 'chapter_end' else scr)})"); pg.wait_for_timeout(500)
+            g = json.loads(pg.evaluate("window.PKD_QA.dump()"))["game"]
+            tag = f"{w}x{h}" + ("" if scr == "board" else "_" + scr); f = []
+            if g.get("screen") != scr: f.append(f"screen {g.get('screen')} != {scr}")
+            if g.get("layout") != want_mode: f.append(f"layout {g.get('layout')} != {want_mode}")
+            vis = [u for u in g["ui"] if u["visible"]]
+            btns = [u for u in vis if u["type"] in ("Button", "CheckButton", "TextureButton")]
+            for u in vis:
+                x, y, uw, uh = u["rect"]
+                if u["font"] < 12 - 0.01: f.append(f"{u['name']} font {u['font']:.1f} < 12")
+                if x < -0.5 or y < -0.5 or x + uw > w + 0.5 or y + uh > h + 0.5: f.append(f"{u['name']} outside viewport {u['rect']}")
+            for u in btns:
+                if u["rect"][2] < 44 - 0.01 or u["rect"][3] < 44 - 0.01: f.append(f"{u['name']} {u['rect'][2]:.0f}x{u['rect'][3]:.0f} < 44")
+                if scr == "board" and ov(u["rect"], g["board_rect"]): f.append(f"{u['name']} overlaps board")
+            for i, a in enumerate(btns):
+                for b in btns[i + 1:]:
+                    if ov(a["rect"], b["rect"]): f.append(f"{a['name']} overlaps {b['name']}")
+            cell = g["board_rect"][2] / g["n"]
+            if scr == "board" and cell < 44 - 0.01: f.append(f"cell {cell:.1f} < 44 (n={g['n']})")
+            res[tag] = {"pass": not f, "fails": f, "layout": g.get("layout"), "css_per_unit": g.get("css_per_unit"), "n": g["n"],
+                        "cell_css": round(cell, 1), "board_rect": [round(v, 1) for v in g["board_rect"]],
+                        "min_button": [round(min(u["rect"][2] for u in btns), 1), round(min(u["rect"][3] for u in btns), 1)] if btns else None,
+                        "min_font": round(min(u["font"] for u in vis), 1),
+                        "elements": [{"name": u["name"], "rect": [round(v, 1) for v in u["rect"]], "font": round(u["font"], 1)} for u in vis]}
+            pg.screenshot(path=f"{shots}/layout_{tag}.png")
+            print(f"{'PASS' if not f else 'FAIL'} {tag}: layout={g.get('layout')} n={g['n']} cell={cell:.1f} min_btn={res[tag]['min_button']} min_font={res[tag]['min_font']}")
+            for x in f: print("   ", x)
+            fails += f
+        ctx.close()
     br.close()
 json.dump(res, open(f"{out}/layout_smoke.json", "w"), indent=1)
 sys.exit(1 if fails else 0)

@@ -65,7 +65,7 @@ static func state(main) -> Dictionary:
 	var params: Dictionary = hooks.params if hooks else {}
 	var sm: Dictionary = main.daily.summary(Clock.local_date())
 	return {"screen": main.screen, "screen_log": main.screen_log, "chapter": main.chapter, "board_no": main.board_no,
-		"givens": main.givens.keys().map(func(i): return [i / main.n, i % main.n]), "card_open": main.card_open, "interactive": main.interactive,
+		"givens": main.givens.keys().map(func(i): return [i / main.n, i % main.n]), "card_open": main.card_open, "t_solved_ms": main.t_solved_ms, "t_interactive_ms": main.t_interactive_ms, "interactive": main.interactive,
 		"progress": main.progress.to_dict(), "save_writes": Store.save_writes, "corrupt_backed_up": Store.corrupt_backed_up,
 		"shakes_started": b.shakes_started, "baking": b.bake_t0 >= 0, "steam_cells": b.steam_cells.size(), "texture_id": "berry2",
 		"targets": main.board.hint_target.keys().map(func(i): return [i / main.n, i % main.n]), "coach": main.puzzle.get("coach", ""),
@@ -125,6 +125,8 @@ static func show(main, cmd: String) -> String:
 	elif cmd.begins_with("daily:"):
 		var d := cmd.substr(6)
 		res = "open %s" % d if main.open_daily(d) else "refused: %s already baked (not replayable)" % d
+	elif cmd.begins_with("chapter_end_screen:"):                        # layout: the real chapter-end screen for K
+		main.show_chapter_end(cmd.substr(19).to_int())
 	elif cmd.begins_with("chapter_end:"):                               # BR-3: completes chapter K, runs the slot decision
 		var k := cmd.substr(12).to_int()
 		main.ad_policy.on_chapter_completed(k)
@@ -145,6 +147,7 @@ static func show(main, cmd: String) -> String:
 		if p.size() == 2: main.tap_cell(p[0].to_int(), p[1].to_int())
 	else: res = "unknown command"
 	Dbg.hit("QA show %s -> %s" % [cmd, res])
+	if OS.has_feature("web"): JavaScriptBridge.eval("window.__pkdShow = %s;" % JSON.stringify(res))   # JS callbacks return nothing
 	return res
 
 

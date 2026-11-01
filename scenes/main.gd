@@ -377,7 +377,7 @@ func _build_screens() -> void:
 	# solved card: "Baked!" + active time; tap anywhere skips (TT-AC-25)
 	solved_card = Control.new(); solved_card.name = "SolvedCard"; solved_card.visible = false
 	solved_card.set_anchors_preset(Control.PRESET_FULL_RECT); modal_root.add_child(solved_card)
-	solved_card.gui_input.connect(func(ev): if (ev is InputEventMouseButton and ev.pressed) or (ev is InputEventScreenTouch and ev.pressed): _after_card())
+	solved_card.gui_input.connect(_on_card_input)
 	var scc := CenterContainer.new(); scc.set_anchors_preset(Control.PRESET_FULL_RECT); scc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	solved_card.add_child(scc)
 	var scp := PanelContainer.new(); scp.theme_type_variation = "CardPanel"; scp.mouse_filter = Control.MOUSE_FILTER_IGNORE; scc.add_child(scp)
@@ -633,6 +633,9 @@ func _relayout() -> void:
 	if m == "wide": end_h = clampf(vs.y - 24.0 - 40.0 - 48.0 * 2 - 12.0 * 4 - 24.0, 150.0, 300.0)
 	end_card.custom_minimum_size = Vector2(end_h * 0.75, end_h)
 	end_shelf.visible = m == "portrait"
+	var short := vs.y < 600.0                      # e.g. the 800x450 CrazyGames embed: compact Home
+	home_shelf.custom_minimum_size.y = 90.0 if short else 142.0
+	home_screen.get_node("Column").add_theme_constant_override("separation", 6 if short else 12)
 	_fit_bubble()
 	_in_relayout = false
 
@@ -660,10 +663,11 @@ func _apply_safe_area() -> void:
 	var side := maxf(16.0, (vs.x - UiLayout.PORTRAIT_MAX_W) / 2.0)
 	for mc in [margin, home_screen, book_screen, end_screen]:
 		if mc == null: continue
+		var sd := side if (mc == margin or layout_mode_name != "wide") else 16.0   # wide pages use the full width
 		mc.add_theme_constant_override("margin_top", int(16 + m[0]))
-		mc.add_theme_constant_override("margin_right", int(side + m[1]))
+		mc.add_theme_constant_override("margin_right", int(sd + m[1]))
 		mc.add_theme_constant_override("margin_bottom", int(16 + m[2]))
-		mc.add_theme_constant_override("margin_left", int(side + m[3]))
+		mc.add_theme_constant_override("margin_left", int(sd + m[3]))
 	_apply_backdrop(vs.x > vs.y)
 
 ## Backdrops (handoff P2): landscape webp on desktop / wide; portrait webp (cover-fit, anchored top) on phone Home,
@@ -808,6 +812,7 @@ func _refresh() -> void:
 # ------------------------------------------------------------------ solve flow
 func _on_solved() -> void:
 	interactive = false
+	t_solved_ms = Time.get_ticks_msec()
 	var id := board_id()
 	Dbg.hit("WIN %s n=%d seed=%d moves=%d" % [id, n, seed_value, moves])
 	board.hint_target = {}; board.hint_unit = {}
@@ -824,11 +829,19 @@ func _on_solved() -> void:
 	if intro_done: Ads.set_context("results")            # solved card: gameplayStop
 	var s := int(active_ms / 1000.0)
 	card_time.text = "Baked in %d:%02d" % [s / 60, s % 60]   # D-16: time only on the solved card
-	card_open = true; solved_card.visible = true
+	card_open = true; solved_card.visible = true; card_open_ms = Time.get_ticks_msec()
 	_card_first = first
 	card_timer.start()
 
 var _card_first := false
+var card_open_ms := 0
+var t_solved_ms := 0           # engine ticks at solve (TT-AC-25 timing, debug dump)
+var t_interactive_ms := 0      # engine ticks when the current board became interactive
+
+## Tap skips the card; the solving tap's own emulated mouse/touch twin (same input, < 250 ms) must not skip it.
+func _on_card_input(ev: InputEvent) -> void:
+	var down: bool = (ev is InputEventMouseButton and ev.pressed) or (ev is InputEventScreenTouch and ev.pressed)
+	if down and Time.get_ticks_msec() - card_open_ms >= 250: _after_card()
 
 func _close_card() -> void:
 	card_timer.stop(); card_open = false; solved_card.visible = false
@@ -1055,6 +1068,7 @@ func _board_interactive() -> void:
 	await get_tree().process_frame
 	if screen != "board": return
 	interactive = not won
+	if interactive: t_interactive_ms = Time.get_ticks_msec()
 	if intro_done and gameplay_started and not won and not settings_modal.visible: Ads.set_context("play")
 	_sync_hint_button()
 	if not _transition_open: return

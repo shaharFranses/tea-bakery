@@ -66,12 +66,12 @@ func test_givens_immutable_and_tutorial_target():
 func test_solve_flow_to_next_board():
 	var m = await _main()
 	_solve(m)
-	assert_true(m.won); assert_true(m.card_open)
-	assert_true(m.progress.is_solved("c1-b1"))
+	assert_true(m.won, "won"); assert_true(m.card_open, "card open")
+	assert_true(m.progress.is_solved("c1-b1"), "progress solved")
 	m._after_card()
-	await wait_frames(2)
-	assert_eq(m.board_id(), "c1-b2"); assert_true(m.interactive)
-	assert_true("solve" in Store.save_writes.map(func(w): return w.reason))
+	await wait_until(func(): return m.interactive, 2.0)   # TT-AC-25: next board interactive <= 2.0 s
+	assert_eq(m.board_id(), "c1-b2"); assert_true(m.interactive, "interactive after advance won=%s screen=%s intro=%s card=%s" % [m.won, m.screen, m.intro_done, m.card_open])
+	assert_true("solve" in Store.save_writes.map(func(w): return w.reason), "solve save")
 
 func test_conflict_shake():
 	var m = await _main()

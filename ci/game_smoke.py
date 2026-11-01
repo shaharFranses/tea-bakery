@@ -27,7 +27,7 @@ with sync_playwright() as p:
     br = p.chromium.launch(executable_path=os.environ.get("PKD_CHROME", "/usr/bin/google-chrome"), headless=True,
                            args=["--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
     ctx = br.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, has_touch=True, is_mobile=True)
-    show = lambda pg, c: pg.evaluate(f"window.PKD_QA.show({json.dumps(c)})")
+    show = lambda pg, c: pg.evaluate(f"(() => {{ window.__pkdShow = null; window.PKD_QA.show({json.dumps(c)}); return window.__pkdShow; }})()")
     pg = boot(ctx, "qa=1&intro=0"); d = dump(pg); g = d["game"]
     res["phone_tutorial_board1"] = g["tutorial"] is True and g["n"] == 5 and g["board_id"] == "c1-b1" and g["screen"] == "board"
     res["tutorial_givens_and_target"] = len(g["givens"]) >= 3 and len(g["targets"]) == 1 and g["coach"] != ""
@@ -45,7 +45,8 @@ with sync_playwright() as p:
     pg.wait_for_function("() => { const g = JSON.parse(window.PKD_QA.dump()).game; return g.board_id == 'c1-b2' && g.interactive }", timeout=10000)
     dt = pg.evaluate("performance.now()") - t0; notes["b1_to_b2_ms"] = dt
     gb = dump(pg)["game"]
-    res["b1_to_b2_interactive_le_2s"] = dt <= 2000 + 400   # +poll slack; card is 1.5 s
+    notes["b1_to_b2_engine_ms"] = gb["t_interactive_ms"] - gs["t_solved_ms"]
+    res["b1_to_b2_interactive_le_2s"] = 0 < gb["t_interactive_ms"] - gs["t_solved_ms"] <= 2000   # engine clock: solve -> next board interactive
     res["progress_dot_1_on"] = gb["dots_on"] == 1 and "c1-b1" in gb["progress"]["solved"]
     res["save_immediate_on_solve"] = any(w["reason"] == "solve" for w in gb["save_writes"])
     # free-board tap cycle + conflict shake (generated board, no givens)
@@ -94,11 +95,11 @@ with sync_playwright() as p:
     res["hint_ch2_second_is_rewarded"] = r2 == "rewarded modal"
     pg.screenshot(path=f"{out}/game_phone_rewarded_modal.png")
     show(pg, "hint_watch"); pg.wait_for_timeout(1500); gw = dump(pg)["game"]
-    res["hint_rewarded_granted_after_ad"] = gw["hint"]["kind"] == "rewarded" and any(e.get("kind") == "rewarded" for e in dump(pg)["ads_log"] if isinstance(e, dict))
+    res["hint_rewarded_granted_after_ad"] = gw["hint"]["kind"] == "rewarded" and any(e.get("kind") == "rewarded" for e in gw["ads_log"] if isinstance(e, dict))
     # save + reload restores marks on the same board (debounced write)
     show(pg, "board:c2-b2"); pg.wait_for_timeout(200); g = dump(pg)["game"]
     free = next([r, c] for r in range(g["n"]) for c in range(g["n"]) if [r, c] not in g["givens"])
-    show(pg, f"tap:{free[0]},{free[1]}"); pg.wait_for_timeout(1600)
+    show(pg, f"tap:{free[0]},{free[1]}"); pg.wait_for_timeout(2500)
     res["save_debounced_write"] = any(w["reason"] == "debounce" for w in dump(pg)["game"]["save_writes"])
     pg.close(); pg = boot(ctx, "qa=1&intro=0"); g = dump(pg)["game"]
     res["reload_restores_saved_board"] = g["board_id"] == "c2-b2" and g["cells"][free[0] * g["n"] + free[1]] == "mold"
