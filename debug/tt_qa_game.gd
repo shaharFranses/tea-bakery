@@ -50,7 +50,13 @@ static func _ui(main: Control) -> Array:
 		for c in n.get_children(): stack.append(c)
 		if not (n is BaseButton or n is Label): continue
 		var r: Rect2 = n.get_global_rect()
-		out.append({"name": str(n.name), "type": n.get_class(), "rect": [r.position.x * css, r.position.y * css, r.size.x * css, r.size.y * css],
+		# scrolled out of its ScrollContainer (Recipe Book / chapter list): reported, flagged "scrolled_out"
+		var so := false
+		var a: Node = n.get_parent()
+		while a != null and a != main:
+			if a is ScrollContainer and not (a as Control).get_global_rect().grow(0.5).encloses(r): so = true; break
+			a = a.get_parent()
+		out.append({"scrolled_out": so, "name": str(n.name), "type": n.get_class(), "rect": [r.position.x * css, r.position.y * css, r.size.x * css, r.size.y * css],
 			"font": n.get_theme_font_size("font_size") * css, "visible": n.is_visible_in_tree(),
 			"enabled": not (n is BaseButton and n.disabled), "text": str(n.text)})
 	return out
@@ -88,7 +94,7 @@ static func state(main) -> Dictionary:
 		"save_key": Store.KEY, "ads_log": Ads.call_log, "ads_decisions": Dbg.hooks.ads_decisions if Dbg.hooks else [], "perf_marks": main.perf_marks, "ads_mode": Ads.mode, "sdk_log": Ads.sdk_log,
 		"gameplay_started": main.gameplay_started, "backdrop": main.backdrop.visible, "backdrop_asset": main.backdrop.texture != null,
 		"gen_ms": main.puzzle.get("ms", 0.0), "reshapes": main.puzzle.get("reshapes", 0),
-		"too_small": main.too_small, "show_me_visible": main.showme_btn.visible, "button_rect": [main.button.get_global_rect().position.x, main.button.get_global_rect().position.y, main.button.size.x, main.button.size.y]}
+		"too_small": main.too_small, "rules_lines": main.hint_label.get_line_count(), "rules_font_css": main.hint_label.get_theme_font_size("font_size") * _css(main), "show_me_visible": main.showme_btn.visible, "button_rect": [main.button.get_global_rect().position.x, main.button.get_global_rect().position.y, main.button.size.x, main.button.size.y]}
 
 ## H2. Returns a short result string (also hit-logged).
 static func show(main, cmd: String) -> String:

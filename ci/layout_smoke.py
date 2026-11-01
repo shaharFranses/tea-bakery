@@ -19,14 +19,14 @@ with sync_playwright() as p:
         pg.goto(f"{base}/index.html?qa=1&intro=0&seed=7&size={size}")
         pg.wait_for_function("() => window.PKD_QA && JSON.parse(window.PKD_QA.dump()).game && JSON.parse(window.PKD_QA.dump()).game.intro_done", timeout=90000)
         pg.wait_for_timeout(600)
-        for scr in ["board", "home", "recipe_book", "chapter_end"]:
+        for scr in ["board", "home", "recipe_book", "chapter_end", "all_baked", "chapter_list"]:
             if scr != "board":
                 pg.evaluate(f"window.PKD_QA.show({json.dumps('chapter_end_screen:1' if scr == 'chapter_end' else scr)})"); pg.wait_for_timeout(500)
             g = json.loads(pg.evaluate("window.PKD_QA.dump()"))["game"]
             tag = f"{w}x{h}" + ("" if scr == "board" else "_" + scr); f = []
             if g.get("screen") != scr: f.append(f"screen {g.get('screen')} != {scr}")
             if g.get("layout") != want_mode: f.append(f"layout {g.get('layout')} != {want_mode}")
-            vis = [u for u in g["ui"] if u["visible"]]
+            vis = [u for u in g["ui"] if u["visible"] and not u.get("scrolled_out")]
             btns = [u for u in vis if u["type"] in ("Button", "CheckButton", "TextureButton")]
             for u in vis:
                 x, y, uw, uh = u["rect"]
@@ -40,6 +40,11 @@ with sync_playwright() as p:
                     if ov(a["rect"], b["rect"]): f.append(f"{a['name']} overlaps {b['name']}")
             cell = g["board_rect"][2] / g["n"]
             if scr == "board" and cell < 44 - 0.01: f.append(f"cell {cell:.1f} < 44 (n={g['n']})")
+            if scr == "board" and want_mode == "portrait":     # SPEC v1.0.2 D-02 on phones
+                if g.get("rules_lines", 9) > 3: f.append(f"D-02 rules text {g.get('rules_lines')} lines > 3")
+                if g.get("rules_font_css", 0) < 16 - 0.01: f.append(f"D-02 rules font {g.get('rules_font_css')} < 16")
+                if g["board_rect"][2] < 352 - 0.01: f.append(f"D-02 board {g['board_rect'][2]:.1f} < 352")
+                if g.get("too_small"): f.append("too_small at 390x844")
             res[tag] = {"pass": not f, "fails": f, "layout": g.get("layout"), "css_per_unit": g.get("css_per_unit"), "n": g["n"],
                         "cell_css": round(cell, 1), "board_rect": [round(v, 1) for v in g["board_rect"]],
                         "min_button": [round(min(u["rect"][2] for u in btns), 1), round(min(u["rect"][3] for u in btns), 1)] if btns else None,
@@ -49,6 +54,16 @@ with sync_playwright() as p:
             print(f"{'PASS' if not f else 'FAIL'} {tag}: layout={g.get('layout')} n={g['n']} cell={cell:.1f} min_btn={res[tag]['min_button']} min_font={res[tag]['min_font']}")
             for x in f: print("   ", x)
             fails += f
+        if want_mode == "portrait":   # TT-AC-48: 8x8 at 700x360 -> cover within 500 ms; back to 390x844 -> gone within 500 ms
+            pg.evaluate("window.PKD_QA.show('board:c6-b2')"); pg.wait_for_timeout(400)
+            ts = {}
+            for vw, vh, want in [(700, 360, True), (390, 844, False)]:
+                pg.set_viewport_size({"width": vw, "height": vh}); pg.wait_for_timeout(500)
+                g = json.loads(pg.evaluate("window.PKD_QA.dump()"))["game"]
+                ts[f"{vw}x{vh}"] = {"too_small": g.get("too_small"), "n": g["n"], "cell_css": round(g["board_rect"][2] / g["n"], 1)}
+                if want: pg.screenshot(path=f"{shots}/layout_too_small_700x360.png")
+                if g.get("too_small") != want: fails.append(f"TT-AC-48 {vw}x{vh} too_small={g.get('too_small')} want {want}")
+            res["too_small"] = ts; print("too_small:", ts)
         ctx.close()
     br.close()
 json.dump(res, open(f"{out}/layout_smoke.json", "w"), indent=1)
