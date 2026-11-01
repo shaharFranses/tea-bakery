@@ -28,11 +28,13 @@ const Progress = preload("res://game/progress.gd")
 const Grader = preload("res://game/grader.gd")
 const HintText = preload("res://game/hint_text.gd")
 const RecipeCard = preload("res://scenes/recipe_card.gd")
+const TouchScroll = preload("res://ui/touch_scroll.gd")
 const Shelf = preload("res://scenes/shelf.gd")
 
 const CARD_MS := 1500            # bake reward + "Baked!" card, then the next board (TT-AC-25: interactive <= 2.0 s)
 const SAVE_DEBOUNCE_S := 1.0     # §3.5 save.debounce_ms
-const IDLE_PULSE_S := 30.0       # §3.5 hints.idle_pulse_s
+const IDLE_PULSE_S := 30.0
+const BOOK_CARD_MIN_H := 240.0  # Recipe Book card height floor (ribbon names readable)       # §3.5 hints.idle_pulse_s
 
 var intro_done := false
 var n := 5
@@ -123,6 +125,7 @@ var end_next: Button
 var end_home: Button
 var end_shelf: Control
 var book_grid: GridContainer
+var book_scroll: ScrollContainer
 var book_cards: Array = []
 var card_title: Label
 var card_time: Label
@@ -355,9 +358,12 @@ func _build_screens() -> void:
 	var rb := HBoxContainer.new(); rb.add_theme_constant_override("separation", 8); r.col.add_child(rb)
 	var back := _round_button("BookBack", "back", "Back"); back.pressed.connect(func(): show_home()); rb.add_child(back)
 	var bt := _title("Recipe Book", "BookTitle", 24); bt.size_flags_horizontal = Control.SIZE_EXPAND_FILL; rb.add_child(bt)
+	book_scroll = TouchScroll.new(); book_scroll.name = "BookScroll"
+	book_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	r.col.add_child(book_scroll)
 	book_grid = GridContainer.new(); book_grid.name = "BookGrid"; book_grid.columns = 2
 	book_grid.add_theme_constant_override("h_separation", 8); book_grid.add_theme_constant_override("v_separation", 8)
-	r.col.add_child(book_grid)
+	book_scroll.add_child(book_grid)
 	for ch in range(1, 9):
 		var c := RecipeCard.new(); c.name = "Card%d" % ch; book_grid.add_child(c); c.setup(ch, false); book_cards.append(c)
 	# Chapter end (§7: recipe card flips in, décor drops onto the shelf; "Next chapter" primary + "Home")
@@ -624,21 +630,30 @@ func _relayout() -> void:
 		board.custom_minimum_size = Vector2(UiLayout.BOARD_MIN, UiLayout.BOARD_MIN)
 		for c in [sizes, row, status, bubble, top_bar]: c.custom_minimum_size.x = 0
 		vb.add_theme_constant_override("separation", UiLayout.portrait_gap(vs.y))
-	# pages: recipe cards sized to fit the viewport (8 cards: 2x4 portrait, 4x2 wide), nothing below the fold
-	var cols := book_grid.columns; var rows := 8 / cols
-	var avail_h := vs.y - 32.0 - 56.0 - 12.0 - 8.0 * (rows - 1)
-	var avail_w := minf(vs.x - 32.0, 480.0 if m == "portrait" else vs.x - 32.0) - 8.0 * (cols - 1)
-	var ch := minf(avail_h / rows, avail_w / cols * 320.0 / 240.0)
-	for c in book_cards: c.custom_minimum_size = Vector2(ch * 240.0 / 320.0, ch)
-	var end_h := clampf(vs.y - 32.0 - 40.0 - 142.0 - 24.0 - 48.0 * 2 - 12.0 * 5, 150.0, 300.0)
-	if m == "wide": end_h = clampf(vs.y - 24.0 - 40.0 - 48.0 * 2 - 12.0 * 4 - 24.0, 150.0, 300.0)
-	end_card.custom_minimum_size = Vector2(end_h * 0.75, end_h)
+	# Recipe Book: 2 columns portrait / 4 wide, cards at least BOOK_CARD_MIN_H tall so every name fits its ribbon
+	# (auto-fit, >= 12 px); the grid scrolls vertically when 8 cards do not fit (phones, the 800x450 embed)
+	var cols := book_grid.columns
+	var hs := page_card_heights(vs, m)
+	for c in book_cards: c.custom_minimum_size = Vector2(hs.book * 0.75, hs.book)
+	book_scroll.custom_minimum_size = Vector2(cols * hs.book * 0.75 + 8.0 * (cols - 1), vs.y - 32.0 - 56.0 - 12.0)
+	end_card.custom_minimum_size = Vector2(hs.end * 0.75, hs.end)
 	end_shelf.visible = m == "portrait"
 	var short := vs.y < 600.0                      # e.g. the 800x450 CrazyGames embed: compact Home
 	home_shelf.custom_minimum_size.y = 90.0 if short else 142.0
 	home_screen.get_node("Column").add_theme_constant_override("separation", 6 if short else 12)
+	end_screen.get_node("Column").add_theme_constant_override("separation", 6 if short else 12)
 	_fit_bubble()
 	_in_relayout = false
+
+## Recipe-card heights for a viewport (logical px) and layout mode: {book, end}. Shared with tests (ribbon fit).
+static func page_card_heights(vs: Vector2, m: String) -> Dictionary:
+	var cols := 4 if m == "wide" else 2; var rows := 8 / cols
+	var avail_h := vs.y - 32.0 - 56.0 - 12.0 - 8.0 * (rows - 1)
+	var avail_w := minf(vs.x - 32.0, 480.0 if m == "portrait" else vs.x - 32.0) - 8.0 * (cols - 1)
+	var book := minf(avail_w / cols * 320.0 / 240.0, maxf(avail_h / rows, BOOK_CARD_MIN_H))
+	var end_h := clampf(vs.y - 32.0 - 40.0 - 142.0 - 24.0 - 48.0 * 2 - 12.0 * 5, 150.0, 300.0)
+	if m == "wide": end_h = clampf(vs.y - 24.0 - 40.0 - 48.0 * 2 - (6.0 if vs.y < 600.0 else 12.0) * 4 - 24.0, 150.0, 300.0)
+	return {"book": book, "end": end_h}
 
 var panel_rect := Rect2()
 func _fit_panel() -> void:
