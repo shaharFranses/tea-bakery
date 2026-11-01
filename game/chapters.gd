@@ -1,11 +1,11 @@
-## Chapter content (SPEC v1.0.1 §3.2 / §3.5 chapters, §6 tutorial, §16.1 board format). Packs:
+## Chapter content (SPEC v1.0.2 §3.2 / §3.5 chapters, §6 tutorial, §16.1 board format). Packs:
 ## res://game/levels/chapter_NN.json, built offline by tools/build_chapters.gd from the validated pack_<n>_g<band>.json
 ## boards (D-21: no runtime generation for chapter content) and re-verified in tests/test_chapters.gd.
-## Thin slice ships chapters 1-2 (10 boards); chapters 3-8 follow in the content drop.
+## Ships chapters 1-8 (40 boards).
 extends RefCounted
 
 const RECIPES := ["Scones & clotted cream", "Victoria sponge", "Lemon drizzle", "Jam tarts", "Cherry Bakewell",
-	"Strawberry shortcake", "Apple crumble", "Macarons"]   # card 5 renamed from the spec's "Bakewell slice" (Art ruling, handoff P2)
+	"Strawberry shortcake", "Apple crumble", "Macarons"]   # card 5 = "Cherry Bakewell" (SPEC v1.0.2, SM ruling); names live only here
 const DECOR := ["Floral teapot", "Tiered cake stand", "Gingham tablecloth", "Lace doily and teacups", "Vase of sweet peas",
 	"Bunting garland", "Cuckoo clock", "Copper kettle"]
 const DECOR_FILES := ["decor_1_teapot", "decor_2_cake_stand", "decor_3_gingham", "decor_4_doily_teacups", "decor_5_sweet_peas",

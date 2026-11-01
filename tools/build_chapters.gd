@@ -1,4 +1,4 @@
-## Builds res://game/levels/chapter_01.json + chapter_02.json (thin slice) from the validated packs (SPEC §3.2/§3.5
+## Builds res://game/levels/chapter_01.json .. chapter_08.json from the validated packs (SPEC §3.2/§3.5
 ## sizes + grades, §6 tutorial, §16.1 format). godot --headless --path . -s tools/build_chapters.gd
 ## Tutorial trays c1-b1..b3 = G1 5x5 pack boards with hand-rule "givens" (plated cakes) chosen by search:
 ##  b1 rows & columns: 4 givens, the empty row/column leaves one cell -> 1 placement.
@@ -13,7 +13,10 @@ const Solver = preload("res://game/solver.gd")
 const Grader = preload("res://game/grader.gd")
 const Packs = preload("res://tools/build_packs.gd")
 
-const CH := {1: {"sizes": [5, 5, 5, 5, 5], "grades": [1, 1, 1, 1, 2]}, 2: {"sizes": [5, 6, 5, 6, 6], "grades": [2, 2, 1, 2, 2]}}
+const CH := {1: {"sizes": [5, 5, 5, 5, 5], "grades": [1, 1, 1, 1, 2]}, 2: {"sizes": [5, 6, 5, 6, 6], "grades": [2, 2, 1, 2, 2]},
+	3: {"sizes": [6, 6, 6, 6, 6], "grades": [2, 2, 1, 2, 3]}, 4: {"sizes": [6, 7, 6, 7, 7], "grades": [2, 2, 1, 2, 3]},
+	5: {"sizes": [7, 7, 7, 7, 7], "grades": [2, 3, 1, 2, 3]}, 6: {"sizes": [7, 8, 7, 8, 8], "grades": [2, 2, 1, 3, 2]},
+	7: {"sizes": [8, 8, 8, 8, 8], "grades": [2, 3, 1, 3, 2]}, 8: {"sizes": [8, 8, 8, 8, 8], "grades": [3, 2, 3, 4, 2]}}   # SPEC v1.0.2 §3.5
 const COACH := [
 	"Every row and column needs one cake. Tap the glowing cell twice to bake it.",
 	"Each color needs one cake too. Pick the free cell whose color has no cake yet.",
@@ -107,7 +110,7 @@ func _init() -> void:
 				boards.append(entry(ch, k + 1, b, t))
 			else:
 				boards.append(entry(ch, k + 1, pick(n, gr), {}))
-		var doc := {"chapter": ch, "format": "tt-chapter-1", "spec": "SPEC v1.0.1 §3.5", "boards": boards}
+		var doc := {"chapter": ch, "format": "tt-chapter-1", "spec": "SPEC v1.0.2 §3.5", "boards": boards}
 		var f := FileAccess.open("res://game/levels/chapter_%02d.json" % ch, FileAccess.WRITE)
 		f.store_string(JSON.stringify(doc, " ", false)); f.close()
 		print("chapter %d: %s" % [ch, ", ".join(boards.map(func(e): return "%s %dx%d g%d (%s)" % [e.id, e.size, e.size, e.grade, e.source]))])

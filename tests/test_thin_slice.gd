@@ -112,7 +112,9 @@ func test_chapter_end_unlock_and_slot():
 	var e: Dictionary = m.chapter_end_slot(1)
 	assert_true(e.reason in ["ok", "ad_unavailable"], e.reason)
 	m.show_chapter_end(2)
-	assert_false(m.end_next.visible, "no ch3 in the thin slice")
+	assert_true(m.end_next.visible, "ch3 follows ch2")
+	m.show_chapter_end(8)
+	assert_false(m.end_next.visible, "no chapter after 8 (SPEC §7.2)")
 
 func test_home_and_book_screens():
 	var m = await _main()

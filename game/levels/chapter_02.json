@@ -1,7 +1,7 @@
 {
  "chapter": 2,
  "format": "tt-chapter-1",
- "spec": "SPEC v1.0.1 §3.5",
+ "spec": "SPEC v1.0.2 §3.5",
  "boards": [
   {
    "id": "c2-b1",

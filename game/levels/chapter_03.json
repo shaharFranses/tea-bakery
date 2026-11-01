@@ -1,0 +1,166 @@
+{
+ "chapter": 3,
+ "format": "tt-chapter-1",
+ "spec": "SPEC v1.0.2 §3.5",
+ "boards": [
+  {
+   "id": "c3-b1",
+   "size": 6,
+   "regions": [
+    "AACCCB",
+    "AACCBB",
+    "CCCCBD",
+    "CCCCCD",
+    "EFFFDD",
+    "FFFFFF"
+   ],
+   "solution": [
+    1,
+    4,
+    2,
+    5,
+    0,
+    3
+   ],
+   "grade": 2,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+   ],
+   "steps": 12,
+   "seed": 3,
+   "gen": "ttgen-0.2",
+   "source": "6-g2-0003",
+   "givens": []
+  },
+  {
+   "id": "c3-b2",
+   "size": 6,
+   "regions": [
+    "BBBBAA",
+    "CBBBDD",
+    "CCCBDD",
+    "CCFBDD",
+    "EFFDDD",
+    "FFFFDD"
+   ],
+   "solution": [
+    5,
+    3,
+    1,
+    4,
+    0,
+    2
+   ],
+   "grade": 2,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+   ],
+   "steps": 11,
+   "seed": 4,
+   "gen": "ttgen-0.2",
+   "source": "6-g2-0004",
+   "givens": []
+  },
+  {
+   "id": "c3-b3",
+   "size": 6,
+   "regions": [
+    "AFFFFF",
+    "AFFCBB",
+    "ADFCFF",
+    "DDFFFF",
+    "DFFFEF",
+    "FFFFFF"
+   ],
+   "solution": [
+    0,
+    5,
+    3,
+    1,
+    4,
+    2
+   ],
+   "grade": 1,
+   "techniques": [
+    "T1",
+    "T2"
+   ],
+   "steps": 6,
+   "seed": 0,
+   "gen": "ttgen-0.2",
+   "source": "6-g1-0000",
+   "givens": []
+  },
+  {
+   "id": "c3-b4",
+   "size": 6,
+   "regions": [
+    "AAABBB",
+    "CABBBB",
+    "CAADBE",
+    "FDDDBE",
+    "FDDEEE",
+    "FFDDDD"
+   ],
+   "solution": [
+    2,
+    4,
+    0,
+    3,
+    5,
+    1
+   ],
+   "grade": 2,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+   ],
+   "steps": 11,
+   "seed": 5,
+   "gen": "ttgen-0.2",
+   "source": "6-g2-0005",
+   "givens": []
+  },
+  {
+   "id": "c3-b5",
+   "size": 6,
+   "regions": [
+    "AABBBB",
+    "AABBBB",
+    "CAABBB",
+    "CCCBDD",
+    "EEEFFD",
+    "EEEEFD"
+   ],
+   "solution": [
+    1,
+    3,
+    0,
+    5,
+    2,
+    4
+   ],
+   "grade": 3,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5"
+   ],
+   "steps": 12,
+   "seed": 0,
+   "gen": "ttgen-0.2",
+   "source": "6-g3-0000",
+   "givens": []
+  }
+ ]
+}

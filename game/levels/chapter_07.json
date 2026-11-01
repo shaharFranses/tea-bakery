@@ -1,0 +1,186 @@
+{
+ "chapter": 7,
+ "format": "tt-chapter-1",
+ "spec": "SPEC v1.0.2 §3.5",
+ "boards": [
+  {
+   "id": "c7-b1",
+   "size": 8,
+   "regions": [
+    "CABBBBDD",
+    "CCCEBDDD",
+    "CCEEEDDD",
+    "CCCEDDDD",
+    "GEEEDDDD",
+    "GGGEDDFF",
+    "GGGDDDFH",
+    "GGGGDDDH"
+   ],
+   "solution": [
+    1,
+    4,
+    0,
+    5,
+    3,
+    6,
+    2,
+    7
+   ],
+   "grade": 2,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+   ],
+   "steps": 11,
+   "seed": 2,
+   "gen": "ttgen-0.2",
+   "source": "8-g2-0002",
+   "givens": []
+  },
+  {
+   "id": "c7-b2",
+   "size": 8,
+   "regions": [
+    "AAAABBBD",
+    "ACAABBBD",
+    "CCAEEBBD",
+    "CCAEBBDD",
+    "ECCEDDDF",
+    "ECEEHDHF",
+    "EEEGHHHH",
+    "EEEEHHHH"
+   ],
+   "solution": [
+    2,
+    4,
+    1,
+    6,
+    0,
+    7,
+    3,
+    5
+   ],
+   "grade": 3,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5"
+   ],
+   "steps": 17,
+   "seed": 1,
+   "gen": "ttgen-0.2",
+   "source": "8-g3-0001",
+   "givens": []
+  },
+  {
+   "id": "c7-b3",
+   "size": 8,
+   "regions": [
+    "DDDDAAAB",
+    "CCDAAABB",
+    "CDDDDDDB",
+    "EEDDDDDD",
+    "EEEFFDDF",
+    "EEEEFFFF",
+    "EEGFFFFF",
+    "EEGGGFFH"
+   ],
+   "solution": [
+    4,
+    6,
+    0,
+    3,
+    1,
+    5,
+    2,
+    7
+   ],
+   "grade": 1,
+   "techniques": [
+    "T1",
+    "T2"
+   ],
+   "steps": 8,
+   "seed": 1,
+   "gen": "ttgen-0.2",
+   "source": "8-g1-0000",
+   "givens": []
+  },
+  {
+   "id": "c7-b4",
+   "size": 8,
+   "regions": [
+    "CCCCBAAA",
+    "CCCCBDDD",
+    "CFCCCDDD",
+    "CFCCDDDE",
+    "FFEEEEEE",
+    "FFEFEGEE",
+    "FFFFGGEE",
+    "HFFFGGGG"
+   ],
+   "solution": [
+    7,
+    4,
+    2,
+    6,
+    3,
+    1,
+    5,
+    0
+   ],
+   "grade": 3,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5"
+   ],
+   "steps": 17,
+   "seed": 2,
+   "gen": "ttgen-0.2",
+   "source": "8-g3-0002",
+   "givens": []
+  },
+  {
+   "id": "c7-b5",
+   "size": 8,
+   "regions": [
+    "BBBBBBAA",
+    "BBBBBCCA",
+    "DBBBCCCA",
+    "DCCCCCCA",
+    "DDDECCGG",
+    "HHEEEGGF",
+    "HHHHEGGG",
+    "HHEEEEGG"
+   ],
+   "solution": [
+    6,
+    2,
+    4,
+    0,
+    3,
+    7,
+    5,
+    1
+   ],
+   "grade": 2,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3"
+   ],
+   "steps": 10,
+   "seed": 3,
+   "gen": "ttgen-0.2",
+   "source": "8-g2-0003",
+   "givens": []
+  }
+ ]
+}

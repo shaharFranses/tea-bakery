@@ -1,4 +1,4 @@
-## Thin-slice chapter content (SPEC v1.0.1 §3.2/§3.5, §6, §16.1, §16.4; TT-AC-02/03/04/24/27 partial): chapters 1-2.
+## Chapter content (SPEC v1.0.2 §3.2/§3.5, §6, §16.1, §16.4; TT-AC-02/03/04/24/27): chapters 1-8, 40 boards.
 extends GutTest
 const Solver = preload("res://game/solver.gd")
 const Rules = preload("res://game/rules.gd")
@@ -13,11 +13,36 @@ func before_all() -> void:
 	spec = JSON.parse_string(s) if s != "" else {}
 
 const SPEC_CH := {1: {"sizes": [5, 5, 5, 5, 5], "grades": [1, 1, 1, 1, 2], "tutorial": [1, 2, 3]},
-	2: {"sizes": [5, 6, 5, 6, 6], "grades": [2, 2, 1, 2, 2]}}
+	2: {"sizes": [5, 6, 5, 6, 6], "grades": [2, 2, 1, 2, 2]}, 3: {"sizes": [6, 6, 6, 6, 6], "grades": [2, 2, 1, 2, 3]},
+	4: {"sizes": [6, 7, 6, 7, 7], "grades": [2, 2, 1, 2, 3]}, 5: {"sizes": [7, 7, 7, 7, 7], "grades": [2, 3, 1, 2, 3]},
+	6: {"sizes": [7, 8, 7, 8, 8], "grades": [2, 2, 1, 3, 2]}, 7: {"sizes": [8, 8, 8, 8, 8], "grades": [2, 3, 1, 3, 2]},
+	8: {"sizes": [8, 8, 8, 8, 8], "grades": [3, 2, 3, 4, 2]}}
+
+## The §3.5 tunables JSON block of the repo's spec/SPEC.md (source of truth for sizes, grades, names).
+func _tunables() -> Dictionary:
+	var t := FileAccess.get_file_as_string("res://spec/SPEC.md")
+	var a := t.find("```json tunables"); var b := t.find("```", a + 10)
+	return JSON.parse_string(t.substr(a + 16, b - a - 16))
+
+func test_chapters_match_spec_tunables() -> void:
+	var tun := _tunables()
+	assert_eq(tun.chapters.size(), 8)
+	for c in tun.chapters:
+		var ch := int(c.id)
+		assert_eq(SPEC_CH[ch].sizes, c.sizes.map(func(v): return int(v)), "ch%d sizes == spec" % ch)
+		assert_eq(SPEC_CH[ch].grades, c.grades.map(func(v): return int(v)), "ch%d grades == spec" % ch)
+		assert_eq(Chapters.RECIPES[ch - 1], c.recipe, "ch%d recipe name == spec" % ch)
+		assert_eq(Chapters.DECOR[ch - 1], c.decor, "ch%d decor name == spec" % ch)
+	assert_eq(Chapters.RECIPES[4], "Cherry Bakewell", "v1.0.2 card 5")
+	assert_eq(Chapters.count_available(), 8)
+
+func test_no_shipped_board_over_8() -> void:
+	for ch in SPEC_CH:
+		for b in range(1, 6): assert_lte(Chapters.board(ch, b).n, 8)
 
 func test_thin_slice_chapters_present() -> void:
 	assert_true(Chapters.available(1) and Chapters.available(2))
-	assert_true(Chapters.count_available() >= 2)
+	assert_eq(Chapters.count_available(), 8)
 
 func test_every_board_unique_graded_valid() -> void:
 	var shapes := {}
