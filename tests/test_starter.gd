@@ -54,7 +54,7 @@ func test_ui_minimums_main_scene():
 
 func test_intro_and_splash_present():
 	assert_eq(ProjectSettings.get_setting("application/run/main_scene"), "res://scenes/main.tscn")
-	assert_eq(ProjectSettings.get_setting("application/boot_splash/image"), "res://pkd_boot_splash.png")
+	assert_eq(ProjectSettings.get_setting("application/boot_splash/image"), "res://pkd_boot_splash_plain.png", "PKD intro v1.1: plain navy splash is the default (N2)")
 	assert_true(ProjectSettings.get_setting("application/boot_splash/fullsize"))
 	assert_not_null(load("res://pkd_intro/pkd_intro.tscn"))
 	assert_not_null(load("res://pkd_intro/pkd_frames.res"), "pkd_intro frames present")
