@@ -19,14 +19,21 @@ with sync_playwright() as p:
         pg.goto(f"{base}/index.html?qa=1&intro=0&seed=7&size={size}")
         pg.wait_for_function("() => window.PKD_QA && JSON.parse(window.PKD_QA.dump()).game && JSON.parse(window.PKD_QA.dump()).game.intro_done", timeout=90000)
         pg.wait_for_timeout(600)
-        for scr in ["board", "home", "recipe_book", "chapter_end", "all_baked", "chapter_list"]:
-            if scr != "board":
+        for scr in ["board", "home", "recipe_book", "chapter_end", "all_baked", "chapter_list", "settings"]:
+            if scr == "settings":
+                pg.evaluate("window.PKD_QA.show('home')"); pg.evaluate("window.PKD_QA.show('settings')"); pg.wait_for_timeout(500)
+            elif scr != "board":
                 pg.evaluate(f"window.PKD_QA.show({json.dumps('chapter_end_screen:1' if scr == 'chapter_end' else scr)})"); pg.wait_for_timeout(500)
             g = json.loads(pg.evaluate("window.PKD_QA.dump()"))["game"]
             tag = f"{w}x{h}" + ("" if scr == "board" else "_" + scr); f = []
-            if g.get("screen") != scr: f.append(f"screen {g.get('screen')} != {scr}")
+            if scr == "settings": scr_want = "home"
+            else: scr_want = scr
+            if g.get("screen") != scr_want: f.append(f"screen {g.get('screen')} != {scr_want}")
             if g.get("layout") != want_mode: f.append(f"layout {g.get('layout')} != {want_mode}")
             vis = [u for u in g["ui"] if u["visible"] and not u.get("scrolled_out")]
+            if scr == "settings":   # the modal only (Home sits under the scrim)
+                vis = [u for u in vis if u["name"] in ("SettingsTitle", "Sound", "Music", "TapOrder", "AutoMolds", "ResetProgress", "SettingsClose")]
+                if len(vis) != 7: f.append(f"settings shows {sorted(u['name'] for u in vis)}")
             btns = [u for u in vis if u["type"] in ("Button", "CheckButton", "TextureButton")]
             for u in vis:
                 x, y, uw, uh = u["rect"]

@@ -107,6 +107,9 @@ var home_btn: Button
 var settings_btn: Button
 var order_btn: Button
 var automold_btn: Button
+var music_btn: Button
+var progress_reset_modal: Control
+var settings_flow: HFlowContainer
 var save_timer: Timer
 var card_timer: Timer
 # screens / modals
@@ -150,6 +153,7 @@ func _ready() -> void:
 	save_data = Store.load_data()
 	daily.from_dict(save_data.get("daily", {}))
 	settings.from_dict(save_data.get("settings", {}))
+	muted = not settings.sound; Sfx.set_user_muted(muted); Sfx.set_music(settings.music)
 	progress.from_dict(save_data.get("progress", {}))
 	ad_policy.chapters_completed = progress.chapters_completed
 	_build_ui()
@@ -450,12 +454,19 @@ func _build_screens() -> void:
 	# settings (§9: Sound, Auto-molds, Tap order)
 	var s := _modal("SettingsModal"); settings_modal = s.root
 	s.col.add_child(_title("Settings", "SettingsTitle", 24))
-	mute = _toggle_button("Sound", "Sound", s.col)
-	mute.toggled.connect(func(on): muted = not on; Sfx.set_user_muted(not on); save_now("settings"))
-	order_btn = _toggle_button("TapOrder", "Cake first", s.col)
+	settings_flow = HFlowContainer.new(); settings_flow.name = "SettingsToggles"
+	settings_flow.add_theme_constant_override("h_separation", 12); settings_flow.add_theme_constant_override("v_separation", 8)
+	s.col.add_child(settings_flow)
+	mute = _toggle_button("Sound", "Sound", settings_flow)
+	mute.toggled.connect(func(on): set_sound(on))
+	music_btn = _toggle_button("Music", "Music", settings_flow)
+	music_btn.toggled.connect(func(on): set_music(on))
+	order_btn = _toggle_button("TapOrder", "Cake first", settings_flow)
 	order_btn.toggled.connect(func(on): set_tap_order(Cells.ORDER_CAKE_FIRST if on else Cells.ORDER_MOLD_FIRST))
-	automold_btn = _toggle_button("AutoMolds", "Auto-molds", s.col)
+	automold_btn = _toggle_button("AutoMolds", "Auto-molds", settings_flow)
 	automold_btn.toggled.connect(func(on): set_auto_mold(on))
+	var rp := _tool_button("ResetProgress", "Reset progress", "reset", "", s.col)
+	rp.pressed.connect(func(): progress_reset_modal.visible = true)
 	var sc := _tool_button("SettingsClose", "Close", "close", "PrimaryButton", s.col)
 	sc.pressed.connect(close_settings)
 	# rewarded hint confirm (D-19: equal-size "Watch" / "No thanks", non-green watch button)
@@ -476,6 +487,15 @@ func _build_screens() -> void:
 	for b in [cancel, ok]: b.custom_minimum_size = Vector2(120, 48)
 	cancel.pressed.connect(func(): reset_modal.visible = false)
 	ok.pressed.connect(func(): reset_modal.visible = false; clear_board())
+	# reset progress confirm (§9; QA-A04): clears chapter progress, cards/décor and Bake of the Day history; settings kept
+	var rpm := _modal("ProgressResetModal"); progress_reset_modal = rpm.root
+	rpm.col.add_child(_body("Start over? Every recipe card, décor piece and streak will be cleared. Your settings stay.", "ProgressResetText"))
+	var rpr := HBoxContainer.new(); rpr.add_theme_constant_override("separation", 12); rpr.alignment = BoxContainer.ALIGNMENT_CENTER; rpm.col.add_child(rpr)
+	var rpc := _tool_button("ProgressResetCancel", "Cancel", "", "", rpr)
+	var rpo := _tool_button("ProgressResetOk", "Start over", "reset", "PrimaryButton", rpr)
+	for b in [rpc, rpo]: b.custom_minimum_size = Vector2(120, 48)
+	rpc.pressed.connect(func(): progress_reset_modal.visible = false)
+	rpo.pressed.connect(func(): reset_progress())
 	_sync_setting_buttons()
 
 # ------------------------------------------------------------------ screens
@@ -708,6 +728,7 @@ func _relayout() -> void:
 	var ah := minf((aw - 6.0 * (acols - 1)) / acols * 320.0 / 240.0, spare_h / arows)
 	for c in all_cards: c.custom_minimum_size = Vector2(ah * 0.75, ah)
 	end_shelf.visible = m == "portrait"
+	settings_flow.custom_minimum_size.x = 452.0 if m == "wide" else 220.0   # 2 toggles per row on wide (fits 800x450)
 	var short := vs.y < 600.0                      # e.g. the 800x450 CrazyGames embed: compact Home
 	home_shelf.custom_minimum_size.y = 90.0 if short else 142.0
 	home_screen.get_node("Column").add_theme_constant_override("separation", 6 if short else 12)
@@ -868,6 +889,25 @@ func set_tap_order(order: String) -> void:
 func set_auto_mold(on: bool) -> void:
 	settings.auto_mold = on; save_now("settings"); _sync_setting_buttons(); _refresh()
 
+func set_sound(on: bool) -> void:
+	settings.sound = on; muted = not on; Sfx.set_user_muted(not on); save_now("settings"); _sync_setting_buttons()
+
+func set_music(on: bool) -> void:
+	settings.music = on; Sfx.set_music(on); save_now("settings"); _sync_setting_buttons()
+
+## Settings "Reset progress" after its confirm: progress + daily history cleared under the fixed save key; settings kept.
+## Routes to the first tray (c1-b1, tutorial) like a first boot.
+func reset_progress() -> void:
+	progress_reset_modal.visible = false; settings_modal.visible = false
+	if card_open: _close_card()
+	progress = Progress.new(); daily = Daily.new()
+	ad_policy.chapters_completed = 0
+	mode = "chapter"; chapter = 0
+	save_now("reset_progress")
+	Dbg.hit("reset progress")
+	_mark_transition_start()
+	open_board("c1-b1")
+
 func _sync_setting_buttons() -> void:
 	if order_btn == null: return
 	var cf: bool = settings.tap_order == Cells.ORDER_CAKE_FIRST
@@ -875,6 +915,7 @@ func _sync_setting_buttons() -> void:
 	automold_btn.set_pressed_no_signal(settings.auto_mold)
 	automold_btn.icon = TtTheme.ui_tex("toggle_on" if settings.auto_mold else "toggle_off")
 	mute.set_pressed_no_signal(not muted); mute.icon = TtTheme.ui_tex("toggle_off" if muted else "toggle_on")
+	music_btn.set_pressed_no_signal(settings.music); music_btn.icon = TtTheme.ui_tex("toggle_on" if settings.music else "toggle_off")
 
 func set_cell(r: int, c: int, v: int) -> void:
 	board.cells[r * n + c] = v; _refresh()

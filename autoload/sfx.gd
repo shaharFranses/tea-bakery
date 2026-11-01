@@ -11,8 +11,17 @@ var _players: Array = []
 var _poll := 0.0
 var disabled := false     # ?audio=0 feature-off toggle
 
+const MUSIC_LOOP := "res://assets/audio/music_loop.ogg"   # §8 one calm loop (asset pending from Art/Audio)
+var music_on := true
+var music_player: AudioStreamPlayer
+
 func _ready() -> void:
 	disabled = Dbg.toggle("audio", "1") == "0"
+	if AudioServer.get_bus_index("Music") < 0:
+		AudioServer.add_bus(); AudioServer.set_bus_name(AudioServer.bus_count - 1, "Music")
+		AudioServer.set_bus_send(AudioServer.bus_count - 1, "Master"); AudioServer.set_bus_volume_db(AudioServer.bus_count - 1, -12.0)
+	music_player = AudioStreamPlayer.new(); music_player.name = "Music"; music_player.bus = "Music"; add_child(music_player)
+	if ResourceLoader.exists(MUSIC_LOOP): music_player.stream = load(MUSIC_LOOP)
 	for i in 4:
 		var p = AudioStreamPlayer.new()
 		add_child(p)
@@ -32,6 +41,15 @@ func set_user_muted(on: bool) -> void: set_reason("user", on)
 ## Portal SDK mute (starter hook 89d3081 name): reason "portal".
 func set_portal_muted(on: bool) -> void: set_reason("portal", on)
 func is_muted() -> bool: return AudioServer.is_bus_mute(0)
+## Settings "Music" (§9): mutes only the Music bus (Master mute reasons still apply on top). Starts the loop after
+## the first gesture path (called from Settings / boot after the intro).
+func set_music(on: bool) -> void:
+	music_on = on
+	AudioServer.set_bus_mute(AudioServer.get_bus_index("Music"), not on)
+	if on and music_player.stream != null and not music_player.playing and not disabled: music_player.play()
+	elif not on and music_player.playing: music_player.stop()
+func music_state() -> Dictionary:
+	return {"on": music_on, "asset": music_player.stream != null, "playing": music_player.playing}
 
 func play(stream: AudioStream) -> void:
 	if stream == null: return
