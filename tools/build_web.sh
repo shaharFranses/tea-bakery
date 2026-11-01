@@ -4,6 +4,7 @@
 # gzip -9 copies, size report (build/<variant>/SIZE.json). Lifted from dl-web-export/build_web.sh.
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd); cd "$ROOT"
+mkdir -p build && : > build/.gdignore   # D0-05: keep Godot from importing ANY export output under build/ (top level)
 VAR=${1:-release}; OUT=$(realpath -m "${2:-build/web-$VAR}")
 GODOT=${GODOT:-godot}
 case $VAR in debug) PRESET="Web"; MODE=--export-debug;; release) PRESET="Web Release"; MODE=--export-release;; *) echo "variant?"; exit 2;; esac
