@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """SPEC v0.3.1 §13.1 BR-1..BR-3 browser checks. usage: br_smoke.py <debug_url> <release_url> <out_dir>
-BR-1 (release AND debug): after boot and after each "New tray" tap, exactly one console line each of
+BR-1 (release AND debug): after boot and after the c1-b1 -> c1-b2 transition (tutorial target tapped twice = solve,
+  "Baked!" card auto-advances), exactly one console line each of
   'pkd:perf pkd:transition_start|transition_end|board_interactive <ms 1 decimal>' (QA-A08 PERF_RE), matching
   performance.getEntriesByType('mark'); board_interactive mark carries {board_id}; no other console lines in release
   except the starter boot markers '[PKD] main ready' / '[PKD] intro finished'.
@@ -37,18 +38,20 @@ with sync_playwright() as p:
     res["br1_release_boot_one_line_each"] = perf_counts(logs) == {"transition_start": 1, "transition_end": 1, "board_interactive": 1}
     res["br1_release_lines_exact_format"] = bool(perf) and all(PERF_RE.match(l) for l in perf)
     n0 = len(logs)
-    # tap "New tray" via its rect is debug-only info; use the play button position measured on the debug build below
     marks = pg.evaluate("performance.getEntriesByType('mark').filter(m => m.name.startsWith('pkd:')).map(m => [m.name, m.detail])")
     res["br1_release_marks_match_lines"] = [m[0] for m in marks] == ["pkd:transition_start", "pkd:transition_end", "pkd:board_interactive"]
     res["br1_release_board_id_detail"] = bool(marks) and (marks[-1][1] or {}).get("board_id") == "c1-b1"
     notes["release_console"] = logs
     rel_pg, rel_ctx = pg, ctx
-    # ---- debug: find the New tray button, then BR-1 on a transition (debug + release)
+    # ---- debug: measure the c1-b1 tutorial target cell, then BR-1 on the b1 -> b2 transition (debug + release)
     ctx, pg, logs = boot(br, dbg, "?qa=1&intro=0", device_scale_factor=2, has_touch=True, is_mobile=True)
-    g = dump(pg)["game"]; play = next(u for u in g["ui"] if u["name"] == "Play"); x, y = play["rect"][0] + play["rect"][2] / 2, play["rect"][1] + play["rect"][3] / 2
-    k0 = len(logs); pg.touchscreen.tap(x, y); pg.wait_for_function("() => performance.getEntriesByName('pkd:board_interactive').length >= 2", timeout=20000); pg.wait_for_timeout(300)
+    g = dump(pg)["game"]; tr, tc = g["targets"][0]; bx, by, bw, bh = g["board_rect"]
+    x, y = bx + (tc + 0.5) * bw / g["n"], by + (tr + 0.5) * bh / g["n"]
+    def solve_b1(page):
+        for _ in range(2): page.touchscreen.tap(x, y); page.wait_for_timeout(250)
+    k0 = len(logs); solve_b1(pg); pg.wait_for_function("() => performance.getEntriesByName('pkd:board_interactive').length >= 2", timeout=20000); pg.wait_for_timeout(300)
     res["br1_debug_transition_one_line_each"] = perf_counts(logs[k0:]) == {"transition_start": 1, "transition_end": 1, "board_interactive": 1}
-    r0 = len(notes["release_console"]); rel_pg.touchscreen.tap(x, y)
+    r0 = len(notes["release_console"]); solve_b1(rel_pg)
     rel_pg.wait_for_function("() => performance.getEntriesByName('pkd:board_interactive').length >= 2", timeout=20000); rel_pg.wait_for_timeout(300)
     rl = notes["release_console"]
     res["br1_release_transition_one_line_each"] = perf_counts(rl[r0:]) == {"transition_start": 1, "transition_end": 1, "board_interactive": 1}

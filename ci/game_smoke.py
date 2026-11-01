@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """tea-bakery game smoke on a served DEBUG build (Playwright + system Chrome).
 usage: game_smoke.py <base_url> <out_dir>
-Checks: board 1 = tutorial; gameplayStart fired; phone cap 8x8 / desktop 9x9; real touch taps cycle empty->X->cake;
+Checks: board 1 = tutorial (givens, target); b1 -> b2 <= 2 s; hints ch1 free / ch2 rewarded; chapter ends + AD-17 at the
+real slot; save/reload; Home + Recipe Book; gameplayStart fired; phone cap 8x8 / desktop 9x9; real touch taps cycle empty->X->cake;
 conflict highlight; PKD_QA.show('solve') -> won; ?seed=&size= deterministic across reloads; 0 console errors."""
 import json, os, re, sys
 from playwright.sync_api import sync_playwright
 base, out = sys.argv[1].rstrip("/"), sys.argv[2]; os.makedirs(out, exist_ok=True)
 HERE = os.path.dirname(os.path.abspath(__file__))
 allow = [re.compile(l.strip()) for l in open(os.path.join(HERE, "console_allowlist.txt")) if l.strip() and not l.startswith("#")]
-res, bad = {}, []
+res, bad, notes = {}, [], {}
 def dump(pg):
     return json.loads(pg.evaluate("window.PKD_QA.dump()"))
 def boot(ctx, q):
@@ -26,11 +27,29 @@ with sync_playwright() as p:
     br = p.chromium.launch(executable_path=os.environ.get("PKD_CHROME", "/usr/bin/google-chrome"), headless=True,
                            args=["--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
     ctx = br.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, has_touch=True, is_mobile=True)
+    show = lambda pg, c: pg.evaluate(f"window.PKD_QA.show({json.dumps(c)})")
     pg = boot(ctx, "qa=1&intro=0"); d = dump(pg); g = d["game"]
-    res["phone_tutorial_board1"] = g["tutorial"] is True and g["n"] == 5
+    res["phone_tutorial_board1"] = g["tutorial"] is True and g["n"] == 5 and g["board_id"] == "c1-b1" and g["screen"] == "board"
+    res["tutorial_givens_and_target"] = len(g["givens"]) >= 3 and len(g["targets"]) == 1 and g["coach"] != ""
     res["phone_gameplay_started"] = g["gameplay_started"] is True and any("gameplayStart" in h for h in d["hitlog"])
     res["phone_max_size_8"] = g["max_size"] == 8
-    # canvas px == CSS px at the 390 base (canvas_items/expand, 390 wide)
+    gx, gy = g["givens"][0]; pg.touchscreen.tap(*cell_xy(g, gx, gy)); pg.wait_for_timeout(300)
+    res["given_cake_immutable"] = dump(pg)["game"]["cells"][gx * 5 + gy] == "cake"
+    pg.screenshot(path=f"{out}/game_phone_tutorial.png")
+    # real taps on the tutorial target: mold, cake -> solved card -> c1-b2 interactive <= 2.0 s
+    tr, tc = g["targets"][0]
+    for _ in range(2): pg.touchscreen.tap(*cell_xy(g, tr, tc)); pg.wait_for_timeout(150)
+    t0 = pg.evaluate("performance.now()"); gs = dump(pg)["game"]
+    res["b1_solved_card_steam"] = gs["won"] is True and gs["card_open"] is True and gs["baking"] is True
+    pg.screenshot(path=f"{out}/game_phone_baked.png")
+    pg.wait_for_function("() => { const g = JSON.parse(window.PKD_QA.dump()).game; return g.board_id == 'c1-b2' && g.interactive }", timeout=10000)
+    dt = pg.evaluate("performance.now()") - t0; notes["b1_to_b2_ms"] = dt
+    gb = dump(pg)["game"]
+    res["b1_to_b2_interactive_le_2s"] = dt <= 2000 + 400   # +poll slack; card is 1.5 s
+    res["progress_dot_1_on"] = gb["dots_on"] == 1 and "c1-b1" in gb["progress"]["solved"]
+    res["save_immediate_on_solve"] = any(w["reason"] == "solve" for w in gb["save_writes"])
+    # free-board tap cycle + conflict shake (generated board, no givens)
+    show(pg, "gen:5,11"); pg.wait_for_timeout(300); g = dump(pg)["game"]
     x, y = cell_xy(g, 0, 0)
     pg.touchscreen.tap(x, y); pg.wait_for_timeout(400); g1 = dump(pg)["game"]
     res["tap1_sets_mold"] = g1["molds"] == [[0, 0]] and g1["cakes"] == [] and g1["cells"][0] == "mold"
@@ -40,10 +59,65 @@ with sync_playwright() as p:
     for _ in range(2): pg.touchscreen.tap(x2, y2); pg.wait_for_timeout(400)
     g3 = dump(pg)["game"]
     res["conflict_highlight_diagonal"] = sorted(g3["conflicts"]) == [[0, 0], [1, 1]]
+    res["conflict_shake_started"] = g3["shakes_started"] >= 1
     pg.screenshot(path=f"{out}/game_phone_conflict.png")
-    pg.evaluate("window.PKD_QA.show('solve')"); pg.wait_for_timeout(400); g4 = dump(pg)["game"]
+    show(pg, "undo"); pg.wait_for_timeout(200)
+    res["undo_works"] = len(dump(pg)["game"]["cakes"]) == 1
+    show(pg, "solve"); pg.wait_for_timeout(400); g4 = dump(pg)["game"]
     res["solve_wins"] = g4["won"] is True and g4["conflicts"] == []
+    show(pg, "undo"); res["undo_blocked_after_solve"] = dump(pg)["game"]["won"] is True
     pg.screenshot(path=f"{out}/game_phone_won.png")
+    # ch1 hint: unlimited free
+    show(pg, "board:c1-b4"); pg.wait_for_timeout(300)
+    h1 = show(pg, "hint"); h2 = show(pg, "hint"); gh = dump(pg)["game"]; notes["hint_c1"] = [h1, h2]
+    res["hint_ch1_free_unlimited"] = gh["hint"]["text"] != "" and gh["hint_offer"] == "free" and len(gh["targets"]) >= 1 and h2 != "rewarded modal"
+    res["hint_text_rules"] = all(len(h) <= 140 and h.count(".") + h.count("!") + h.count("?") == 1 and not re.search(r"T[1-7]|technique|region|candidate", h, re.I) for h in [h1, h2])
+    pg.screenshot(path=f"{out}/game_phone_hint.png")
+    # finish chapter 1 -> chapter end (recipe card, décor, happytime); AD-17 floor edge at the REAL chapter-end slot
+    for b in range(1, 6):
+        show(pg, f"board:c1-b{b}"); show(pg, "solve"); pg.wait_for_timeout(100)
+        if b < 5: show(pg, "skip")
+    show(pg, "skip"); pg.wait_for_timeout(500); ge = dump(pg)["game"]
+    res["chapter_end_screen"] = ge["screen"] == "chapter_end" and ge["unlocked"]["recipes"] == [1] and len(ge["unlocked"]["decor"]) == 1
+    res["happytime_on_chapter_end"] = any("happytime" in json.dumps(e) for e in ge["sdk_log"])
+    res["save_on_chapter_end"] = any(w["reason"] == "chapter_end" for w in ge["save_writes"])
+    res["portrait_backdrop_chapter_end"] = ge["backdrop"] is True
+    pg.screenshot(path=f"{out}/game_phone_chapter_end.png")
+    pg.evaluate("window.PKD_QA.set_session_s(299)"); show(pg, "end_next"); pg.wait_for_timeout(800)
+    d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c1"] = dec
+    res["ad17_299_denied_real_chapter_end"] = len(dec) == 1 and dec[0]["reason"] == "session_s<300" and dec[0]["origin"] == "chapter_end"
+    res["next_chapter_opens_c2b1"] = d["game"]["board_id"] == "c2-b1" and d["game"]["screen"] == "board"
+    # ch2 hints: 1 free, then rewarded confirm (mock ads available)
+    pg.close(); pg = boot(ctx, "qa=1&intro=0&ads=mock_available"); g = dump(pg)["game"]
+    res["boot_routes_next_unsolved"] = g["board_id"] == "c2-b1"
+    show(pg, "hint"); r2 = show(pg, "hint"); notes["hint_c2"] = r2
+    res["hint_ch2_second_is_rewarded"] = r2 == "rewarded modal"
+    pg.screenshot(path=f"{out}/game_phone_rewarded_modal.png")
+    show(pg, "hint_watch"); pg.wait_for_timeout(1500); gw = dump(pg)["game"]
+    res["hint_rewarded_granted_after_ad"] = gw["hint"]["kind"] == "rewarded" and any(e.get("kind") == "rewarded" for e in dump(pg)["ads_log"] if isinstance(e, dict))
+    # save + reload restores marks on the same board (debounced write)
+    show(pg, "board:c2-b2"); pg.wait_for_timeout(200); g = dump(pg)["game"]
+    free = next([r, c] for r in range(g["n"]) for c in range(g["n"]) if [r, c] not in g["givens"])
+    show(pg, f"tap:{free[0]},{free[1]}"); pg.wait_for_timeout(1600)
+    res["save_debounced_write"] = any(w["reason"] == "debounce" for w in dump(pg)["game"]["save_writes"])
+    pg.close(); pg = boot(ctx, "qa=1&intro=0"); g = dump(pg)["game"]
+    res["reload_restores_saved_board"] = g["board_id"] == "c2-b2" and g["cells"][free[0] * g["n"] + free[1]] == "mold"
+    # finish chapter 2 -> AD-17 300 s edge at the real slot (mock ad shown), Home
+    for b in range(1, 6):
+        show(pg, f"board:c2-b{b}"); show(pg, "solve"); pg.wait_for_timeout(100)
+        if b < 5: show(pg, "skip")
+    show(pg, "skip"); pg.wait_for_timeout(500); ge = dump(pg)["game"]
+    res["chapter2_end_no_next"] = ge["screen"] == "chapter_end" and ge["unlocked"]["recipes"] == [1, 2] and not next(u for u in ge["ui"] if u["name"] == "EndNext")["visible"]
+    pg.evaluate("window.PKD_QA.set_session_s(300)"); show(pg, "end_home"); pg.wait_for_timeout(1500)
+    d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c2"] = dec
+    res["ad17_300_ad_unavailable_or_ok"] = bool(dec) and dec[-1]["reason"] in ("ok", "ad_unavailable")
+    res["home_after_chapter_end"] = d["game"]["screen"] == "home"
+    hd = next(u for u in d["game"]["ui"] if u["name"] == "HomeDaily")
+    res["home_daily_unlocked_after_c1"] = hd["enabled"] is True
+    pg.screenshot(path=f"{out}/game_phone_home.png")
+    show(pg, "recipe_book"); pg.wait_for_timeout(400); gb = dump(pg)["game"]
+    res["recipe_book_screen"] = gb["screen"] == "recipe_book" and gb["backdrop"] is True
+    pg.screenshot(path=f"{out}/game_phone_recipe_book.png")
     pg.close()
     regs = []
     for _ in range(2):
@@ -59,7 +133,7 @@ with sync_playwright() as p:
     pg.screenshot(path=f"{out}/game_desktop_9x9.png"); pg.close(); ctx.close()
     br.close()
 res["console_zero"] = not bad
-json.dump({"checks": res, "console_bad": bad}, open(f"{out}/game_smoke.json", "w"), indent=1)
+json.dump({"checks": res, "console_bad": bad, "notes": notes}, open(f"{out}/game_smoke.json", "w"), indent=1)
 for k, v in res.items(): print(("PASS " if v else "FAIL ") + k)
 for b in bad[:5]: print("  console:", b)
 sys.exit(0 if all(res.values()) else 1)
