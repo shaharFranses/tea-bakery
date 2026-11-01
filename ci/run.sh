@@ -76,7 +76,7 @@ step 5 "browser smoke + console-zero + screenshots" smoke
 step 6 "game smoke (tutorial, taps, conflict, win, seed, 8x8 cap)" game_smoke
 step 6b "responsive layout: 44px targets / 12px text at 390x844, 800x450, 1280x720" layout
 step 6c "BR-1 perf lines (release+debug), BR-2 set_date/retry_daily, BR-3 set_session_s/ads_decisions" br
-step 6d "TT-AC-53 (v1.0.1): no sendBeacon/fetch/XHR in our code (pck + html head)" netcalls
+step 6d "TT-AC-53 (v1.0.2): no sendBeacon/fetch/XHR in our code (pck + html head); engine loader export-file loads allowed" netcalls
 step 7 "banned user text absent (SPEC §3.5 + QA NAME-01) in title/pck/html/js + source" no_old_title
 step 8 "release: QA URL flags inert + intro skip by tap/click/key" release_flags
 [ $GATE = 1 ] && [ ${#FAILS[@]} = 0 ] && step 9 "freeze gate + CG zip" gate

@@ -93,7 +93,7 @@ func state() -> Dictionary:
 	if OS.has_feature("web"):               # TT-AC-53 runtime half: network calls since boot (game ones must be 0)
 		var nc = JavaScriptBridge.eval("JSON.stringify(window.__pkdNet || [])")
 		d["net_calls"] = JSON.parse_string(str(nc)) if nc != null else []
-		d["net_calls_from_game"] = d["net_calls"].filter(func(x): return not x.get("from_sdk", false)).size()
+		d["net_calls_from_game"] = d["net_calls"].filter(func(x): return not x.get("from_sdk", false) and not x.get("engine_loader", false)).size()
 	return d
 
 func publish() -> void:
@@ -104,9 +104,14 @@ func _bind_js() -> void:
 	JavaScriptBridge.eval("window.PKD_QA = window.PKD_QA || {};")
 	# TT-AC-53 (SPEC v1.0.1) debug runtime half: count every fetch / XHR / sendBeacon made after boot; a call whose stack
 	# has no CrazyGames SDK frame is attributed to the game (must stay 0). Read via dump().net_calls.
+	# SPEC v1.0.2 note: the engine loader's (index.js) same-origin fetches of our own export files are allowed
+	# ("engine_loader": true, not counted); "game code" = our GDScript and JS only.
 	JavaScriptBridge.eval("""(function(){ if (window.__pkdNet) return; var L = window.__pkdNet = [];
 	  function rec(api, url){ var st = (new Error()).stack || ''; L.push({api: api, url: String(url).slice(0, 200), t: performance.now(),
-	    from_sdk: /crazygames/i.test(st)}); }
+	    from_sdk: /crazygames/i.test(st), engine_loader: loader(url, st)}); }
+	  function loader(u, st){ try { var a = new URL(String(u && u.url || u), location.href);
+	    return a.origin === location.origin && ['index.js', 'index.wasm', 'index.pck', 'index.side.wasm', 'index.audio.worklet.js',
+	      'index.audio.position.worklet.js'].indexOf(a.pathname.split('/').pop()) >= 0 && st.indexOf('/index.js') >= 0; } catch (e) { return false; } }
 	  if (window.fetch) { var f = window.fetch; window.fetch = function(u, o){ rec('fetch', u && u.url || u); return f.apply(this, arguments); }; }
 	  if (navigator.sendBeacon) { var b = navigator.sendBeacon.bind(navigator); navigator.sendBeacon = function(u, d){ rec('sendBeacon', u); return b(u, d); }; }
 	  var xo = XMLHttpRequest.prototype.open; XMLHttpRequest.prototype.open = function(m, u){ rec('xhr', u); return xo.apply(this, arguments); };

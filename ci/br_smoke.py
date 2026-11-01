@@ -86,6 +86,8 @@ with sync_playwright() as p:
     res["ac53_runtime_zero_game_network_calls"] = dd.get("net_calls_from_game") == 0 and isinstance(dd.get("net_calls"), list)
     ev("fetch('index.html').catch(()=>0)"); pg.wait_for_timeout(200)   # positive control: the debug counter does see a game-origin fetch
     res["ac53_runtime_counter_selftest"] = dump(pg).get("net_calls_from_game") == 1
+    ev("fetch('index.pck', {method: 'HEAD'}).catch(()=>0)"); pg.wait_for_timeout(200)   # v1.0.2: an export file fetched by OUR code still counts
+    res["ac53_v102_export_file_from_game_code_counts"] = dump(pg).get("net_calls_from_game") == 2
     res["ac53_analytics_sink_noop_ring_filled"] = dd["game"]["analytics_sink"] == "noop" and any(e["event"] == "board_start" for e in dd["game"]["analytics"])
     ctx.close(); br.close()
 json.dump({"checks": res, "notes": notes}, open(f"{out}/br_smoke.json", "w"), indent=1)

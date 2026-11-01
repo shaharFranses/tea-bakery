@@ -5,7 +5,10 @@
    no hitlog overlay text, PKD_AUDIO.state().portalMute false (cgmute ignored).
 2. Intro skip works in release by touch tap, mouse click and key press (fresh page each): '[PKD] intro finished' arrives
    well before the unskipped intro does (compared with a no-input control run on the same box).
-3. TT-AC-53 (SPEC v1.0.1) run (a): every request from these release pages is same-origin; 0 sendBeacon (type ping).
+3. TT-AC-53 (SPEC v1.0.2) run (a): every request from these release pages is same-origin; 0 sendBeacon (type ping).
+   v1.0.2 note: the engine loader's same-origin fetches of the game's own export files are allowed, so every same-origin
+   request must be one of the export files (index.html/js/wasm/pck/worklets/icons...; env PKD_RELEASE_DIR, default
+   build/web-release) and nothing else.
 4. Page <title> is the user-visible stub 'Bakery Logic Puzzle' (config/name; QA ruling 10-25), never the slug."""
 import json, os, re, sys, time
 from playwright.sync_api import sync_playwright
@@ -72,7 +75,13 @@ from urllib.parse import urlsplit
 own = urlsplit(base).netloc
 foreign = sorted({u for u, t in reqs if not u.startswith("data:") and not u.startswith("blob:") and urlsplit(u).netloc != own})
 beacons = [u for u, t in reqs if t == "ping"]
+rel = os.environ.get("PKD_RELEASE_DIR", os.path.join(os.path.dirname(HERE), "build", "web-release"))
+export_files = set(os.listdir(rel)) if os.path.isdir(rel) else set()
+own_paths = sorted({urlsplit(u).path for u, t in reqs if urlsplit(u).netloc == own})
+non_export = [pth for pth in own_paths if pth.rsplit("/", 1)[-1] not in export_files and pth not in ("/", "")]
 notes["requests"] = len(reqs); notes["foreign_requests"] = foreign
+notes["own_origin_paths"] = own_paths; notes["own_origin_non_export"] = non_export
+res["ac53_v102_own_origin_requests_are_export_files"] = bool(export_files) and not non_export
 res["ac53_only_own_origin_0_beacons"] = bool(reqs) and not foreign and not beacons
 res["console_zero"] = not bad
 json.dump({"checks": res, "notes": notes, "console_bad": bad}, open(f"{out}/release_flags.json", "w"), indent=1)
