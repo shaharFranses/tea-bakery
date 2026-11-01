@@ -54,6 +54,7 @@ importcheck() { local T; T=$(mktemp -d "$PKD_WORK_DIR/tt_import.XXXXXX"); git ls
   rm -rf "$T"; echo "import rc=$rc, $(wc -l < "$R/import_check.log") log lines"
   if grep -nE 'Parse Error|SCRIPT ERROR|ERROR:|Unicode parsing error' "$R/import_check.log"; then echo "FAIL: errors in headless import"; return 1; fi
   echo "headless import clean (0 Parse Error / SCRIPT ERROR / ERROR: / Unicode parsing error)"; }
+packs() { $GODOT --headless --path "$ROOT" -s tools/validate_boards.gd -- "$R/validate_boards.json" 2>&1 | grep -E 'validate_boards|SCRIPT ERROR|ERROR:'; python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d['pass'] and d['chapter_boards']==40 and d['daily_boards']==400 else 1)" "$R/validate_boards.json"; }   # H5: every shipped board re-verified
 build() { tools/build_web.sh debug build/web-debug && tools/build_web.sh release build/web-release; }
 audit() { $ZPY qa/release_audit.py build/web-release "$R/release_audit.txt" build/web-debug; }
 serve() { tools/serve_unit.sh start build/web-debug "$PORT" && tools/serve_unit.sh start build/web-release "$((PORT+1))"; }
@@ -69,6 +70,7 @@ gate() { G=$(tools/freeze_gate.sh build/web-release "$SLUG" | tail -1) && echo "
 step 0 preflight preflight
 step 1 "GUT tests" tests
 step 1b "headless import of all scripts, fresh checkout (fail on Parse Error / SCRIPT ERROR / ERROR:)" importcheck
+step 1c "pack verification: 40 chapter + 400 daily boards (unique, stored solution, grade, distinct)" packs
 if [ $NOBUILD = 0 ]; then step 2 "web export (debug+release)" build; fi
 step 3 "release audit" audit
 step 4 "serve :$PORT/:$((PORT+1))" serve
