@@ -1,6 +1,6 @@
 ## Headless seeded board export CLI + test-vector builder (pattern: sudoku-dash dev a795a1a tools/export_puzzles.gd).
 ## Usage:
-##   godot --headless --path . -s tools/export_boards.gd -- size=7 seeds=0-99 [band=2] [out=/tmp/x.jsonl]   (JSONL, one board per line)
+##   godot --headless --path . -s tools/export_boards.gd -- size=7 seeds=0-99 [band=2] [out=/workspace/tea-and-tarts-work/x.jsonl]   (JSONL, one board per line)
 ##   godot --headless --path . -s tools/export_boards.gd -- vectors          (rebuilds res://data/test_vectors.json)
 ## JSONL lines match qa/tt_check.py input: {"n","seed","regions","solution",...}. Rebuilding vectors is a deliberate act:
 ## any diff means shared seeds / daily boards changed.

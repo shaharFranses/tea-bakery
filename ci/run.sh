@@ -13,6 +13,8 @@ GATE=0; PORT=${PKD_PORT:-8900}; SLUG=${PKD_SLUG:-$(tr -d "[:space:]" < SLUG)};  
 while [ $# -gt 0 ]; do case $1 in --gate) GATE=1;; --port) PORT=$2; shift;; --slug) SLUG=$2; shift;; --no-build) NOBUILD=1;; --live) LIVE=$2; shift;; esac; shift; done
 PY=${PKD_PY:-/workspace/pwvenv/bin/python}; ZPY=${PKD_ZPY:-/workspace/zvenv/bin/python};   # zvenv: zstandard for pck scripts
  GODOT=${GODOT:-godot}; export GODOT
+export PKD_WORK_DIR=${PKD_WORK_DIR:-/workspace/tea-and-tarts-work}; mkdir -p "$PKD_WORK_DIR"   # never /tmp (box rollback 11-01 wiped /tmp)
+export PKD_SERVE_DIR=${PKD_SERVE_DIR:-$PKD_WORK_DIR/serve}
 mkdir -p build && : > build/.gdignore   # D0-05: top-level build/ never imported (before any import/export step)
 export PKD_DIRTY_AT_START=$(git status --porcelain --untracked-files=no | wc -l)
 SHA=$(git rev-parse --short HEAD); R="qa/results/ci-$SHA"; mkdir -p "$R"
@@ -45,7 +47,7 @@ tests() { $GODOT --headless --path "$ROOT" --import >/dev/null 2>&1; out=$($GODO
   echo "$out" | grep -q 'All tests passed'; }
 # Fresh-checkout headless import of every tracked file (no .godot cache) = what the editor / a clean clone sees. Catches
 # warnings-as-errors and unicode problems GUT's runner does not surface (QA 10-25: test_tap_order Variant inference; 0xA7).
-importcheck() { local T; T=$(mktemp -d /tmp/tt_import.XXXXXX); git ls-files -c -z | xargs -0 -I{} sh -c 'test -e "{}" && printf "%s\0" "{}"' | tar --null -T - -cf - | tar -xf - -C "$T"
+importcheck() { local T; T=$(mktemp -d "$PKD_WORK_DIR/tt_import.XXXXXX"); git ls-files -c -z | xargs -0 -I{} sh -c 'test -e "{}" && printf "%s\0" "{}"' | tar --null -T - -cf - | tar -xf - -C "$T"
   $GODOT --headless --path "$T" --import > "$R/import_check.log" 2>&1; local rc=$?
   rm -rf "$T"; echo "import rc=$rc, $(wc -l < "$R/import_check.log") log lines"
   if grep -nE 'Parse Error|SCRIPT ERROR|ERROR:|Unicode parsing error' "$R/import_check.log"; then echo "FAIL: errors in headless import"; return 1; fi

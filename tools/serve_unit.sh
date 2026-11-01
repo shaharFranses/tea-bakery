@@ -5,7 +5,7 @@
 # Serves .wasm as application/wasm and .gz with Content-Encoding off (plain files).
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd); CMD=$1
-PIDDIR=${PKD_SERVE_DIR:-/tmp/pkd-serve}; mkdir -p "$PIDDIR"
+PIDDIR=${PKD_SERVE_DIR:-${PKD_WORK_DIR:-/workspace/tea-and-tarts-work}/serve}; mkdir -p "$PIDDIR"
 case $CMD in
 start) DIR=$(realpath "$2"); PORT=$3
   "$0" stop "$PORT" >/dev/null 2>&1 || true
