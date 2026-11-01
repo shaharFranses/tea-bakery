@@ -1,0 +1,212 @@
+{
+ "chapter": 1,
+ "format": "tt-chapter-1",
+ "spec": "SPEC v1.0.1 §3.5",
+ "boards": [
+  {
+   "id": "c1-b1",
+   "size": 5,
+   "regions": [
+    "BBBBA",
+    "BBBCC",
+    "BBCCE",
+    "DEEEE",
+    "EEEEE"
+   ],
+   "solution": [
+    4,
+    1,
+    3,
+    0,
+    2
+   ],
+   "grade": 1,
+   "techniques": [
+    "T1",
+    "T2"
+   ],
+   "steps": 5,
+   "seed": 0,
+   "gen": "ttgen-0.2",
+   "source": "5-g1-0000",
+   "givens": [
+    [
+     1,
+     1
+    ],
+    [
+     2,
+     3
+    ],
+    [
+     3,
+     0
+    ],
+    [
+     4,
+     2
+    ]
+   ],
+   "targets": [
+    [
+     0,
+     4
+    ]
+   ],
+   "coach": "Every row and column needs one cake. Tap the glowing cell twice to bake it."
+  },
+  {
+   "id": "c1-b2",
+   "size": 5,
+   "regions": [
+    "AABBB",
+    "AABBB",
+    "ECBBB",
+    "EDDDD",
+    "EEEED"
+   ],
+   "solution": [
+    0,
+    3,
+    1,
+    4,
+    2
+   ],
+   "grade": 1,
+   "techniques": [
+    "T1",
+    "T2"
+   ],
+   "steps": 5,
+   "seed": 1,
+   "gen": "ttgen-0.2",
+   "source": "5-g1-0001",
+   "givens": [
+    [
+     1,
+     3
+    ],
+    [
+     3,
+     4
+    ],
+    [
+     4,
+     2
+    ]
+   ],
+   "targets": [
+    [
+     2,
+     1
+    ]
+   ],
+   "coach": "Each color needs one cake too. Pick the free cell whose color has no cake yet."
+  },
+  {
+   "id": "c1-b3",
+   "size": 5,
+   "regions": [
+    "AABBB",
+    "AABBB",
+    "DDCBB",
+    "DDEEE",
+    "EEEEE"
+   ],
+   "solution": [
+    1,
+    4,
+    2,
+    0,
+    3
+   ],
+   "grade": 1,
+   "techniques": [
+    "T1",
+    "T2"
+   ],
+   "steps": 5,
+   "seed": 2,
+   "gen": "ttgen-0.2",
+   "source": "5-g1-0002",
+   "givens": [
+    [
+     2,
+     2
+    ],
+    [
+     3,
+     0
+    ],
+    [
+     4,
+     3
+    ]
+   ],
+   "targets": [
+    [
+     1,
+     4
+    ]
+   ],
+   "coach": "Cakes can't touch, not even corners. Set an empty mold where it would touch, then bake the other cell."
+  },
+  {
+   "id": "c1-b4",
+   "size": 5,
+   "regions": [
+    "CCAAA",
+    "BCAAA",
+    "CCCAA",
+    "EEEDD",
+    "EEEED"
+   ],
+   "solution": [
+    3,
+    0,
+    2,
+    4,
+    1
+   ],
+   "grade": 1,
+   "techniques": [
+    "T1",
+    "T2"
+   ],
+   "steps": 5,
+   "seed": 3,
+   "gen": "ttgen-0.2",
+   "source": "5-g1-0003",
+   "givens": []
+  },
+  {
+   "id": "c1-b5",
+   "size": 5,
+   "regions": [
+    "AAAAA",
+    "CCDDB",
+    "CDDDD",
+    "DDDDD",
+    "EEEED"
+   ],
+   "solution": [
+    2,
+    4,
+    0,
+    3,
+    1
+   ],
+   "grade": 2,
+   "techniques": [
+    "T1",
+    "T2",
+    "T4"
+   ],
+   "steps": 6,
+   "seed": 0,
+   "gen": "ttgen-0.2",
+   "source": "5-g2-0000",
+   "givens": []
+  }
+ ]
+}
