@@ -1,12 +1,14 @@
-# Deploys the committed, QA-gated web/ folder to GitHub Pages. It does NOT re-export:
-# a CI re-export changes the pck hash, so QA's PASS would no longer apply (ff-retro/build.md, SD build retro).
-# Adapted from flick-freight .github/workflows/pages.yml. Repo setting needed once: Pages source = "GitHub Actions".
-name: deploy frozen web build to GitHub Pages   # slug comes from ./SLUG (the one place), echoed below
+# Deploys the committed, QA-gated frozen snapshot in web/ to GitHub Pages. It NEVER builds or re-exports: a re-export
+# changes the pck hash, so QA's PASS would no longer apply. MANUAL ONLY (workflow_dispatch): no push trigger, so
+# nothing deploys automatically; a build-from-main deploy does not exist on purpose. Stage web/ first with
+# tools/stage_frozen_deploy.sh <gate-folder> (see DEPLOY.md). Repo setting needed once: Pages source = "GitHub Actions".
+name: deploy frozen snapshot (web/) to GitHub Pages
 on:
-  push:
-    branches: [main]
-    paths: ["web/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
+    inputs:
+      expected_pck_sha256:
+        description: "sha256 of the gated index.pck that must be deployed (from FREEZE.md)"
+        required: true
 permissions:
   contents: read
   pages: write
@@ -22,14 +24,16 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Check frozen build
+      - name: Verify frozen snapshot (every file vs SHA256SUMS, expected pck)
         run: |
-          test -s web/index.html && test -s web/index.wasm && test -s web/index.pck
-          touch web/.nojekyll
-          cd web && sha256sum -c SHA256SUMS
-          echo "deploying $(tr -d '[:space:]' < ../SLUG) pck sha256 $(sha256sum index.pck | cut -d' ' -f1)"
+          cat web/FROZEN_FROM.txt
+          tools/verify_frozen_snapshot.sh web "${{ inputs.expected_pck_sha256 }}"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Post-deploy check (served bytes == frozen bytes)
+        run: |
+          sleep 20
+          tools/verify_served.sh "${{ steps.deployment.outputs.page_url }}" web

@@ -40,7 +40,8 @@ preflight() {
   test -f web/.nojekyll || { echo "web/.nojekyll missing"; return 1; }
   ! grep -rn --include=*.gd 'paused = true' autoload scenes pkd_intro || { echo "lifecycle code pauses the tree"; return 1; }
   if [ $GATE = 1 ] && [ "$PKD_DIRTY_AT_START" != 0 ]; then echo "--gate needs a clean tree"; git status --short; return 1; fi
-  python3 ci/no_placeholders.py CURRENT_BUILD.md || return 1   # D0-23: no <placeholder> text anywhere in CURRENT_BUILD.md
+  python3 ci/no_placeholders.py CURRENT_BUILD.md DEPLOY.md || return 1
+  if [ -f web/SHA256SUMS ]; then tools/verify_frozen_snapshot.sh web | tail -1 || return 1; fi   # staged Pages snapshot untouched   # D0-23: no <placeholder> text anywhere in CURRENT_BUILD.md
   echo preflight ok; }
 tests() { $GODOT --headless --path "$ROOT" --import >/dev/null 2>&1; out=$($GODOT --headless --path "$ROOT" -s addons/gut/gut_cmdln.gd -gexit 2>&1); echo "$out" | sed 's/\x1b\[[0-9;]*m//g' | tail -20
   echo "$out" | grep -q 'SCRIPT ERROR' && { echo "SCRIPT ERROR counts as FAIL (SD build retro)"; return 1; }

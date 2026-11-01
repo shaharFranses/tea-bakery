@@ -25,8 +25,8 @@ commit sha and the pck is not byte-reproducible across exports). The frozen comm
 | Field | Value |
 |---|---|
 | Pages URL | https://shaharfranses.github.io/tea-bakery/ (repo name TBD, likely tea-bakery; not created yet) |
-| Live commit (web/) | none yet (not published) |
-| Live pck sha256 == gated? | not checked yet (not published); compare against the gated index.pck sha256, see FREEZE.md |
+| Live commit (web/) | ed57fce staged in web/ for the first Pages deploy (DEPLOY.md); not published yet (no repo) |
+| Live pck sha256 == gated? | not checked yet (not published); staged web/ pck sha256 784edc1cc02abb510afc6360429698b5b1ffb3cb4b34283d97785807054aab67 = day0-ed57fce, verified locally; after deploy run tools/verify_served.sh (see FREEZE.md of day0-ed57fce) |
 | Live QA check | not run yet |
 | Shahar phone check | not yet |
 
