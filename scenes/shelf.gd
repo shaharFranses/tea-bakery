@@ -34,7 +34,7 @@ func _draw() -> void:
 	if 3 in owned: draw_texture_rect(_tex.shelf_gingham_drape, full, false)
 	for ch in owned:
 		var s = _slots.get(str(ch))
-		if s == null: continue
+		if s == null or not s.has("size"): continue   # ch3/ch6 are full-shelf overlays (slots "overlay")
 		var side: float = float(s.size) * k
 		var bottom := o.y + 128.0 * k + side * 0.06
 		var y := bottom - side

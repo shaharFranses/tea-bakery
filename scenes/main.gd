@@ -34,7 +34,7 @@ const Shelf = preload("res://scenes/shelf.gd")
 const CARD_MS := 1500            # bake reward + "Baked!" card, then the next board (TT-AC-25: interactive <= 2.0 s)
 const SAVE_DEBOUNCE_S := 1.0     # §3.5 save.debounce_ms
 const IDLE_PULSE_S := 30.0
-const BOOK_CARD_MIN_H := 240.0  # Recipe Book card height floor (ribbon names readable)       # §3.5 hints.idle_pulse_s
+const BOOK_CARD_MIN_H := 280.0  # Recipe Book card height floor (ribbon names readable)       # §3.5 hints.idle_pulse_s
 
 var intro_done := false
 var n := 5
@@ -373,9 +373,11 @@ func _build_screens() -> void:
 	end_card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	end_shelf = Shelf.new(); end_shelf.name = "EndShelf"; end_shelf.custom_minimum_size = Vector2(320, 142); e.col.add_child(end_shelf)
 	end_decor = _body("", "EndDecor"); e.col.add_child(end_decor)
-	end_next = _tool_button("EndNext", "Next chapter", "play", "PrimaryButton", e.col)
+	var eb := HBoxContainer.new(); eb.name = "EndButtons"; eb.add_theme_constant_override("separation", 12)
+	eb.alignment = BoxContainer.ALIGNMENT_CENTER; e.col.add_child(eb)
+	end_next = _tool_button("EndNext", "Next chapter", "play", "PrimaryButton", eb)
 	end_next.pressed.connect(func(): chapter_end_continue("next"))
-	end_home = _tool_button("EndHome", "Home", "home", "", e.col)
+	end_home = _tool_button("EndHome", "Home", "home", "", eb)
 	end_home.pressed.connect(func(): chapter_end_continue("home"))
 	# modal layer (over everything except the intro)
 	modal_root = Control.new(); modal_root.name = "Modals"; modal_root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -614,7 +616,6 @@ func _relayout() -> void:
 		else:
 			for c in movers: vb.add_child(c)
 			board.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		book_grid.columns = 4 if m == "wide" else 2
 		Dbg.hit("layout %s css=%dx%d logical=%dx%d" % [m, css.x, css.y, ls.x, ls.y])
 	margin.visible = screen == "board" and m == "portrait"; wide_root.visible = screen == "board" and m == "wide"
 	var vs := get_viewport_rect().size
@@ -632,8 +633,8 @@ func _relayout() -> void:
 		vb.add_theme_constant_override("separation", UiLayout.portrait_gap(vs.y))
 	# Recipe Book: 2 columns portrait / 4 wide, cards at least BOOK_CARD_MIN_H tall so every name fits its ribbon
 	# (auto-fit, >= 12 px); the grid scrolls vertically when 8 cards do not fit (phones, the 800x450 embed)
-	var cols := book_grid.columns
 	var hs := page_card_heights(vs, m)
+	book_grid.columns = hs.cols; var cols: int = hs.cols
 	for c in book_cards: c.custom_minimum_size = Vector2(hs.book * 0.75, hs.book)
 	book_scroll.custom_minimum_size = Vector2(cols * hs.book * 0.75 + 8.0 * (cols - 1), vs.y - 32.0 - 56.0 - 12.0)
 	end_card.custom_minimum_size = Vector2(hs.end * 0.75, hs.end)
@@ -647,13 +648,17 @@ func _relayout() -> void:
 
 ## Recipe-card heights for a viewport (logical px) and layout mode: {book, end}. Shared with tests (ribbon fit).
 static func page_card_heights(vs: Vector2, m: String) -> Dictionary:
-	var cols := 4 if m == "wide" else 2; var rows := 8 / cols
+	# Recipe Book: as many columns as keep cards >= BOOK_CARD_MIN_H (2-line names at the 14 px label minimum); scrolls.
+	var max_w := minf(vs.x - 32.0, 480.0 if m == "portrait" else vs.x - 32.0)
+	var cols := 4
+	while cols > 1 and (max_w - 8.0 * (cols - 1)) / cols * 320.0 / 240.0 < BOOK_CARD_MIN_H: cols -= 1
+	var rows := ceili(8.0 / cols)
 	var avail_h := vs.y - 32.0 - 56.0 - 12.0 - 8.0 * (rows - 1)
-	var avail_w := minf(vs.x - 32.0, 480.0 if m == "portrait" else vs.x - 32.0) - 8.0 * (cols - 1)
-	var book := minf(avail_w / cols * 320.0 / 240.0, maxf(avail_h / rows, BOOK_CARD_MIN_H))
-	var end_h := clampf(vs.y - 32.0 - 40.0 - 142.0 - 24.0 - 48.0 * 2 - 12.0 * 5, 150.0, 300.0)
-	if m == "wide": end_h = clampf(vs.y - 24.0 - 40.0 - 48.0 * 2 - (6.0 if vs.y < 600.0 else 12.0) * 4 - 24.0, 150.0, 300.0)
-	return {"book": book, "end": end_h}
+	var book := minf((max_w - 8.0 * (cols - 1)) / cols * 320.0 / 240.0, maxf(avail_h / rows, BOOK_CARD_MIN_H))
+	# Chapter end: Next + Home share one row (EndButtons)
+	var end_h := clampf(vs.y - 32.0 - 40.0 - 142.0 - 24.0 - 48.0 - 12.0 * 4, 150.0, 300.0)
+	if m == "wide": end_h = clampf(vs.y - 24.0 - 40.0 - 48.0 - (6.0 if vs.y < 600.0 else 12.0) * 3 - 24.0, 150.0, 300.0)
+	return {"book": book, "end": end_h, "cols": cols}
 
 var panel_rect := Rect2()
 func _fit_panel() -> void:

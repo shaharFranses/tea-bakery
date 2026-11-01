@@ -42,7 +42,7 @@ func refresh() -> void:
 
 const RIBBON := Rect2(32, 232, 174, 48)   # empty ribbon on the 240x320 1x card art
 const RIBBON_PAD := 6.0                   # 1x px of padding inside each ribbon end
-const MIN_FS := 12                        # never below the 12 px text minimum
+const MIN_FS := 14                        # SPEC §3.5/TT-AC-07: labels >= 14 px
 var fit := {}                             # {fs, text_w, ribbon_w, fits} (QA dump / tests)
 
 ## Ribbon auto-fit: one line, the largest size in [MIN_FS, 20 px * card scale] whose text width fits inside the ribbon.

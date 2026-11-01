@@ -19,7 +19,7 @@ func test_every_name_fits_all_layouts():
 				var c = _card(ch, hs[where])
 				assert_true(c.fit.fits, "%s %s card %d '%s' fs=%d lines=%d w=%.1f/%.1f h=%.1f/%.1f" % [lay[0], where, ch, c.fit.text,
 					c.fit.fs, c.fit.lines, c.fit.text_w, c.fit.ribbon_w, c.fit.text_h, c.fit.ribbon_h])
-				assert_gte(c.fit.fs, 12)
+				assert_gte(c.fit.fs, 14)
 
 func test_cherry_bakewell_explicit():
 	assert_eq(Chapters.RECIPES[4], "Cherry Bakewell")
@@ -28,4 +28,4 @@ func test_cherry_bakewell_explicit():
 		for where in ["book", "end"]:
 			var c = _card(5, hs[where])
 			assert_eq(c.fit.text, "Cherry Bakewell")
-			assert_true(c.fit.fits and c.fit.fs >= 12, "Cherry Bakewell fits the %s ribbon at %s (fs %d, lines %d)" % [where, lay[0], c.fit.fs, c.fit.lines])
+			assert_true(c.fit.fits and c.fit.fs >= 14, "Cherry Bakewell fits the %s ribbon at %s (fs %d, lines %d)" % [where, lay[0], c.fit.fs, c.fit.lines])
