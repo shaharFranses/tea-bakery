@@ -13,6 +13,7 @@ GATE=0; PORT=${PKD_PORT:-8900}; SLUG=${PKD_SLUG:-$(tr -d "[:space:]" < SLUG)};  
 while [ $# -gt 0 ]; do case $1 in --gate) GATE=1;; --port) PORT=$2; shift;; --slug) SLUG=$2; shift;; --no-build) NOBUILD=1;; --live) LIVE=$2; shift;; esac; shift; done
 PY=${PKD_PY:-/workspace/pwvenv/bin/python}; ZPY=${PKD_ZPY:-/workspace/zvenv/bin/python};   # zvenv: zstandard for pck scripts
  GODOT=${GODOT:-godot}; export GODOT
+mkdir -p build && : > build/.gdignore   # D0-05: top-level build/ never imported (before any import/export step)
 export PKD_DIRTY_AT_START=$(git status --porcelain --untracked-files=no | wc -l)
 SHA=$(git rev-parse --short HEAD); R="qa/results/ci-$SHA"; mkdir -p "$R"
 FAILS=(); STEPS=()
@@ -37,6 +38,7 @@ preflight() {
   test -f web/.nojekyll || { echo "web/.nojekyll missing"; return 1; }
   ! grep -rn --include=*.gd 'paused = true' autoload scenes pkd_intro || { echo "lifecycle code pauses the tree"; return 1; }
   if [ $GATE = 1 ] && [ "$PKD_DIRTY_AT_START" != 0 ]; then echo "--gate needs a clean tree"; git status --short; return 1; fi
+  python3 ci/no_placeholders.py CURRENT_BUILD.md || return 1   # D0-23: no <placeholder> text anywhere in CURRENT_BUILD.md
   echo preflight ok; }
 tests() { $GODOT --headless --path "$ROOT" --import >/dev/null 2>&1; out=$($GODOT --headless --path "$ROOT" -s addons/gut/gut_cmdln.gd -gexit 2>&1); echo "$out" | sed 's/\x1b\[[0-9;]*m//g' | tail -20
   echo "$out" | grep -q 'SCRIPT ERROR' && { echo "SCRIPT ERROR counts as FAIL (SD build retro)"; return 1; }
@@ -58,7 +60,7 @@ netcalls() { $ZPY qa/net_calls_scan.py "$R/net_calls_scan.json" build/web-debug 
 no_old_title() { $ZPY qa/user_text_scan.py "$R" build/web-debug build/web-release && python3 qa/title_scan_ci.py "$R" build/web-debug build/web-release; }   # SPEC §3.5 banned_user_text + QA NAME-01 scanner; source tree too
 br() { $PY ci/br_smoke.py "http://127.0.0.1:$PORT" "http://127.0.0.1:$((PORT+1))" "$R"; }   # SPEC §13.1 BR-1..BR-3
 release_flags() { $PY ci/release_flags_smoke.py "http://127.0.0.1:$((PORT+1))" "$R"; }
-gate() { G=$(tools/freeze_gate.sh build/web-release "$SLUG" | tail -1) && echo "gated: $G" && echo "$G" > "$R/GATED_DIR" && tools/cg_zip.sh "$G" "$SLUG"; }
+gate() { G=$(tools/freeze_gate.sh build/web-release "$SLUG" | tail -1) && echo "gated: $G" && echo "$G" > "$R/GATED_DIR" && tools/cg_zip.sh "$G" "$SLUG" && python3 tools/write_freeze.py "$G" "dist/$SLUG-cg-$SHA.zip" "$(dirname "$G")/FREEZE.md" && python3 ci/d023_check.py CURRENT_BUILD.md "$G" "$SHA" "$(dirname "$G")/FREEZE.md" pre | tee "$R/d023_check.txt"; }   # QA D0-23 checker (copy)   # D0-23: concrete sha + zip/pck md5+sha256
 
 step 0 preflight preflight
 step 1 "GUT tests" tests

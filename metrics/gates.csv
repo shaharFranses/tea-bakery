@@ -2,3 +2,4 @@ datetime_asia_jerusalem,commit,branch,ci_verdict,gate,release_total_bytes,wasm_b
 2026-10-25 09:14,01d5d2d,main,FAIL,0,36483280,35376909,release,,
 2026-10-25 09:48,4abfa26,main,FAIL,0,36476457,35376909,"BR-1 perf lines (release+debug), BR-2 set_date/retry_daily, BR-3 set_session_s/ads_decisions",,
 2026-10-25 10:02,96e2144,main,PASS,0,36476457,35376909,,,
+2026-11-01 11:33,457c753,,PASS,1,39159228,35376909,,,
