@@ -1,5 +1,5 @@
-## SPEC v1.0 D-12 / TT-AC-06 / TT-AC-22: mold-first tap cycle (default) and "cake first" setting, right-click mold toggle,
-## auto-molds derived (never stored), settings persisted in the save dict.
+## SPEC v1.0 D-12 / TT-AC-06: mold-first tap cycle (default) and "cake first" setting, right-click mold toggle,
+## no auto-molds (placing a cake never marks other cells), settings persisted in the save dict.
 extends GutTest
 const Cells = preload("res://game/cells.gd")
 const Settings = preload("res://game/settings.gd")
@@ -18,41 +18,28 @@ func test_default_order_mold_first():
 func test_cake_first_order():
 	assert_eq(_cycle(Cells.ORDER_CAKE_FIRST), ["cake", "mold", "empty"])
 
-func test_auto_mold_cell_cycles_like_empty_and_cake_on_mold_allowed():
-	assert_eq(Cells.next_state(Cells.MOLD_AUTO, Cells.ORDER_MOLD_FIRST), Cells.MOLD)
-	assert_eq(Cells.next_state(Cells.MOLD_AUTO, Cells.ORDER_CAKE_FIRST), Cells.CAKE, "auto-mold never blocks a cake")
+func test_cake_on_mold_allowed():
 	assert_eq(Cells.next_state(Cells.MOLD, Cells.ORDER_MOLD_FIRST), Cells.CAKE, "cake on a mold cell")
 
 func test_right_click_toggles_mold_never_cake():
 	assert_eq(Cells.right_click(Cells.EMPTY), Cells.MOLD)
 	assert_eq(Cells.right_click(Cells.MOLD), Cells.EMPTY)
-	assert_eq(Cells.right_click(Cells.MOLD_AUTO), Cells.MOLD)
 	assert_eq(Cells.right_click(Cells.CAKE), Cells.CAKE)
 
-func test_auto_molds_derived_and_removed_with_their_cake():
-	var t := Gen.tutorial(); var n: int = t.n
-	var cells := PackedInt32Array(); cells.resize(n * n); cells.fill(Cells.EMPTY)
-	cells[0] = Cells.CAKE                      # A1
-	cells[2] = Cells.MOLD                      # player mold in row 1 stays a player mold
-	var a := Cells.auto_molds(n, t.regions, cells)
-	assert_true(a.has(1) and a.has(n) and a.has(n + 1), "row, column, diagonal neighbour")
-	assert_false(a.has(2), "player mold not downgraded")
-	assert_eq(Cells.shown(2, cells, a), Cells.MOLD)
-	assert_eq(Cells.auto_molds(n, t.regions, cells, false), {}, "setting OFF hides them")
-	cells[0] = Cells.EMPTY
-	assert_eq(Cells.auto_molds(n, t.regions, cells), {}, "removing the cake removes its auto-molds")
-	assert_eq(cells[2], Cells.MOLD)
+func test_no_auto_molds():
+	var src := FileAccess.get_file_as_string("res://game/cells.gd")
+	assert_false(src.contains("MOLD_AUTO") or src.contains("auto_molds"), "no derived auto-mold state")
+	assert_false("auto_mold" in Settings.new().to_dict(), "no Auto-molds setting")
 
 func test_settings_persist_both_orders():
 	for order in [Cells.ORDER_CAKE_FIRST, Cells.ORDER_MOLD_FIRST]:
-		var s = Settings.new(); s.tap_order = order; s.auto_mold = false
+		var s = Settings.new(); s.tap_order = order
 		var saved: Dictionary = JSON.parse_string(JSON.stringify({"settings": s.to_dict()}))   # through the save format
 		var r = Settings.new(); r.from_dict(saved.settings)
-		assert_eq(r.tap_order, order); assert_false(r.auto_mold)
+		assert_eq(r.tap_order, order)
 		assert_eq(Cells.NAMES[Cells.next_state(Cells.EMPTY, r.tap_order)], "cake" if order == Cells.ORDER_CAKE_FIRST else "mold")
 	var bad = Settings.new(); bad.from_dict({"tap_order": "x"})
 	assert_eq(bad.tap_order, Cells.ORDER_MOLD_FIRST, "unknown value -> default")
-	assert_true(bad.auto_mold, "auto-molds ON by default (D-13)")
 
 func test_analytics_noop_sink():
 	assert_eq(Analytics.sink, "noop")

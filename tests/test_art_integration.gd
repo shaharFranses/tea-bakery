@@ -9,8 +9,6 @@ const UiLayout = preload("res://game/ui_layout.gd")
 func test_mold_and_cake_draw_sizes() -> void:
 	assert_almost_eq(BoardView.mold_side(100.0), 70.0, 0.001, "mold drawn at 0.70 x cell")
 	assert_almost_eq(BoardView.cake_side(100.0), 100.0, 0.001, "cake drawn at 1.0 x cell")
-	assert_eq(BoardView.AUTO_ALPHA, 0.5, "auto-mold = same sprite at 0.5 alpha")
-	assert_true(BoardView.AUTO_ALPHA <= 0.6, "TT-AC-22")
 
 func test_only_berry_cake_and_2x_sprites() -> void:
 	assert_eq(BoardView.CAKE_SPRITE, "res://assets/board/cake_berry@2x.png")

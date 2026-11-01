@@ -2,7 +2,7 @@
 ## (ui/theme/art_palette.gd, generated). Only @2x sprites are loaded; mipmaps downscale them (linear+mipmaps filter).
 ## Per-cell draw order (handoff P0): tile -> region seams/rims (code) -> under-layer (overlay_solved / overlay_conflict /
 ## overlay_conflict_unit / overlay_hint_unit / given_plate) -> cake (cake_berry, 1.0 x cell, +0.02 down) or mold
-## (0.70 x cell; auto-mold = same sprite at 0.5 alpha) -> over-layer (badge_conflict / badge_solved / hint target).
+## (0.70 x cell) -> over-layer (badge_conflict / badge_solved / hint target).
 ## Tray: 9-slice tray_frame (golden tray_frame_solved + SOLVED_TRAY_TINT when solved), grown 10 px (12 bottom).
 ## Berry v2 is the only cake wired in v1 (D-03); the other cake_*.png are recipe-card / post-v1 extras.
 ## Input: left click / tap -> cell_tapped; right-click -> cell_right_clicked (desktop mold toggle, D-12).
@@ -18,11 +18,9 @@ signal cell_right_clicked(r: int, c: int)
 const EMPTY := Cells.EMPTY
 const MOLD := Cells.MOLD
 const CAKE := Cells.CAKE
-const MOLD_AUTO := Cells.MOLD_AUTO
 const DIR := "res://assets/board/"
 const MOLD_SPRITE := DIR + "mold@2x.png"
 const CAKE_SPRITE := DIR + "cake_berry@2x.png"     # the v1 cake (berry v2)
-const AUTO_ALPHA := Pal.AUTO_MOLD_ALPHA            # <= 0.6 x the player mold (TT-AC-22)
 const TRAY_GROW := Vector4(10, 10, 10, 12)         # frame rect = board rect grown l/t/r/b (handoff P1)
 const SPRITES := ["mold", "cake_berry", "steam_puff", "overlay_conflict", "badge_conflict", "overlay_solved", "badge_solved",
 	"given_plate", "overlay_hint_unit", "overlay_hint_target", "overlay_conflict_unit"]
@@ -30,7 +28,6 @@ const SPRITES := ["mold", "cake_berry", "steam_puff", "overlay_conflict", "badge
 var n := 5
 var regions := PackedInt32Array()
 var cells := PackedInt32Array()    # stored EMPTY / MOLD / CAKE per cell
-var auto := {}                     # cell index -> true: shown as MOLD_AUTO (game/cells.gd auto_molds)
 var conflict_cells := {}           # Vector2i -> true
 var conflict_units := {}           # cell index -> true: shared row/column/region of a conflict (D-10 unit tint)
 var givens := {}                   # cell index -> true: given cake, drawn on a plate
@@ -108,7 +105,7 @@ func _process(dt: float) -> void:
 func setup(size: int, reg: PackedInt32Array, given_cells: Array = []) -> void:
 	n = size; regions = reg
 	cells = PackedInt32Array(); cells.resize(n * n); cells.fill(EMPTY)
-	auto = {}; conflict_cells = {}; conflict_units = {}; hint_unit = {}; hint_target = {}; won = false
+	conflict_cells = {}; conflict_units = {}; hint_unit = {}; hint_target = {}; won = false
 	anim = {}; stop_bake()
 	givens = {}
 	for p in given_cells: givens[p.x * n + p.y] = true
@@ -130,7 +127,7 @@ func cell_at(local: Vector2) -> Vector2i:
 	return Vector2i(r, c)
 
 func shown(i: int) -> int:
-	return Cells.shown(i, cells, auto)
+	return cells[i]
 
 ## Mold draw size (px) for a cell pitch: MOLD_DRAW (0.70) x cell, so the visible tin is ~60% of the cell (§10).
 static func mold_side(pitch: float) -> float:
@@ -223,7 +220,6 @@ func _draw() -> void:
 				"cake_pop": sc = lerpf(0.0, 1.15, ak[1] / 0.7) if ak[1] < 0.7 else lerpf(1.15, 1.0, (ak[1] - 0.7) / 0.3)
 				"shake": ctr.x += 2.0 * sin(ak[1] * TAU * 2.0)
 		if st == MOLD: _sprite("mold", _centred(ctr, mold_side(cs) * sc), al)
-		elif st == MOLD_AUTO: _sprite("mold", _centred(ctr, mold_side(cs) * sc), AUTO_ALPHA * al)
 		elif st == EMPTY and not ak.is_empty() and ak[0] == "cake_out":
 			_sprite("cake_berry", _centred(ctr + Vector2(0, cs * 0.02), cake_side(cs) * (1.0 - ak[1])))
 		elif st == CAKE:

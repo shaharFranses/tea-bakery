@@ -30,4 +30,3 @@ const TILE_RADIUS := 0.22
 const RIM_WIDTH := 0.06
 const MOLD_DRAW := 0.70
 const CAKE_DRAW := 1.0
-const AUTO_MOLD_ALPHA := 0.5

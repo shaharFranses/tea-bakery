@@ -106,7 +106,6 @@ var too_small_cover: Control
 var home_btn: Button
 var settings_btn: Button
 var order_btn: Button
-var automold_btn: Button
 var music_btn: Button
 var progress_reset_modal: Control
 var settings_flow: HFlowContainer
@@ -451,7 +450,7 @@ func _build_screens() -> void:
 	var scv := VBoxContainer.new(); scv.mouse_filter = Control.MOUSE_FILTER_IGNORE; scp.add_child(scv)
 	card_title = _title("Baked!", "CardTitle", 32); card_title.custom_minimum_size.x = 200; scv.add_child(card_title)
 	card_time = _body("", "CardTime"); card_time.add_theme_font_size_override("font_size", 14); scv.add_child(card_time)
-	# settings (§9: Sound, Auto-molds, Tap order)
+	# settings (§9: Sound, Music, Tap order)
 	var s := _modal("SettingsModal"); settings_modal = s.root
 	s.col.add_child(_title("Settings", "SettingsTitle", 24))
 	settings_flow = HFlowContainer.new(); settings_flow.name = "SettingsToggles"
@@ -463,8 +462,6 @@ func _build_screens() -> void:
 	music_btn.toggled.connect(func(on): set_music(on))
 	order_btn = _toggle_button("TapOrder", "Cake first", settings_flow)
 	order_btn.toggled.connect(func(on): set_tap_order(Cells.ORDER_CAKE_FIRST if on else Cells.ORDER_MOLD_FIRST))
-	automold_btn = _toggle_button("AutoMolds", "Auto-molds", settings_flow)
-	automold_btn.toggled.connect(func(on): set_auto_mold(on))
 	var rp := _tool_button("ResetProgress", "Reset progress", "reset", "", s.col)
 	rp.pressed.connect(func(): progress_reset_modal.visible = true)
 	var sc := _tool_button("SettingsClose", "Close", "close", "PrimaryButton", s.col)
@@ -886,9 +883,6 @@ func clear_board() -> void:
 func set_tap_order(order: String) -> void:
 	settings.tap_order = order; save_now("settings"); _sync_setting_buttons(); _refresh()
 
-func set_auto_mold(on: bool) -> void:
-	settings.auto_mold = on; save_now("settings"); _sync_setting_buttons(); _refresh()
-
 func set_sound(on: bool) -> void:
 	settings.sound = on; muted = not on; Sfx.set_user_muted(not on); save_now("settings"); _sync_setting_buttons()
 
@@ -912,8 +906,6 @@ func _sync_setting_buttons() -> void:
 	if order_btn == null: return
 	var cf: bool = settings.tap_order == Cells.ORDER_CAKE_FIRST
 	order_btn.set_pressed_no_signal(cf); order_btn.icon = TtTheme.ui_tex("toggle_on" if cf else "toggle_off")
-	automold_btn.set_pressed_no_signal(settings.auto_mold)
-	automold_btn.icon = TtTheme.ui_tex("toggle_on" if settings.auto_mold else "toggle_off")
 	mute.set_pressed_no_signal(not muted); mute.icon = TtTheme.ui_tex("toggle_off" if muted else "toggle_on")
 	music_btn.set_pressed_no_signal(settings.music); music_btn.icon = TtTheme.ui_tex("toggle_on" if settings.music else "toggle_off")
 
@@ -944,7 +936,6 @@ func _refresh() -> void:
 	board.set_conflicts(bad)
 	if bad.size() > before and chapter > 0 and mode == "chapter": progress.stats(chapter).conflicts_shown += 1
 	board.conflict_units = BoardView.units_of_conflicts(n, puzzle.regions, bad)
-	board.auto = Cells.auto_molds(n, puzzle.regions, board.cells, settings.auto_mold)
 	var was_won := won
 	won = Rules.is_solution(n, puzzle.regions, cs)
 	board.won = won

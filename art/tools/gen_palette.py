@@ -21,7 +21,7 @@ L += ["", "## Board geometry (fractions of cell pitch) and extra board colours",
   'const SOLVED_TRAY_TINT := Color(0.788, 0.502, 0.227, 0.22)  # toasted crust over the board when solved',
   'const SCRIM := Color(0.263, 0.157, 0.227, 0.45)  # modal backdrop (ink at 45%)',
   "const TILE_GAP := 0.075", "const TILE_RADIUS := 0.22", "const RIM_WIDTH := 0.06",
-  "const MOLD_DRAW := 0.70", "const CAKE_DRAW := 1.0", "const AUTO_MOLD_ALPHA := 0.5"]
+  "const MOLD_DRAW := 0.70", "const CAKE_DRAW := 1.0"]
 for d in (OUT, "/workspace/tea-and-tarts/ui/theme"):
     os.makedirs(d,exist_ok=True); open(os.path.join(d,"art_palette.gd"),"w").write("\n".join(L)+"\n")
 if False: open(os.path.join(OUT,"art_palette.gd"),"w").write("\n".join(L)+"\n")

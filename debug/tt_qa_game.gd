@@ -2,7 +2,7 @@
 ## so none of these command strings / URL flags exist in release (checked by qa/release_audit.py + ci/release_flags_smoke.py).
 ##  H1  PKD_QA.dump().game schema           -> state(main)
 ##  H2  PKD_QA.show("board:<id>" | "gen:N,seed" | "solve_next" | "solve" | "home" | "daily:YYYY-MM-DD" | "tap:r,c" | "clear" | "new")
-##      + "rclick:r,c" (desktop mold toggle) | "tap_order:mold_first|cake_first" | "auto_mold:0|1" (Settings, persisted)
+##      + "rclick:r,c" (desktop mold toggle) | "tap_order:mold_first|cake_first" (Settings, persisted)
 ##  H3  ?qa=1&date=YYYY-MM-DD (local-date override) &session_offset_s=N (session clock offset)
 ##  BR-2 PKD_QA.set_date("YYYY-MM-DD"[ "THH:MM"]) runtime local date via main.check_day() (real rollover path);
 ##       PKD_QA.retry_daily() second completion attempt on today's daily -> rejected, streak unchanged (V8)
@@ -80,7 +80,6 @@ static func state(main) -> Dictionary:
 		"tutorial": main.puzzle.get("tutorial", false), "regions": Array(main.puzzle.regions), "cells": cells,
 		"cakes": main.cakes().map(func(p): return [p.x, p.y]),
 		"molds": range(main.n * main.n).filter(func(i): return b.cells[i] == Cells.MOLD).map(func(i): return [i / main.n, i % main.n]),
-		"molds_auto": range(main.n * main.n).filter(func(i): return b.shown(i) == Cells.MOLD_AUTO).map(func(i): return [i / main.n, i % main.n]),
 		"settings": main.settings.to_dict(), "analytics": Analytics.ring, "analytics_sink": Analytics.sink,
 		"conflicts": b.conflict_cells.keys().map(func(p): return [p.x, p.y]), "solved": main.won, "won": main.won, "moves": main.moves,
 		"undo_len": main.history.size(), "undo_hash": str(hash(main.history.back())) if not main.history.is_empty() else "", "board_rect": [(gp.x + br.position.x) * _css(main), (gp.y + br.position.y) * _css(main), br.size.x * _css(main), br.size.y * _css(main)],
@@ -155,7 +154,6 @@ static func show(main, cmd: String) -> String:
 		var q := cmd.substr(7).split(",")
 		if q.size() == 2: main.right_click_cell(q[0].to_int(), q[1].to_int())
 	elif cmd.begins_with("tap_order:"): main.set_tap_order(cmd.substr(10))
-	elif cmd.begins_with("auto_mold:"): main.set_auto_mold(cmd.substr(10) == "1")
 	elif cmd.begins_with("tap:"):
 		var p := cmd.substr(4).split(",")
 		if p.size() == 2: main.tap_cell(p[0].to_int(), p[1].to_int())
