@@ -88,7 +88,7 @@ static func state(main) -> Dictionary:
 		"save_key": Store.KEY, "ads_log": Ads.call_log, "ads_decisions": Dbg.hooks.ads_decisions if Dbg.hooks else [], "perf_marks": main.perf_marks, "ads_mode": Ads.mode, "sdk_log": Ads.sdk_log,
 		"gameplay_started": main.gameplay_started, "backdrop": main.backdrop.visible, "backdrop_asset": main.backdrop.texture != null,
 		"gen_ms": main.puzzle.get("ms", 0.0), "reshapes": main.puzzle.get("reshapes", 0),
-		"button_rect": [main.button.get_global_rect().position.x, main.button.get_global_rect().position.y, main.button.size.x, main.button.size.y]}
+		"too_small": main.too_small, "show_me_visible": main.showme_btn.visible, "button_rect": [main.button.get_global_rect().position.x, main.button.get_global_rect().position.y, main.button.size.x, main.button.size.y]}
 
 ## H2. Returns a short result string (also hit-logged).
 static func show(main, cmd: String) -> String:
@@ -110,6 +110,7 @@ static func show(main, cmd: String) -> String:
 	elif cmd == "continue": main.home_continue_pressed()
 	elif cmd == "skip": main._after_card()
 	elif cmd == "hint": main.request_hint(); res = main.hint_state.text if not main.reward_modal.visible else "rewarded modal"
+	elif cmd == "show_me": res = "applied" if main.apply_hint() else "no hint"
 	elif cmd == "hint_watch": main._watch_for_hint()
 	elif cmd == "hint_no": main.reward_modal.visible = false
 	elif cmd == "undo": main.undo()

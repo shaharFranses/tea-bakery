@@ -99,6 +99,10 @@ var undo_btn: Button
 var hint_btn: Button
 var hint_badge: TextureRect
 var reset_btn: Button
+var showme_btn: Button          # D-07 / HN-20: "Show me" applies the shown hint
+var last_hint_step: Dictionary = {}
+var too_small := false           # TT-AC-48
+var too_small_cover: Control
 var home_btn: Button
 var settings_btn: Button
 var order_btn: Button
@@ -280,6 +284,14 @@ func _build_ui() -> void:
 	board.cell_tapped.connect(tap_cell)
 	board.cell_right_clicked.connect(right_click_cell)
 	board.resized.connect(_update_size_buttons)
+	board.resized.connect(func(): _check_too_small.call_deferred())
+	too_small_cover = PanelContainer.new(); too_small_cover.name = "TooSmall"; too_small_cover.visible = false
+	too_small_cover.theme_type_variation = "CardPanel"
+	too_small_cover.set_anchors_preset(Control.PRESET_FULL_RECT); too_small_cover.mouse_filter = Control.MOUSE_FILTER_STOP
+	var tsl := Label.new(); tsl.name = "TooSmallText"; tsl.text = "Turn your device upright or enlarge the window to play this tray."
+	tsl.add_theme_font_size_override("font_size", 16); tsl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tsl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; tsl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	too_small_cover.add_child(tsl); board.add_child(too_small_cover)
 	vb.add_child(board)
 	status = Label.new(); status.name = "Status"
 	status.add_theme_font_size_override("font_size", 16)
@@ -298,6 +310,9 @@ func _build_ui() -> void:
 	hint_badge.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; hint_badge.size = Vector2(24, 24)
 	hint_btn.add_child(hint_badge)
 	hint_btn.resized.connect(func(): hint_badge.position = Vector2(hint_btn.size.x - 18, -6))
+	showme_btn = _tool_button("ShowMe", "Show me", "hint")
+	showme_btn.pressed.connect(func(): apply_hint())
+	showme_btn.visible = false
 	reset_btn = _tool_button("Clear", "Reset", "reset")
 	reset_btn.pressed.connect(request_reset)
 	button = _tool_button("Play", "New tray", "play", "PrimaryButton")
@@ -589,7 +604,9 @@ func _set_puzzle(p: Dictionary) -> void:
 	hints_used_board = 0; idle_s = 0.0
 	ad_policy.on_board_start()
 	hint_state = {"free_left": 1, "rewarded_visible": false, "text": "", "technique": "", "targets": [], "pulse_count": 0, "kind": ""}
+	last_hint_step = {}; showme_btn.visible = false
 	interactive = false
+	_check_too_small.call_deferred()
 	_update_size_buttons()
 	_sync_board_chrome()
 	_refresh()
@@ -696,6 +713,7 @@ func _relayout() -> void:
 	home_screen.get_node("Column").add_theme_constant_override("separation", 6 if short else 12)
 	end_screen.get_node("Column").add_theme_constant_override("separation", 6 if short else 12)
 	_fit_bubble()
+	_check_too_small.call_deferred()
 	_in_relayout = false
 
 ## Recipe-card heights for a viewport (logical px) and layout mode: {book, end}. Shared with tests (ribbon fit).
@@ -767,12 +785,31 @@ func _apply_backdrop(landscape: bool) -> void:
 
 # ------------------------------------------------------------------ input
 func _can_edit() -> bool:
-	return not won and not card_open and screen == "board"
+	return not won and not card_open and screen == "board" and not too_small
+
+## CSS px per logical px (viewport stretch / devicePixelRatio).
+func css_scale() -> float:
+	var sc := get_viewport().get_final_transform().get_scale().x
+	if OS.has_feature("web"):
+		var dpr = JavaScriptBridge.eval("window.devicePixelRatio || 1")
+		return sc / float(dpr if dpr != null else 1.0)
+	return sc
+
+## TT-AC-48: the board's cell would be < 44 CSS px -> cover it with the message, input blocked, state kept.
+func _check_too_small() -> void:
+	var cell_css: float = board.cell_size() * css_scale()
+	var ts := screen == "board" and board.size.x > 0.0 and cell_css < 44.0 - 0.01
+	if ts == too_small: return
+	too_small = ts
+	too_small_cover.visible = ts
+	Dbg.hit("too_small %s (cell %.1f css px)" % [ts, cell_css])
+	_sync_hint_button()
 
 func _input_happened() -> void:
 	idle_s = 0.0
 	if hint_state.text != "" and str(puzzle.get("coach", "")) == "":
 		hint_state.text = ""; hint_label.text = Cfg.RULES_TEXT; board.hint_target = {}; board.hint_unit = {}
+	last_hint_step = {}; if showme_btn: showme_btn.visible = false
 
 func _push_history() -> void:
 	history.append(board.cells.duplicate())
@@ -1015,7 +1052,7 @@ func _sync_hint_button() -> void:
 	var ch1_free: bool = _hint_chapter() <= 1 and mode != "daily"
 	hint_state.free_left = -1 if ch1_free else maxi(0, Cfg.HINTS_FREE_PER_BOARD - ad_policy.free_hints_used_this_board)
 	hint_state.rewarded_visible = offer == "rewarded"
-	hint_btn.disabled = offer == "none" or won or not interactive
+	hint_btn.disabled = offer == "none" or won or not interactive or too_small
 	hint_badge.visible = offer == "rewarded" or (offer == "free" and not ch1_free)
 	hint_badge.texture = TtTheme.ui_tex("badge_rewarded" if offer == "rewarded" else "badge_free_hint")
 
@@ -1052,10 +1089,33 @@ func show_hint(kind: String) -> Dictionary:
 	hint_state.text = text; hint_state.technique = step.technique; hint_state.kind = kind
 	hint_state.targets = tgt.map(func(i): return [i / n, i % n])
 	hint_label.text = text
+	last_hint_step = step
+	showme_btn.visible = not (step.technique == "contradiction")
 	Analytics.hint_used(board_id(), kind, step.technique)
 	Dbg.hit("hint %s %s: %s" % [kind, step.technique, text])
 	_sync_hint_button()
 	return step
+
+## "Show me" (D-07 / HN-20): applies the shown hint as one undoable move: fix -> lift the wrong cake/mold; a placement
+## -> plate the cake; eliminations -> empty molds on those cells. Returns false when there is no pending hint.
+func apply_hint() -> bool:
+	if last_hint_step.is_empty() or not _can_edit(): return false
+	var st := last_hint_step
+	_push_history()
+	if st.technique == "fix":
+		for i in st.cells: if not givens.has(i): board.cells[i] = Cells.EMPTY
+	elif st.get("place", false):
+		board.cells[int(st.cells[0])] = Cells.CAKE
+	else:
+		for i in st.get("eliminations", []):
+			if not givens.has(i) and board.cells[i] == Cells.EMPTY: board.cells[i] = Cells.MOLD
+	moves += 1
+	Dbg.hit("show me %s" % st.technique)
+	last_hint_step = {}; showme_btn.visible = false
+	hint_state.text = ""; board.hint_target = {}; board.hint_unit = {}
+	if str(puzzle.get("coach", "")) == "": hint_label.text = Cfg.RULES_TEXT
+	_refresh(); _schedule_save()
+	return true
 
 func _unit_cells(lbl: String) -> Array:
 	for u in Grader.units(n, puzzle.regions):
