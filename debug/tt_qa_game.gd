@@ -82,7 +82,7 @@ static func state(main) -> Dictionary:
 		"viewport_logical": [main.get_viewport_rect().size.x, main.get_viewport_rect().size.y], "ui": _ui(main), "hint": main.hint_state, "hint_offer": main.ad_policy.hint_offer(main._hint_chapter(), "daily" if main.mode == "daily" else "chapter", Ads.available()), "timer_visible": main.card_open,
 		"active_s": main.active_ms / 1000.0, "session_s": Clock.session_s(), "session_started": Clock.session_started(),
 		"date": qa_date(params), "local_now": Clock.local_datetime(), "streak": sm.streak, "best_streak": sm.best_streak,
-		"total_bakes": sm.total_bakes, "bakes": main.daily.bakes, "daily_open": main.daily.open_date,
+		"total_bakes": sm.total_bakes, "bakes": main.daily.bakes, "daily_open": main.daily.open_date, "daily_index": main.puzzle.get("index", -1), "puzzle_id": main.puzzle.get("id", ""),
 		"daily_done_today": main.daily.is_done(Clock.local_date()), "last_daily": main.last_daily_result, "unlocked": {"recipes": main.progress.recipes, "decor": main.progress.decor},
 		"ad_policy": {"chapters_completed": main.ad_policy.chapters_completed, "last_midgame_session_ms": main.ad_policy.last_midgame_ms},
 		"save_key": Store.KEY, "ads_log": Ads.call_log, "ads_decisions": Dbg.hooks.ads_decisions if Dbg.hooks else [], "perf_marks": main.perf_marks, "ads_mode": Ads.mode, "sdk_log": Ads.sdk_log,

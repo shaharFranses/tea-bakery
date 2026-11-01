@@ -23,6 +23,7 @@ const Settings = preload("res://game/settings.gd")
 const TtTheme = preload("res://ui/theme/tt_theme.gd")
 const Pal = preload("res://ui/theme/art_palette.gd")
 const Chapters = preload("res://game/chapters.gd")
+const DailyPool = preload("res://game/daily_pool.gd")
 const Progress = preload("res://game/progress.gd")
 const Grader = preload("res://game/grader.gd")
 const HintText = preload("res://game/hint_text.gd")
@@ -502,15 +503,15 @@ func load_tutorial() -> void:
 	open_board("c1-b1")
 
 ## Bake of the Day for `date` (device-local; fixed when OPENED, U1/V9). Returns false if already done (not replayable).
-## Thin slice: generated 6x6 placeholder until the 400-board pool ships (content drop, step 3).
 func open_daily(date: String) -> bool:
 	if not daily.open(date):
 		Dbg.hit("daily %s already baked: not replayable" % date)
 		return false
 	if card_open: _close_card()
 	_mark_transition_start()
-	n = 6; seed_value = Gen.seed_from_string("daily-" + date); mode = "daily"; chapter = 0; board_no = 0
-	_set_puzzle(Gen.generate(n, seed_value))
+	var p := DailyPool.board(date)          # pool[(date - epoch) mod 400] (D-11)
+	n = p.n; seed_value = p.seed; mode = "daily"; chapter = 0; board_no = 0
+	_set_puzzle(p)
 	_set_screen_raw("board")
 	Dbg.hit("daily %s open n=%d" % [date, n])
 	return true
