@@ -55,7 +55,7 @@ with sync_playwright() as p:
     pg = boot(ctx, "qa=1&intro=0&seed=7&size=9"); g = dump(pg)["game"]
     res["desktop_9x9_allowed"] = g["n"] == 9 and g["max_size"] == 9
     res["desktop_cells_ge_44"] = g["board_rect"][2] / g["n"] >= 44
-    res["desktop_backdrop_placeholder"] = g["backdrop_asset"] is False   # no ART asset yet: flat fill shown
+    res["desktop_backdrop_landscape"] = g["backdrop_asset"] is True and g["backdrop"] is True   # Art P2 landscape webp on desktop
     pg.screenshot(path=f"{out}/game_desktop_9x9.png"); pg.close(); ctx.close()
     br.close()
 res["console_zero"] = not bad

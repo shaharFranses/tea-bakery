@@ -11,9 +11,23 @@ head = open(os.path.join(root, "html", "head_include.html")).read()
 assert head.isascii(), "html/head_include.html must be ASCII-only: " + repr(sorted({c for c in head if not c.isascii()}))
 slim = os.path.join(root, "engine", "pkd_web_release_slim.zip")
 rel_tpl = slim if (os.path.exists(slim) and os.environ.get("PKD_STOCK") != "1") else ""
+# PKD_SLIM=1: Pipeline Ops' prebuilt slim template (not the default until QA passes a slim build). Never built here.
+PO_SLIM = "/workspace/pipeline-ops/engine-templates/godot-4.3-web-slim/web_nothreads_release.zip"
+PO_SLIM_SHA256 = "0572db172ec58a3abeef1a3e17aec6ef14fca6a8e597799febdc8e65efa52e75"
+if os.environ.get("PKD_SLIM") == "1":
+    import hashlib
+    rel_tpl = os.environ.get("PKD_SLIM_TEMPLATE", PO_SLIM)
+    got = hashlib.sha256(open(rel_tpl, "rb").read()).hexdigest()
+    want = os.environ.get("PKD_SLIM_SHA256", PO_SLIM_SHA256)
+    assert got == want, f"slim template sha256 {got} != {want}"
+    print("slim template sha256 ok:", got)
 dbg_tpl = os.environ.get("PKD_DEBUG_TEMPLATE", "")
 q = lambda s: json.dumps(s)  # Godot cfg strings accept JSON-style escapes
 EXC = "tests/*, tools/*, qa/*, ci/*, addons/gut/*, build/*, web/*, engine/*, metrics/*, docs/*, spec/*, *.md, art/*, portal/*, data/*, qa_shots/*, reuse-sd/*"   # data/ = test vectors + synced spec lists (tests/CI only)
+# Art ships 1x + @2x; the game loads only @2x (art/HANDOFF_GODOT.md), so the 1x PNGs stay out of the pck.
+import glob
+ONE_X = sorted(os.path.relpath(f, root) for f in glob.glob(os.path.join(root, "assets", "**", "*.png"), recursive=True) if "@2x" not in f)
+EXC = EXC + ", assets/backdrop/README.txt" + "".join(", " + f for f in ONE_X)
 def preset(i, name, path, excl, release_tpl, debug_tpl):
     return f'''[preset.{i}]
 

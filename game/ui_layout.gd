@@ -19,6 +19,13 @@ const MARGIN := 12.0
 const PANEL_MIN_W := 280.0
 const PANEL_MAX_W := 360.0
 const GAP := 12.0
+const BOARD_MIN := 352.0          # portrait board floor (SM ruling; 8x8 cells stay >= 44 px)
+const SHORT_PHONE_H := 700.0      # logical height below which the portrait gaps shrink (art/HANDOFF_GODOT.md P2)
+
+## Portrait column gap: 8 normally, 4 on short phones (the 3-line rules bubble takes its 16 px from the gaps; the
+## 16 px font, the >= 352 px board and the 44 px targets never shrink).
+static func portrait_gap(logical_h: float) -> int:
+	return 4 if logical_h < SHORT_PHONE_H else 8
 
 static func mode(css: Vector2) -> String:
 	if css.x <= 0.0 or css.y <= 0.0: return "portrait"

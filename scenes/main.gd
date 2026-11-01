@@ -18,6 +18,8 @@ const Daily = preload("res://game/daily.gd")
 const AdPolicy = preload("res://game/ad_policy.gd")
 const Cells = preload("res://game/cells.gd")
 const Settings = preload("res://game/settings.gd")
+const TtTheme = preload("res://ui/theme/tt_theme.gd")
+const Pal = preload("res://ui/theme/art_palette.gd")
 
 var intro_done := false
 var n := 5
@@ -47,7 +49,18 @@ var size_buttons: Array = []
 var backdrop: TextureRect
 var backdrop_fill: ColorRect
 var gameplay_started := false
-const BACKDROP_PATHS := ["res://assets/backdrop/backdrop_landscape.png", "res://assets/backdrop/backdrop_landscape.webp"]
+const BACKDROP_LANDSCAPE := "res://assets/backdrop/backdrop_landscape.webp"   # desktop / wide
+const BACKDROP_PORTRAIT := "res://assets/backdrop/backdrop_portrait.webp"     # phone Home / Recipe Book / chapter end
+const PORTRAIT_BACKDROP_SCREENS := ["home", "recipe_book", "chapter_end"]
+var screen := "board"           # board | home | recipe_book | chapter_end (only "board" exists before the thin slice)
+var tex_landscape: Texture2D
+var tex_portrait: Texture2D
+var top_bar: HBoxContainer
+var dots: HBoxContainer
+var bubble: PanelContainer      # rules / coach bubble (coach_bubble 9-slice), 72 -> 88 px for 3 lines
+var undo_btn: Button
+var history: Array = []
+var chapter_dots_enabled := false   # progress dots show once chapters are wired (thin slice); themed + hooked now         # undo stack of cell snapshots
 var layout_mode_name := ""     # "portrait" | "wide" (game/ui_layout.gd)
 var vb: VBoxContainer          # portrait column (inside $Margin)
 var wide_root: Control         # wide: board left (positioned by UiLayout.wide_split), panel right
@@ -58,6 +71,8 @@ var hint_label: Label
 
 func _ready() -> void:
 	Dbg.main = self
+	theme = TtTheme.build()
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS   # @2x sprites + mipmaps (handoff import table)
 	session_start_ms = int(Time.get_unix_time_from_system() * 1000.0)
 	save_data = Store.load_data()
 	daily.from_dict(save_data.get("daily", {}))
@@ -95,7 +110,7 @@ func _fresh_seed() -> int:
 func _build_ui() -> void:
 	# Landscape desktop backdrop hook (ART asset in res://assets/backdrop/, see README.txt there).
 	backdrop_fill = ColorRect.new(); backdrop_fill.name = "BackdropFill"
-	backdrop_fill.color = Color("2a2440"); backdrop_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backdrop_fill.color = Pal.ROSEWATER_BG; backdrop_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	backdrop_fill.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop_fill); move_child(backdrop_fill, 1)
 	backdrop = TextureRect.new(); backdrop.name = "Backdrop"
@@ -103,24 +118,43 @@ func _build_ui() -> void:
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	for path in BACKDROP_PATHS:
-		if ResourceLoader.exists(path):
-			backdrop.texture = load(path); break
+	backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR   # backdrops: lossy webp, no mipmaps
+	tex_landscape = load(BACKDROP_LANDSCAPE)
+	tex_portrait = load(BACKDROP_PORTRAIT)
 	add_child(backdrop); move_child(backdrop, 2)
 	vb = VBoxContainer.new()
 	vb.name = "VBox"
-	vb.add_theme_constant_override("separation", 12)
+	vb.add_theme_constant_override("separation", 8)
 	margin.add_child(vb)
+	top_bar = HBoxContainer.new(); top_bar.name = "TopBar"; top_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	top_bar.add_theme_constant_override("separation", 12)
+	vb.add_child(top_bar)
 	label = Label.new(); label.name = "Title"; label.text = Cfg.TITLE_PLACEHOLDER   # final title TBD
-	label.add_theme_font_size_override("font_size", 28)
+	label.theme_type_variation = "TitleLabel"   # DM Serif Display 28
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(label)
+	top_bar.add_child(label)
+	dots = HBoxContainer.new(); dots.name = "ChapterDots"; dots.add_theme_constant_override("separation", 6)
+	dots.alignment = BoxContainer.ALIGNMENT_CENTER
+	for k in 5:
+		var d := TextureRect.new(); d.name = "Dot%d" % k; d.custom_minimum_size = Vector2(16, 16)
+		d.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; d.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		d.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		dots.add_child(d)
+	top_bar.add_child(dots)
+	bubble = PanelContainer.new(); bubble.name = "RulesBubble"; bubble.theme_type_variation = "CoachBubble"
+	bubble.custom_minimum_size.y = TtTheme.BUBBLE_MIN_H
+	vb.add_child(bubble)
 	var hint := Label.new(); hint.name = "Hint"; hint_label = hint
 	hint.text = Cfg.RULES_TEXT
-	hint.add_theme_font_size_override("font_size", 16)   # D-02: rules >= 16 px
+	hint.theme_type_variation = "BubbleLabel"   # D-02: rules 16 px Lexend, up to 3 lines on phones (ruling 10:19)
+	hint.add_theme_font_size_override("font_size", 16)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.max_lines_visible = 3
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(hint)
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hint.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hint.resized.connect(_fit_bubble)
+	bubble.add_child(hint)
 	sizes = HFlowContainer.new(); sizes.name = "Sizes"
 	sizes.alignment = FlowContainer.ALIGNMENT_CENTER
 	sizes.add_theme_constant_override("h_separation", 8); sizes.add_theme_constant_override("v_separation", 8)
@@ -128,13 +162,13 @@ func _build_ui() -> void:
 	for k in range(Gen.MIN_N, Gen.MAX_N + 1):
 		var b := Button.new(); b.name = "Size%d" % k; b.text = "%dx%d" % [k, k]
 		b.custom_minimum_size = Vector2(60, 44); b.toggle_mode = true
-		b.add_theme_font_size_override("font_size", 14)
+		b.add_theme_font_size_override("font_size", 15)
 		b.set_meta("n", k)
 		b.pressed.connect(func(): new_board(k, _fresh_seed()))
 		sizes.add_child(b); size_buttons.append(b)
 	board = BoardView.new(); board.name = "Board"
 	board.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	board.custom_minimum_size = Vector2(300, 300)
+	board.custom_minimum_size = Vector2(UiLayout.BOARD_MIN, UiLayout.BOARD_MIN)
 	board.cell_tapped.connect(tap_cell)
 	board.cell_right_clicked.connect(right_click_cell)
 	board.resized.connect(_update_size_buttons)
@@ -148,35 +182,63 @@ func _build_ui() -> void:
 	row.alignment = FlowContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("h_separation", 10); row.add_theme_constant_override("v_separation", 10)
 	vb.add_child(row)
-	button = Button.new(); button.name = "Play"; button.text = "New tray"
-	button.custom_minimum_size = Vector2(110, 48); button.add_theme_font_size_override("font_size", 16)
-	button.pressed.connect(func(): taps += 1; new_board(n, _fresh_seed()))
-	row.add_child(button)
-	var clear := Button.new(); clear.name = "Clear"; clear.text = "Clear"
-	clear.custom_minimum_size = Vector2(90, 48); clear.add_theme_font_size_override("font_size", 16)
+	undo_btn = _tool_button("Undo", "Undo", "undo")
+	undo_btn.pressed.connect(undo)
+	var clear := _tool_button("Clear", "Reset", "reset")
 	clear.pressed.connect(clear_board)
-	row.add_child(clear)
-	mute = Button.new(); mute.name = "Mute"; mute.text = "Sound: on"; mute.toggle_mode = true
-	mute.custom_minimum_size = Vector2(110, 48); mute.add_theme_font_size_override("font_size", 16)
-	mute.toggled.connect(func(on): Sfx.set_user_muted(on); mute.text = "Sound: off" if on else "Sound: on")
-	row.add_child(mute)
-	order_btn = Button.new(); order_btn.name = "TapOrder"; order_btn.toggle_mode = true
-	order_btn.custom_minimum_size = Vector2(150, 48); order_btn.add_theme_font_size_override("font_size", 16)
+	button = _tool_button("Play", "New tray", "play", "PrimaryButton")   # starter's 44px button contract
+	button.pressed.connect(func(): taps += 1; new_board(n, _fresh_seed()))
+	mute = Button.new(); mute.name = "Mute"; mute.toggle_mode = true; mute.theme_type_variation = "RoundButton"
+	mute.custom_minimum_size = Vector2(56, 56); mute.tooltip_text = "Sound"
+	mute.icon = TtTheme.icon("sound_on"); mute.expand_icon = true
+	mute.toggled.connect(func(on): Sfx.set_user_muted(on); mute.icon = TtTheme.icon("sound_off" if on else "sound_on"))
+	top_bar.add_child(mute)   # top-bar round icon button (btn_round, 56 px)
+	order_btn = _toggle_button("TapOrder", "Cake first")
 	order_btn.toggled.connect(func(on): set_tap_order(Cells.ORDER_CAKE_FIRST if on else Cells.ORDER_MOLD_FIRST))
-	row.add_child(order_btn)
-	automold_btn = Button.new(); automold_btn.name = "AutoMolds"; automold_btn.toggle_mode = true
-	automold_btn.custom_minimum_size = Vector2(150, 48); automold_btn.add_theme_font_size_override("font_size", 16)
-	automold_btn.toggled.connect(func(on): set_auto_mold(not on))
-	row.add_child(automold_btn)
+	automold_btn = _toggle_button("AutoMolds", "Auto-molds")
+	automold_btn.toggled.connect(func(on): set_auto_mold(on))
 	_sync_setting_buttons()
 	# wide layout containers (empty until _relayout moves the nodes in)
 	wide_root = Control.new(); wide_root.name = "Wide"; wide_root.visible = false
 	wide_root.set_anchors_preset(Control.PRESET_FULL_RECT); wide_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(wide_root)
 	panel = VBoxContainer.new(); panel.name = "Panel"
-	panel.add_theme_constant_override("separation", 10)
+	panel.add_theme_constant_override("separation", 8)
 	panel.minimum_size_changed.connect(func(): if layout_mode_name == "wide": _fit_panel.call_deferred())
 	wide_root.add_child(panel)
+
+func _tool_button(nm: String, text: String, icon_name: String, variation := "") -> Button:
+	var b := Button.new(); b.name = nm; b.text = text
+	b.theme_type_variation = variation
+	b.icon = TtTheme.icon(icon_name, variation != "")   # cream icons on raspberry / sage, ink on cream tool buttons
+	b.custom_minimum_size = Vector2(0, 48)              # spec: tool buttons >= 48 px tall
+	row.add_child(b)
+	return b
+
+## Settings toggle: toggle_on / toggle_off sprite (64x36) right of the label; the label never changes.
+func _toggle_button(nm: String, text: String) -> Button:
+	var b := Button.new(); b.name = nm; b.text = text; b.toggle_mode = true
+	b.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	b.add_theme_constant_override("icon_max_width", 48)
+	b.custom_minimum_size = Vector2(0, 48)
+	b.toggled.connect(func(on): b.icon = TtTheme.ui_tex("toggle_on" if on else "toggle_off"))
+	b.icon = TtTheme.ui_tex("toggle_off")
+	row.add_child(b)
+	return b
+
+## Rules bubble: 72 px, 88 px when the rules run to 3 lines (16 px Lexend, 20 px lines + 12/12 padding).
+func _fit_bubble() -> void:
+	if bubble == null: return
+	var h: float = TtTheme.BUBBLE_3LINE_H if hint_label.get_line_count() >= 3 else TtTheme.BUBBLE_MIN_H
+	if layout_mode_name == "wide": h = 0.0
+	if bubble.custom_minimum_size.y != h: bubble.custom_minimum_size.y = h
+
+func _sync_dots() -> void:
+	if dots == null: return
+	dots.visible = chapter_dots_enabled and mode == "chapter"
+	var done := 1 if mode == "chapter" else 0    # board 1 of 5 (chapter progress is wired in the thin slice)
+	for k in dots.get_child_count():
+		(dots.get_child(k) as TextureRect).texture = TtTheme.ui_tex("progress_dot_on" if k < done else "progress_dot_off")
 
 func new_board(size: int, s: int) -> void:
 	n = clampi(size, Gen.MIN_N, max_size()); seed_value = s; mode = "free"
@@ -213,8 +275,9 @@ func complete_daily(forced_date: String = "") -> Dictionary:
 func _set_puzzle(p: Dictionary) -> void:
 	if intro_done: _mark_transition_start()
 	puzzle = p
-	board.setup(n, puzzle.regions)
-	moves = 0; won = false
+	board.setup(n, puzzle.regions, puzzle.get("givens", []))
+	moves = 0; won = false; history.clear()
+	_sync_dots()
 	_update_size_buttons()
 	_refresh()
 	if intro_done: _board_interactive.call_deferred()
@@ -259,11 +322,11 @@ func _relayout() -> void:
 	var m := UiLayout.mode(css)
 	if m != layout_mode_name:
 		layout_mode_name = m
-		var movers := [label, hint_label, sizes, board, status, row]
+		var movers := [top_bar, bubble, sizes, board, status, row]
 		for c in movers: c.get_parent().remove_child(c)
 		if m == "wide":
 			wide_root.add_child(board)
-			for c in [label, hint_label, sizes, status, row]: panel.add_child(c)
+			for c in [top_bar, bubble, sizes, status, row]: panel.add_child(c)
 			board.size_flags_vertical = Control.SIZE_FILL
 		else:
 			for c in movers: vb.add_child(c)
@@ -275,12 +338,16 @@ func _relayout() -> void:
 		board.custom_minimum_size = Vector2.ZERO
 		board.position = sp.board.position; board.size = sp.board.size
 		panel_rect = sp.panel
-		for c in [sizes, row, status, hint_label, label]: c.custom_minimum_size.x = sp.panel.size.x
+		for c in [sizes, row, status, bubble, top_bar]: c.custom_minimum_size.x = sp.panel.size.x
 		_fit_panel()
 		_fit_panel.call_deferred()   # flow containers report their wrapped height only after one layout pass
 	else:
-		board.custom_minimum_size = Vector2(300, 300)
-		for c in [sizes, row, status, hint_label, label]: c.custom_minimum_size.x = 0
+		board.custom_minimum_size = Vector2(UiLayout.BOARD_MIN, UiLayout.BOARD_MIN)
+		for c in [sizes, row, status, bubble, top_bar]: c.custom_minimum_size.x = 0
+		# portrait gaps 8/8/12; short phones take the 3rd rules line out of the gaps (4/4/8), never the board/targets
+		var g := UiLayout.portrait_gap(get_viewport_rect().size.y)
+		vb.add_theme_constant_override("separation", g)
+	_fit_bubble()
 	_in_relayout = false
 
 var panel_rect := Rect2()
@@ -296,12 +363,23 @@ func _on_resized() -> void:
 	_update_size_buttons()
 
 func clear_board() -> void:
+	_push_history()
 	board.cells.fill(Cells.EMPTY); moves = 0; won = false; _refresh()
+
+func _push_history() -> void:
+	history.append(board.cells.duplicate())
+	if history.size() > 200: history.pop_front()
+
+## Undo the last tap / right-click / reset on this board (tool row).
+func undo() -> void:
+	if history.is_empty() or won: return
+	board.cells = history.pop_back(); _refresh()
 
 ## One tap: empty -> mold -> cake -> empty, or with Settings "Tap order: cake first" empty -> cake -> mold -> empty (D-12).
 func tap_cell(r: int, c: int) -> void:
 	if won: return
 	var i := r * n + c
+	_push_history()
 	board.cells[i] = Cells.next_state(board.cells[i], settings.tap_order)
 	moves += 1
 	_refresh()
@@ -310,6 +388,7 @@ func tap_cell(r: int, c: int) -> void:
 func right_click_cell(r: int, c: int) -> void:
 	if won: return
 	var i := r * n + c
+	_push_history()
 	board.cells[i] = Cells.right_click(board.cells[i])
 	moves += 1
 	_refresh()
@@ -325,10 +404,10 @@ func _save_settings() -> void:
 
 func _sync_setting_buttons() -> void:
 	if order_btn == null: return
-	order_btn.set_pressed_no_signal(settings.tap_order == Cells.ORDER_CAKE_FIRST)
-	order_btn.text = "Tap order: cake first" if settings.tap_order == Cells.ORDER_CAKE_FIRST else "Tap order: mold first"
-	automold_btn.set_pressed_no_signal(not settings.auto_mold)
-	automold_btn.text = "Auto-molds: on" if settings.auto_mold else "Auto-molds: off"
+	var cf: bool = settings.tap_order == Cells.ORDER_CAKE_FIRST
+	order_btn.set_pressed_no_signal(cf); order_btn.icon = TtTheme.ui_tex("toggle_on" if cf else "toggle_off")
+	automold_btn.set_pressed_no_signal(settings.auto_mold)
+	automold_btn.icon = TtTheme.ui_tex("toggle_on" if settings.auto_mold else "toggle_off")
 
 func set_cell(r: int, c: int, v: int) -> void:
 	board.cells[r * n + c] = v; _refresh()
@@ -344,6 +423,8 @@ func _refresh() -> void:
 	var bad := Rules.conflicts(n, puzzle.regions, cs)
 	board.conflict_cells = {}
 	for p in bad: board.conflict_cells[p] = true
+	board.conflict_units = BoardView.units_of_conflicts(n, puzzle.regions, bad)
+	if undo_btn: undo_btn.disabled = history.is_empty() or won
 	board.auto = Cells.auto_molds(n, puzzle.regions, board.cells, settings.auto_mold)
 	var was_won := won
 	won = Rules.is_solution(n, puzzle.regions, cs)
@@ -404,9 +485,32 @@ func _apply_safe_area() -> void:
 	margin.add_theme_constant_override("margin_right", int(side + m[1]))
 	margin.add_theme_constant_override("margin_bottom", int(16 + m[2]))
 	margin.add_theme_constant_override("margin_left", int(side + m[3]))
-	if backdrop:
-		backdrop.visible = landscape and backdrop.texture != null
-		backdrop_fill.visible = landscape
+	_apply_backdrop(landscape)
+
+## Backdrops (handoff P2): landscape webp on desktop / wide; portrait webp (cover-fit, anchored top) on phone Home,
+## Recipe Book and chapter end; the board screen on phones keeps the flat rosewater wallpaper (calm behind the tray).
+func _apply_backdrop(landscape: bool) -> void:
+	if backdrop == null: return
+	backdrop_fill.visible = true
+	var t: Texture2D = null
+	if landscape: t = tex_landscape
+	elif screen in PORTRAIT_BACKDROP_SCREENS: t = tex_portrait
+	backdrop.texture = t
+	backdrop.visible = t != null
+	if t == null: return
+	var vs := get_viewport_rect().size
+	if landscape:
+		backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	else:   # portrait: cover-fit anchored top (overflow is cut at the bottom, never the top)
+		var k := maxf(vs.x / t.get_width(), vs.y / t.get_height())
+		backdrop.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		backdrop.stretch_mode = TextureRect.STRETCH_SCALE
+		backdrop.position = Vector2((vs.x - t.get_width() * k) / 2.0, 0.0)
+		backdrop.size = Vector2(t.get_width(), t.get_height()) * k
+
+func set_screen(s: String) -> void:
+	screen = s; _apply_safe_area()
 
 ## BR-1 (SPEC v0.3.1 §13.1; release + debug): performance.mark() for pkd:transition_start (Next / new board tapped),
 ## pkd:transition_end (next board drawn) and pkd:board_interactive (next board accepts input); each mark prints exactly
