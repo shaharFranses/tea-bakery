@@ -26,7 +26,7 @@ commit sha and the pck is not byte-reproducible across exports). The frozen comm
 |---|---|
 | Pages URL | https://shaharfranses.github.io/tea-bakery/ (repo name TBD, likely tea-bakery; not created yet) |
 | Live commit (web/) | none yet (not published) |
-| Live pck sha256 == gated? | not checked yet (not published) |
+| Live pck sha256 == gated? | not checked yet (not published); compare against the gated index.pck sha256, see FREEZE.md |
 | Live QA check | not run yet |
 | Shahar phone check | not yet |
 
@@ -46,5 +46,5 @@ commit sha and the pck is not byte-reproducible across exports). The frozen comm
 
 ## Last CI (auto)
 <!-- ci:begin -->
-2026-11-01 11:28: CI **PASS** on `6cf5b9b` · release 39.16 MB (wasm 35.38 MB) · packet `qa/results/ci-6cf5b9b/GATE_PACKET.md`
+2026-11-01 12:06: CI **PASS** on `6d35a6d` · release 39.16 MB (wasm 35.38 MB) · packet `qa/results/ci-6d35a6d/GATE_PACKET.md`
 <!-- ci:end -->
