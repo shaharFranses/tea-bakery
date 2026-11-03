@@ -73,6 +73,14 @@ check(lm["unlock"] == "sequential" and lm["button_px"] >= v["min_tap_px"], "leve
 check(lm["cols_phone"] * lm["button_px"] + (lm["cols_phone"] - 1) * 8 <= v["portrait_w"] - 2 * v["side_margin"], "level map row fits the phone column")
 check(bpc >= T["v102_boards_per_chapter"], "v1.1 keeps the v1.0.2 boards b1..b5")
 rows.append(f"levels: {len(T['chapters']) * bpc} on the map, max stars {len(T['chapters']) * bpc * st['max_per_board']}")
+# --- v1.2 cakes: one piece per chapter, all shipped as B2 @2x sprites; daily + debug pieces exist too
+ck = T["cakes"]; board_dir = p.resolve().parent.parent / "assets" / "board"
+check(len(ck["by_chapter"]) == len(T["chapters"]), "one cake per chapter")
+check(len(set(ck["by_chapter"])) == len(ck["by_chapter"]) and ck["daily"] not in ck["by_chapter"], "chapter cakes distinct, daily cake separate")
+if board_dir.is_dir():
+    for c in ck["by_chapter"] + [ck["daily"], ck["debug"]]:
+        check((board_dir / f"cake_{c}@2x.png").is_file(), f"missing sprite cake_{c}@2x.png")
+check(ck["min_halo_coverage"] >= 0.98 and ck["min_ink_coverage"] >= 0.94, "cake readability floors")
 check(total >= T["min_total_content_min"], f"total content {total:.1f} min < {T['min_total_content_min']}")
 d = T["daily"]
 check(d["pool"] >= 365, "daily pool < 1 year"); check(len(d["sizes_mon_to_sun"]) == 7, "daily weekday sizes")

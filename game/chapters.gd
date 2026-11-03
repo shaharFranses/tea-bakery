@@ -12,6 +12,14 @@ const DECOR := ["Floral teapot", "Tiered cake stand", "Gingham tablecloth", "Lac
 const DECOR_FILES := ["decor_1_teapot", "decor_2_cake_stand", "decor_3_gingham", "decor_4_doily_teacups", "decor_5_sweet_peas",
 	"decor_6_bunting", "decor_7_cuckoo_clock", "decor_8_copper_kettle"]
 const BOARDS := 12
+## Cake piece per chapter (SPEC v1.2 §10, D-03 revised): each chapter's board uses the cake of its recipe card.
+## Sprites: res://assets/board/cake_<name>@2x.png. Bake of the Day uses DAILY_CAKE; debug/free boards DEFAULT_CAKE.
+const CAKES := ["scone", "victoria", "lemon", "apricot", "bakewell", "berry", "custard", "macaron"]
+const DAILY_CAKE := "chocolate"
+const DEFAULT_CAKE := "berry"
+
+static func cake_for(ch: int) -> String:
+	return CAKES[ch - 1] if ch >= 1 and ch <= CAKES.size() else DEFAULT_CAKE
 
 ## Global level number (1-based) of chapter ch, board b.
 static func level(ch: int, b: int) -> int:

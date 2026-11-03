@@ -449,8 +449,13 @@ func _build_screens() -> void:
 	mpad.add_theme_constant_override("margin_right", 14)   # keep the right column clear of the scrollbar
 	map_scroll.add_child(mpad); mpad.add_child(map_box)
 	for ch in range(1, Chapters.count_available() + 1):
+		var hh := HBoxContainer.new(); hh.name = "MapHead%d" % ch; hh.alignment = BoxContainer.ALIGNMENT_CENTER
+		hh.add_theme_constant_override("separation", 6); map_box.add_child(hh)
+		var ci := TextureRect.new(); ci.name = "MapCake%d" % ch; ci.custom_minimum_size = Vector2(32, 32)   # the chapter's cake
+		ci.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ci.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ci.texture = load("res://assets/board/cake_%s@2x.png" % Chapters.cake_for(ch)); hh.add_child(ci)
 		var hl := _body("", "MapCh%d" % ch); hl.theme_type_variation = "TitleLabel"; hl.add_theme_font_size_override("font_size", 18)
-		map_box.add_child(hl)
+		hl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT; hh.add_child(hl)
 		var grid := GridContainer.new(); grid.name = "MapGrid%d" % ch; grid.columns = 4
 		grid.add_theme_constant_override("h_separation", 8); grid.add_theme_constant_override("v_separation", 8)
 		grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; map_box.add_child(grid)
@@ -652,7 +657,7 @@ func _set_puzzle(p: Dictionary) -> void:
 	puzzle = p
 	givens = {}
 	for g in p.get("givens", []): givens[g.x * n + g.y] = true
-	board.setup(n, puzzle.regions, p.get("givens", []))
+	board.setup(n, puzzle.regions, p.get("givens", []), board_cake())
 	for i in givens: board.cells[i] = Cells.CAKE
 	moves = 0; won = false; history.clear(); undo_count = 0; active_ms = 0.0
 	hints_used_board = 0; conflicts_board = 0; idle_s = 0.0
@@ -1122,7 +1127,7 @@ func show_level_map() -> void:
 			num.add_theme_color_override("font_color", Pal.CLOTTED_CREAM if id == nxt else Pal.EARL_GREY_INK)
 			var sr = bb.find_child("Stars", true, false)
 			sr.filled = st; sr.visible = st > 0
-		(map_box.get_node("MapCh%d" % ch) as Label).text = "Chapter %d · %s · %d/%d stars" % [ch, Chapters.RECIPES[ch - 1], got, Chapters.BOARDS * 3]
+		(map_box.get_node("MapHead%d/MapCh%d" % [ch, ch]) as Label).text = "Chapter %d · %s · %d/%d stars" % [ch, Chapters.RECIPES[ch - 1], got, Chapters.BOARDS * 3]
 	map_total.text = "%d/%d" % [progress.total_stars(), Progress.max_stars()]
 	set_screen("level_map")
 	_scroll_map_to.call_deferred(nxt)
@@ -1130,7 +1135,7 @@ func show_level_map() -> void:
 func _scroll_map_to(id: String) -> void:
 	if id == "" or not map_buttons.has(id): return
 	await get_tree().process_frame
-	var head: Control = map_box.get_node("MapCh%d" % Chapters.parse_id(id)[0])   # chapter heading of the next level
+	var head: Control = map_box.get_node("MapHead%d" % Chapters.parse_id(id)[0])   # chapter heading of the next level
 	map_scroll.scroll_vertical = int(maxf(0.0, head.get_global_rect().position.y - map_box.get_global_rect().position.y - 8.0))
 
 ## Level map tap: replay a solved level, play the next one; locked levels do nothing.
@@ -1368,6 +1373,11 @@ func check_day() -> void:
 ## Second completion attempt on today's daily: always rejected if already baked; streak/total unchanged (V8).
 func retry_today_daily() -> Dictionary:
 	return complete_daily(Clock.local_date())
+
+## Cake piece for the current board (SPEC v1.2): chapter cake, chocolate on the daily, berry on debug boards.
+func board_cake() -> String:
+	if mode == "daily": return Chapters.DAILY_CAKE
+	return Chapters.cake_for(chapter) if chapter > 0 else Chapters.DEFAULT_CAKE
 
 func board_id() -> String:
 	if mode == "daily": return "d-" + (daily.open_date if daily.open_date != "" else "done")

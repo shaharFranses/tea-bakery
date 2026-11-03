@@ -74,7 +74,7 @@ static func state(main) -> Dictionary:
 	return {"screen": main.screen, "screen_log": main.screen_log, "chapter": main.chapter, "board_no": main.board_no,
 		"givens": main.givens.keys().map(func(i): return [i / main.n, i % main.n]), "card_open": main.card_open, "t_solved_ms": main.t_solved_ms, "t_interactive_ms": main.t_interactive_ms, "interactive": main.interactive,
 		"progress": main.progress.to_dict(), "level": Chapters.level_of(main.board_id()), "last_stars": main.last_stars, "conflicts_board": main.conflicts_board, "total_stars": main.progress.total_stars(), "save_writes": Store.save_writes, "corrupt_backed_up": Store.corrupt_backed_up,
-		"shakes_started": b.shakes_started, "baking": b.bake_t0 >= 0, "steam_cells": b.steam_cells.size(), "texture_id": "berry2",
+		"shakes_started": b.shakes_started, "baking": b.bake_t0 >= 0, "steam_cells": b.steam_cells.size(), "texture_id": "berry2", "piece": b.piece,
 		"targets": main.board.hint_target.keys().map(func(i): return [i / main.n, i % main.n]), "coach": main.puzzle.get("coach", ""),
 		"bubble_text": main.hint_label.text, "dots_on": range(Chapters.BOARDS).filter(func(k): return main.chapter > 0 and main.progress.is_solved("c%d-b%d" % [main.chapter, k + 1])).size(), "board_id": main.board_id(), "mode": main.mode,
 		"intro_done": main.intro_done, "taps": main.taps, "n": main.n, "seed": main.seed_value, "max_size": main.max_size(),

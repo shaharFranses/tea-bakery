@@ -1,10 +1,11 @@
 ## tea-bakery board in Art's B2 look (SPEC v1.0.1 §10; art/HANDOFF_GODOT.md P0 + P1). Colours/geometry: ArtPalette
 ## (ui/theme/art_palette.gd, generated). Only @2x sprites are loaded; mipmaps downscale them (linear+mipmaps filter).
 ## Per-cell draw order (handoff P0): tile -> region seams/rims (code) -> under-layer (overlay_solved / overlay_conflict /
-## overlay_conflict_unit / overlay_hint_unit / given_plate) -> cake (cake_berry, 1.0 x cell, +0.02 down) or mold
+## overlay_conflict_unit / overlay_hint_unit / given_plate) -> cake (cake_<piece>, 1.0 x cell, +0.02 down) or mold
 ## (0.70 x cell; auto-mold = same sprite at 0.5 alpha) -> over-layer (badge_conflict / badge_solved / hint target).
 ## Tray: 9-slice tray_frame (golden tray_frame_solved + SOLVED_TRAY_TINT when solved), grown 10 px (12 bottom).
-## Berry v2 is the only cake wired in v1 (D-03); the other cake_*.png are recipe-card / post-v1 extras.
+## Cake piece per board (SPEC v1.2, D-03 revised): the chapter's cake (game/chapters.gd CAKES), chocolate on the daily,
+## berry v2 on debug boards. Every cake shares the B2 ink outline + cream halo (tests/test_cake_contrast.gd).
 ## Input: left click / tap -> cell_tapped; right-click -> cell_right_clicked (desktop mold toggle, D-12).
 extends Control
 
@@ -21,10 +22,10 @@ const CAKE := Cells.CAKE
 const MOLD_AUTO := Cells.MOLD_AUTO
 const DIR := "res://assets/board/"
 const MOLD_SPRITE := DIR + "mold@2x.png"
-const CAKE_SPRITE := DIR + "cake_berry@2x.png"     # the v1 cake (berry v2)
+const CAKE_PIECES := ["berry", "scone", "victoria", "lemon", "apricot", "bakewell", "custard", "macaron", "chocolate"]
 const AUTO_ALPHA := Pal.AUTO_MOLD_ALPHA            # <= 0.6 x the player mold (TT-AC-22)
 const TRAY_GROW := Vector4(10, 10, 10, 12)         # frame rect = board rect grown l/t/r/b (handoff P1)
-const SPRITES := ["mold", "cake_berry", "steam_puff", "overlay_conflict", "badge_conflict", "overlay_solved", "badge_solved",
+const SPRITES := ["mold", "steam_puff", "overlay_conflict", "badge_conflict", "overlay_solved", "badge_solved",
 	"given_plate", "overlay_hint_unit", "overlay_hint_target", "overlay_conflict_unit"]
 
 var n := 5
@@ -37,6 +38,7 @@ var givens := {}                   # cell index -> true: given cake, drawn on a 
 var hint_unit := {}                # cell index -> true (hint hook, wired in the thin slice)
 var hint_target := {}              # cell index -> true
 var won := false
+var piece := "berry"              # cake sprite name for this board (cake_<piece>@2x.png)
 var tex := {}                      # sprite name -> Texture2D (@2x)
 var tiles: Array[Texture2D] = []
 var tray_box: StyleBox
@@ -94,6 +96,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	for s in SPRITES: tex[s] = load(DIR + s + "@2x.png")
+	for c in CAKE_PIECES: tex["cake_" + c] = load(DIR + "cake_" + c + "@2x.png")
 	tiles.clear()
 	for i in Pal.REGION_NAMES.size(): tiles.append(load(DIR + "tile_%d_%s@2x.png" % [i, Pal.REGION_NAMES[i]]))
 	tray_box = Slice.make(DIR + "tray_frame@2x.png", Vector4(32, 32, 32, 32), Vector4.ZERO)
@@ -105,8 +108,9 @@ func _process(dt: float) -> void:
 		hint_phase = fmod(hint_phase + dt / 0.9, 1.0); busy = true
 	if busy: queue_redraw()
 
-func setup(size: int, reg: PackedInt32Array, given_cells: Array = []) -> void:
+func setup(size: int, reg: PackedInt32Array, given_cells: Array = [], cake := "berry") -> void:
 	n = size; regions = reg
+	piece = cake if cake in CAKE_PIECES else "berry"
 	cells = PackedInt32Array(); cells.resize(n * n); cells.fill(EMPTY)
 	auto = {}; conflict_cells = {}; conflict_units = {}; hint_unit = {}; hint_target = {}; won = false
 	anim = {}; stop_bake()
@@ -225,11 +229,11 @@ func _draw() -> void:
 		if st == MOLD: _sprite("mold", _centred(ctr, mold_side(cs) * sc), al)
 		elif st == MOLD_AUTO: _sprite("mold", _centred(ctr, mold_side(cs) * sc), AUTO_ALPHA * al)
 		elif st == EMPTY and not ak.is_empty() and ak[0] == "cake_out":
-			_sprite("cake_berry", _centred(ctr + Vector2(0, cs * 0.02), cake_side(cs) * (1.0 - ak[1])))
+			_sprite("cake_" + piece, _centred(ctr + Vector2(0, cs * 0.02), cake_side(cs) * (1.0 - ak[1])))
 		elif st == CAKE:
 			var golden := won and bake_t0 >= 0 and now_ms() - bake_t0 >= _reading_rank(i) * 40
 			var mod := Color(1.0, 0.86, 0.6) if golden or (won and bake_t0 < 0) else Color.WHITE
-			var t2: Texture2D = tex.get("cake_berry")
+			var t2: Texture2D = tex.get("cake_" + piece)
 			if t2: draw_texture_rect(t2, _centred(ctr + Vector2(0, cs * 0.02), cake_side(cs) * sc), false, mod)
 			if bad: _sprite("badge_conflict", t)
 			elif won: _sprite("badge_solved", t)

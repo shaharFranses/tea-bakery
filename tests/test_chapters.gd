@@ -108,3 +108,9 @@ func test_recipes_and_decor_names() -> void:
 	assert_eq(Chapters.RECIPES.size(), 8); assert_eq(Chapters.DECOR.size(), 8)
 	for f in Chapters.DECOR_FILES: assert_true(ResourceLoader.exists("res://assets/decor/%s@2x.png" % f), f)
 	for i in 8: assert_true(ResourceLoader.exists("res://assets/recipes/recipe_%d@2x.png" % (i + 1)))
+
+## SPEC v1.2 §10: the code's cake list == the spec tunables (one cake per chapter, chocolate daily, berry debug).
+func test_cakes_match_spec_tunables() -> void:
+	var ck: Dictionary = _tunables().cakes
+	assert_eq(Chapters.CAKES, ck.by_chapter)
+	assert_eq(Chapters.DAILY_CAKE, ck.daily); assert_eq(Chapters.DEFAULT_CAKE, ck.debug)
