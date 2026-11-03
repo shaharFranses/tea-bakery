@@ -8,7 +8,7 @@ func _main() -> Control:
 	add_child_autofree(m)
 	await wait_frames(2)
 	m.progress = Progress.new()
-	for ch in range(1, 4): for b in range(1, 6): m.progress.mark_solved("c%d-b%d" % [ch, b])
+	for ch in range(1, 4): for b in range(1, 13): m.progress.mark_solved("c%d-b%d" % [ch, b])
 	for ch in range(1, 4): m.progress.unlock_chapter(ch)
 	m._on_intro_finished()
 	m.open_board("c4-b1")

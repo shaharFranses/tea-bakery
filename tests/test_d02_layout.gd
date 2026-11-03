@@ -11,7 +11,7 @@ func test_rules_three_lines_board_targets_8x8():
 	add_child_autofree(m)
 	await wait_frames(2)
 	m.progress = Progress.new()
-	for ch in range(1, 6): for b in range(1, 6): m.progress.mark_solved("c%d-b%d" % [ch, b])
+	for ch in range(1, 6): for b in range(1, 13): m.progress.mark_solved("c%d-b%d" % [ch, b])
 	m._on_intro_finished()
 	assert_true(m.open_board("c6-b2")); await wait_frames(4)
 	assert_eq(m.n, 8)

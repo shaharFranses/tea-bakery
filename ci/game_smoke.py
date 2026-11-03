@@ -8,6 +8,7 @@ import json, os, re, sys
 from playwright.sync_api import sync_playwright
 base, out = sys.argv[1].rstrip("/"), sys.argv[2]; os.makedirs(out, exist_ok=True)
 HERE = os.path.dirname(os.path.abspath(__file__))
+BPC = 12   # levels per chapter (SPEC v1.1 §3.5 boards_per_chapter)
 allow = [re.compile(l.strip()) for l in open(os.path.join(HERE, "console_allowlist.txt")) if l.strip() and not l.startswith("#")]
 res, bad, notes = {}, [], {}
 def dump(pg):
@@ -75,9 +76,9 @@ with sync_playwright() as p:
     res["hint_text_rules"] = all(len(h) <= 140 and h.count(".") + h.count("!") + h.count("?") == 1 and not re.search(r"T[1-7]|technique|region|candidate", h, re.I) for h in [h1, h2])
     pg.screenshot(path=f"{out}/game_phone_hint.png")
     # finish chapter 1 -> chapter end (recipe card, décor, happytime); AD-17 floor edge at the REAL chapter-end slot
-    for b in range(1, 6):
+    for b in range(1, BPC + 1):
         show(pg, f"board:c1-b{b}"); show(pg, "solve"); pg.wait_for_timeout(100)
-        if b < 5: show(pg, "skip")
+        if b < BPC: show(pg, "skip")
     show(pg, "skip"); pg.wait_for_timeout(500); ge = dump(pg)["game"]
     res["chapter_end_screen"] = ge["screen"] == "chapter_end" and ge["unlocked"]["recipes"] == [1] and len(ge["unlocked"]["decor"]) == 1
     res["happytime_on_chapter_end"] = any("happytime" in json.dumps(e) for e in ge["sdk_log"])
@@ -106,9 +107,9 @@ with sync_playwright() as p:
     # AD-17 at REAL chapter ends: ch2 end at session 300 s -> ok (mock ad shown) -> Next -> ch3; ch3 end at 479 s
     # (179 s after the ch2 request) -> gap<180s denied -> Next -> ch4; ch4 end at 480 s (180 s gap) -> ok -> Home.
     def finish(ch):
-        for b in range(1, 6):
+        for b in range(1, BPC + 1):
             show(pg, f"board:c{ch}-b{b}"); show(pg, "solve"); pg.wait_for_timeout(100)
-            if b < 5: show(pg, "skip")
+            if b < BPC: show(pg, "skip")
         show(pg, "skip"); pg.wait_for_timeout(500); return dump(pg)["game"]
     ge = finish(2)
     res["chapter2_end_has_next"] = ge["screen"] == "chapter_end" and ge["unlocked"]["recipes"] == [1, 2] and next(u for u in ge["ui"] if u["name"] == "EndNext")["visible"]

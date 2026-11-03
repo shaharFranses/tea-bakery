@@ -9,7 +9,7 @@ func _main(id: String) -> Control:
 	add_child_autofree(m)
 	await wait_frames(2)
 	m.progress = Progress.new()
-	for ch in range(1, 3): for b in range(1, 6): m.progress.mark_solved("c%d-b%d" % [ch, b])
+	for ch in range(1, 3): for b in range(1, 13): m.progress.mark_solved("c%d-b%d" % [ch, b])
 	m._on_intro_finished()
 	m.open_board(id)
 	await wait_frames(3)
@@ -42,7 +42,7 @@ func test_show_me_fix_first():
 	m.undo(); assert_eq(m.board.cells[i], Cells.CAKE, "Show me is one undoable move")
 
 func test_too_small_cover_blocks_input_keeps_state():
-	var m = await _main("c2-b5")
+	var m = await _main("c2-b12")
 	m.tap_cell(0, 0)
 	var before: Array = Array(m.board.cells).duplicate()
 	m.board.custom_minimum_size = Vector2.ZERO

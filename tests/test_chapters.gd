@@ -1,4 +1,4 @@
-## Chapter content (SPEC v1.0.2 §3.2/§3.5, §6, §16.1, §16.4; TT-AC-02/03/04/24/27): chapters 1-8, 40 boards.
+## Chapter content (SPEC v1.1 §3.2/§3.5, §6, §16.1, §16.4; TT-AC-02/03/04/24/27/54): chapters 1-8 x 12 levels, 96 boards.
 extends GutTest
 const Solver = preload("res://game/solver.gd")
 const Rules = preload("res://game/rules.gd")
@@ -12,11 +12,15 @@ func before_all() -> void:
 	var s := FileAccess.get_file_as_string("res://data/spec_tunables.json") if FileAccess.file_exists("res://data/spec_tunables.json") else ""
 	spec = JSON.parse_string(s) if s != "" else {}
 
-const SPEC_CH := {1: {"sizes": [5, 5, 5, 5, 5], "grades": [1, 1, 1, 1, 2], "tutorial": [1, 2, 3]},
-	2: {"sizes": [5, 6, 5, 6, 6], "grades": [2, 2, 1, 2, 2]}, 3: {"sizes": [6, 6, 6, 6, 6], "grades": [2, 2, 1, 2, 3]},
-	4: {"sizes": [6, 7, 6, 7, 7], "grades": [2, 2, 1, 2, 3]}, 5: {"sizes": [7, 7, 7, 7, 7], "grades": [2, 3, 1, 2, 3]},
-	6: {"sizes": [7, 8, 7, 8, 8], "grades": [2, 2, 1, 3, 2]}, 7: {"sizes": [8, 8, 8, 8, 8], "grades": [2, 3, 1, 3, 2]},
-	8: {"sizes": [8, 8, 8, 8, 8], "grades": [3, 2, 3, 4, 2]}}
+const SPEC_CH := {
+	1: {"sizes": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5], "grades": [1, 1, 1, 1, 2, 1, 2, 1, 2, 1, 2, 2], "tutorial": [1, 2, 3]},
+	2: {"sizes": [5, 6, 5, 6, 6, 5, 6, 6, 5, 6, 6, 6], "grades": [2, 2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 2]},
+	3: {"sizes": [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6], "grades": [2, 2, 1, 2, 3, 2, 2, 1, 3, 2, 1, 3]},
+	4: {"sizes": [6, 7, 6, 7, 7, 7, 6, 7, 7, 6, 7, 7], "grades": [2, 2, 1, 2, 3, 2, 2, 1, 3, 2, 1, 3]},
+	5: {"sizes": [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7], "grades": [2, 3, 1, 2, 3, 2, 2, 1, 3, 2, 1, 3]},
+	6: {"sizes": [7, 8, 7, 8, 8, 8, 7, 8, 8, 7, 8, 8], "grades": [2, 2, 1, 3, 2, 2, 3, 1, 2, 3, 1, 3]},
+	7: {"sizes": [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8], "grades": [2, 3, 1, 3, 2, 2, 3, 1, 2, 3, 1, 3]},
+	8: {"sizes": [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8], "grades": [3, 2, 3, 4, 2, 3, 2, 3, 2, 3, 1, 3]}}   # SPEC v1.1 §3.5
 
 ## The §3.5 tunables JSON block of the repo's spec/SPEC.md (source of truth for sizes, grades, names).
 func _tunables() -> Dictionary:
@@ -38,7 +42,7 @@ func test_chapters_match_spec_tunables() -> void:
 
 func test_no_shipped_board_over_8() -> void:
 	for ch in SPEC_CH:
-		for b in range(1, 6): assert_lte(Chapters.board(ch, b).n, 8)
+		for b in range(1, Chapters.BOARDS + 1): assert_lte(Chapters.board(ch, b).n, 8)
 
 func test_thin_slice_chapters_present() -> void:
 	assert_true(Chapters.available(1) and Chapters.available(2))
@@ -47,7 +51,7 @@ func test_thin_slice_chapters_present() -> void:
 func test_every_board_unique_graded_valid() -> void:
 	var shapes := {}
 	for ch in SPEC_CH:
-		for b in range(1, 6):
+		for b in range(1, Chapters.BOARDS + 1):
 			var p := Chapters.board(ch, b)
 			assert_eq(p.id, "c%d-b%d" % [ch, b])
 			assert_eq(p.n, SPEC_CH[ch].sizes[b - 1], "%s size" % p.id)
@@ -83,7 +87,22 @@ func test_tutorial_trays() -> void:
 		assert_eq(p.solution[p.targets[0].x], p.targets[0].y, "target is a solution cell")
 	assert_eq(Chapters.board(1, 1).givens.size(), 4, "b1: 4 givens, 1 placement")
 	assert_eq(_free_after_givens(Chapters.board(1, 1)).size(), 1)
-	for b in [4, 5]: assert_false(Chapters.board(1, b).tutorial, "c1-b%d normal tray (no coach)" % b)
+	for b in range(4, Chapters.BOARDS + 1): assert_false(Chapters.board(1, b).tutorial, "c1-b%d normal tray (no coach)" % b)
+
+## SPEC v1.1: boards 1-5 of every chapter are the v1.0.2 boards (pinned by their pack source ids), 12 levels per chapter.
+const V102_SOURCES := {1: ["5-g1-0000", "5-g1-0001", "5-g1-0002", "5-g1-0003", "5-g2-0000"],
+	2: ["5-g2-0001", "6-g2-0000", "5-g1-0004", "6-g2-0001", "6-g2-0002"], 8: ["8-g3-0003", "8-g2-0004", "8-g3-0004", "8-g4-0000", "8-g2-0005"]}
+func test_v102_boards_kept_and_12_levels() -> void:
+	assert_eq(Chapters.BOARDS, 12)
+	for ch in SPEC_CH: assert_eq(Chapters.doc(ch).boards.size(), 12, "ch%d has 12 levels" % ch)
+	for ch in V102_SOURCES:
+		for b in 5: assert_eq(Chapters.board(ch, b + 1).source_id, V102_SOURCES[ch][b], "c%d-b%d unchanged" % [ch, b + 1])
+
+func test_level_numbers() -> void:
+	assert_eq(Chapters.level(1, 1), 1); assert_eq(Chapters.level(2, 1), 13); assert_eq(Chapters.level(8, 12), 96)
+	assert_eq(Chapters.id_of_level(14), "c2-b2"); assert_eq(Chapters.id_of_level(96), "c8-b12")
+	assert_eq(Chapters.level_of("c3-b12"), 36); assert_eq(Chapters.level_of("d-2026-11-03"), 0)
+	for lv in range(1, 97): assert_eq(Chapters.level_of(Chapters.id_of_level(lv)), lv)
 
 func test_recipes_and_decor_names() -> void:
 	assert_eq(Chapters.RECIPES.size(), 8); assert_eq(Chapters.DECOR.size(), 8)

@@ -19,7 +19,7 @@ with sync_playwright() as p:
         pg.goto(f"{base}/index.html?qa=1&intro=0&seed=7&size={size}")
         pg.wait_for_function("() => window.PKD_QA && JSON.parse(window.PKD_QA.dump()).game && JSON.parse(window.PKD_QA.dump()).game.intro_done", timeout=90000)
         pg.wait_for_timeout(600)
-        for scr in ["board", "home", "recipe_book", "chapter_end", "all_baked", "chapter_list", "settings"]:
+        for scr in ["board", "home", "recipe_book", "chapter_end", "all_baked", "level_map", "settings"]:
             if scr == "settings":
                 pg.evaluate("window.PKD_QA.show('home')"); pg.evaluate("window.PKD_QA.show('settings')"); pg.wait_for_timeout(500)
             elif scr != "board":

@@ -65,6 +65,14 @@ for ch in T["chapters"]:
     mins = sec / 60; total += mins; rows.append(f"ch{ch['id']}: {mins:.1f} min ({ch['recipe']})")
     check(lo <= mins <= hi, f"ch{ch['id']} {mins:.1f} min outside {lo}-{hi}")
 check(T["chapters"][0]["sizes"] == [5] * bpc, "chapter 1 must be all 5x5")
+# --- v1.1 structure: stars are a mastery mark (never time, never currency); level map numbers every chapter board
+st = T["stars"]; lm = T["level_map"]
+check(st["max_per_board"] == 3 and st["no_hint"] == 2 and st["no_hint_no_conflict"] == 3, "stars rule 1/2/3")
+check(st["time_based"] is False and st["currency"] is False, "stars must not be time-based or a currency (D-09, D-16)")
+check(lm["unlock"] == "sequential" and lm["button_px"] >= v["min_tap_px"], "level map unlock / tap size")
+check(lm["cols_phone"] * lm["button_px"] + (lm["cols_phone"] - 1) * 8 <= v["portrait_w"] - 2 * v["side_margin"], "level map row fits the phone column")
+check(bpc >= T["v102_boards_per_chapter"], "v1.1 keeps the v1.0.2 boards b1..b5")
+rows.append(f"levels: {len(T['chapters']) * bpc} on the map, max stars {len(T['chapters']) * bpc * st['max_per_board']}")
 check(total >= T["min_total_content_min"], f"total content {total:.1f} min < {T['min_total_content_min']}")
 d = T["daily"]
 check(d["pool"] >= 365, "daily pool < 1 year"); check(len(d["sizes_mon_to_sun"]) == 7, "daily weekday sizes")

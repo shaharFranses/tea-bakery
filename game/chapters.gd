@@ -1,7 +1,8 @@
 ## Chapter content (SPEC v1.0.2 §3.2 / §3.5 chapters, §6 tutorial, §16.1 board format). Packs:
 ## res://game/levels/chapter_NN.json, built offline by tools/build_chapters.gd from the validated pack_<n>_g<band>.json
 ## boards (D-21: no runtime generation for chapter content) and re-verified in tests/test_chapters.gd.
-## Ships chapters 1-8 (40 boards).
+## Ships chapters 1-8 x 12 levels = 96 boards (SPEC v1.1; b1-b5 = the v1.0.2 boards). Levels are numbered 1..96
+## across chapters on the level map (level = (chapter - 1) * BOARDS + board).
 extends RefCounted
 
 const RECIPES := ["Scones & clotted cream", "Victoria sponge", "Lemon drizzle", "Jam tarts", "Cherry Bakewell",
@@ -10,7 +11,20 @@ const DECOR := ["Floral teapot", "Tiered cake stand", "Gingham tablecloth", "Lac
 	"Bunting garland", "Cuckoo clock", "Copper kettle"]
 const DECOR_FILES := ["decor_1_teapot", "decor_2_cake_stand", "decor_3_gingham", "decor_4_doily_teacups", "decor_5_sweet_peas",
 	"decor_6_bunting", "decor_7_cuckoo_clock", "decor_8_copper_kettle"]
-const BOARDS := 5
+const BOARDS := 12
+
+## Global level number (1-based) of chapter ch, board b.
+static func level(ch: int, b: int) -> int:
+	return (ch - 1) * BOARDS + b
+
+## Board id "cN-bM" of a global level number.
+static func id_of_level(lv: int) -> String:
+	return "c%d-b%d" % [(lv - 1) / BOARDS + 1, (lv - 1) % BOARDS + 1]
+
+## Level number of a board id, 0 if not a chapter id.
+static func level_of(id: String) -> int:
+	var cb := parse_id(id)
+	return level(cb[0], cb[1]) if cb[0] > 0 else 0
 
 static var _cache := {}
 

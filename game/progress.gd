@@ -13,10 +13,40 @@ var recipes: Array = []           # chapter numbers whose card is owned
 var decor: Array = []
 var chapters_completed := 0
 var all_baked_seen := false     # §7.2: the "All recipes baked" screen is shown once
+var stars := {}                   # board id -> best stars 1..3 (SPEC v1.1 §3.6; a solved id missing here counts as 1)
 var chapter_stats := {}           # "N" -> {hints_used, hints_free, hints_rewarded, active_s, undo_count, conflicts_shown, t0_unix, sessions}
 
 func is_solved(id: String) -> bool:
 	return id in solved
+
+## Stars for a board from its play stats (SPEC v1.1 §3.6): 1 = baked, 2 = no hints, 3 = no hints and no conflict shown.
+static func stars_for(hints_used: int, conflicts_shown: int) -> int:
+	if hints_used > 0: return 1
+	return 3 if conflicts_shown == 0 else 2
+
+## Best stars on a board (0 = not solved).
+func stars_of(id: String) -> int:
+	if not is_solved(id): return 0
+	return clampi(int(stars.get(id, 1)), 1, 3)
+
+## Keeps the best result. Returns true if it improved.
+func record_stars(id: String, s: int) -> bool:
+	s = clampi(s, 1, 3)
+	if stars.has(id) and int(stars[id]) >= s: return false
+	stars[id] = s
+	return true
+
+func total_stars() -> int:
+	var t := 0
+	for id in solved: t += stars_of(id)
+	return t
+
+static func max_stars() -> int:
+	return Chapters.count_available() * Chapters.BOARDS * 3
+
+## Level map lock (SPEC v1.1 §9): a level is open when solved, or when it is the first unsolved level.
+func level_open(id: String) -> bool:
+	return is_solved(id) or id == next_unsolved()
 
 func chapter_done(ch: int) -> bool:
 	for b in range(1, Chapters.BOARDS + 1):
@@ -64,7 +94,7 @@ func stats(ch: int) -> Dictionary:
 
 func to_dict() -> Dictionary:
 	return {"solved": solved.duplicate(), "current": {"id": current_id, "cells": current_cells.duplicate()},
-		"unlocked": {"recipes": recipes.duplicate(), "decor": decor.duplicate()}, "chapters_completed": chapters_completed, "all_baked_seen": all_baked_seen,
+		"unlocked": {"recipes": recipes.duplicate(), "decor": decor.duplicate()}, "chapters_completed": chapters_completed, "all_baked_seen": all_baked_seen, "stars": stars.duplicate(),
 		"chapter_stats": chapter_stats.duplicate(true)}
 
 func from_dict(d: Dictionary) -> void:
@@ -81,5 +111,9 @@ func from_dict(d: Dictionary) -> void:
 		for v in u.get("decor", []): decor.append(int(v))
 	chapters_completed = int(d.get("chapters_completed", 0))
 	all_baked_seen = bool(d.get("all_baked_seen", false))
+	stars = {}
+	var st = d.get("stars", {})
+	if st is Dictionary:
+		for k in st: stars[str(k)] = clampi(int(st[k]), 1, 3)
 	var cs = d.get("chapter_stats", {})
 	chapter_stats = cs.duplicate(true) if cs is Dictionary else {}
