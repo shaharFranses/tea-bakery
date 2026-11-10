@@ -11,9 +11,10 @@ var _players: Array = []
 var _poll := 0.0
 var disabled := false     # ?audio=0 feature-off toggle
 
-const MUSIC_LOOP := "res://assets/audio/music_loop.ogg"   # §8 one calm loop (asset pending from Art/Audio)
+const MUSIC_LOOP := "res://assets/audio/music_loop.ogg"   # §8 one calm loop: original, synthesised by tools/make_music_loop.py
 var music_on := true
 var music_player: AudioStreamPlayer
+var gestured := false     # SPEC §8: audio starts only after the first user gesture (tap / click / key)
 
 func _ready() -> void:
 	disabled = Dbg.toggle("audio", "1") == "0"
@@ -21,7 +22,9 @@ func _ready() -> void:
 		AudioServer.add_bus(); AudioServer.set_bus_name(AudioServer.bus_count - 1, "Music")
 		AudioServer.set_bus_send(AudioServer.bus_count - 1, "Master"); AudioServer.set_bus_volume_db(AudioServer.bus_count - 1, -12.0)
 	music_player = AudioStreamPlayer.new(); music_player.name = "Music"; music_player.bus = "Music"; add_child(music_player)
-	if ResourceLoader.exists(MUSIC_LOOP): music_player.stream = load(MUSIC_LOOP)
+	if ResourceLoader.exists(MUSIC_LOOP):
+		music_player.stream = load(MUSIC_LOOP)
+		if music_player.stream is AudioStreamOggVorbis: music_player.stream.loop = true   # also set in the .import
 	for i in 4:
 		var p = AudioStreamPlayer.new()
 		add_child(p)
@@ -41,15 +44,29 @@ func set_user_muted(on: bool) -> void: set_reason("user", on)
 ## Portal SDK mute (starter hook 89d3081 name): reason "portal".
 func set_portal_muted(on: bool) -> void: set_reason("portal", on)
 func is_muted() -> bool: return AudioServer.is_bus_mute(0)
-## Settings "Music" (§9): mutes only the Music bus (Master mute reasons still apply on top). Starts the loop after
-## the first gesture path (called from Settings / boot after the intro).
+## Settings "Music" (§9): mutes only the Music bus; the Master mute reasons (user Sound toggle, tab hidden, blur, ad,
+## portal muteAudio) still apply on top because the Music bus sends to Master. The loop itself only starts once the
+## player has made a gesture (first tap / click / key, SPEC §8), never at boot or after the intro on its own.
 func set_music(on: bool) -> void:
 	music_on = on
 	AudioServer.set_bus_mute(AudioServer.get_bus_index("Music"), not on)
-	if on and music_player.stream != null and not music_player.playing and not disabled: music_player.play()
-	elif not on and music_player.playing: music_player.stop()
+	_sync_music()
+func _sync_music() -> void:
+	var want: bool = music_on and gestured and not disabled and music_player.stream != null
+	if want and not music_player.playing: music_player.play()
+	elif not want and music_player.playing: music_player.stop()
+## First user gesture (also called by tests / QA hooks).
+func note_gesture() -> void:
+	if gestured: return
+	gestured = true; _sync_music()
+func _input(event: InputEvent) -> void:
+	if gestured: return
+	if (event is InputEventMouseButton or event is InputEventScreenTouch or event is InputEventKey) and event.is_pressed():
+		note_gesture()
 func music_state() -> Dictionary:
-	return {"on": music_on, "asset": music_player.stream != null, "playing": music_player.playing}
+	return {"on": music_on, "asset": music_player.stream != null, "playing": music_player.playing, "gestured": gestured,
+		"loop": music_player.stream != null and music_player.stream.get("loop") == true, "bus_muted": AudioServer.is_bus_mute(AudioServer.get_bus_index("Music")),
+		"master_muted": AudioServer.is_bus_mute(0)}
 
 func play(stream: AudioStream) -> void:
 	if stream == null: return
