@@ -4,7 +4,7 @@ The single "what is current" pointer for this game. Every bot reads this before 
 SM owns the State line; `ci/run.sh` fills in "Last CI"; QA fills in Verdict; PO fills in Portal. Times are Asia/Jerusalem.
 
 ## State
-**State:** active · Stage: 3 thin slice (tutorial + chapters 1-2) re-freeze for TT QA (D0-05 / D0-10 fixes) · Repo: github.com/shaharFranses/tea-bakery (exists; SM pushes and deploys, GB never pushes) · Live: Day-0 `ed57fce` on GitHub Pages since 2026-11-01, served files verified against day0-ed57fce (live index.pck sha256 784edc1c…ab67 re-checked 2026-11-10 07:20) · D0-04 ruled satisfied (SM 2026-11-01 20:55) · Updated: 2026-11-10 07:25 Asia/Jerusalem, TT Godot Build
+**State:** active · Stage: 3 thin slice (tutorial + chapters 1-2) QA PASS and live · Repo: github.com/shaharFranses/tea-bakery (exists; SM pushes and deploys, GB never pushes) · Live: thin-slice `a4fd2af` on GitHub Pages since 2026-11-10, served files verified against thin-a4fd2af (`tools/verify_served.sh` SERVED == FROZEN at 2026-11-10 11:19 Asia/Jerusalem; live index.pck sha256 90c87974…3351) · D0-04 ruled satisfied (SM 2026-11-01 20:55) · Updated: 2026-11-10 11:19 Asia/Jerusalem, TT Studio Manager
 
 ## Gated build (what QA is testing / has passed)
 This file is committed IN the frozen commit, so the commit cannot name its own sha or the export hashes (the export embeds the
@@ -25,9 +25,9 @@ commit sha and the pck is not byte-reproducible across exports). The frozen comm
 | Field | Value |
 |---|---|
 | Pages URL | https://shaharfranses.github.io/tea-bakery/ (repo shaharFranses/tea-bakery; Pages source GitHub Actions, pages.yml manual-only) |
-| Live commit (web/) | ed57fce (frozen day0-ed57fce folder staged byte-for-byte in web/), published 2026-11-01 by SM (main 1d4d1d3, run 41338693610; DEPLOY.md) |
-| Live pck sha256 == gated? | **yes**: live index.pck sha256 784edc1cc02abb510afc6360429698b5b1ffb3cb4b34283d97785807054aab67 == day0-ed57fce SHA256SUMS (QA D0-24 2026-11-01; re-fetched by GB 2026-11-10 07:20, match); live SHA256SUMS == staged web/SHA256SUMS |
-| Live QA check | Tested 2026-11-01 20:55 Asia/Jerusalem · `ed57fce` live https://shaharfranses.github.io/tea-bakery/ (main 1d4d1d3, run 41338693610) · **PASS** (D0-24, D0-25, AN-53, NAME, D0-02 PASS; D0-04 PASS by SM ruling 2026-11-01 20:55; record finalized 2026-11-10, no retest) · D0-26 phone check: link sent to Shahar 2026-11-01, result not recorded · `/workspace/tea-and-tarts-qa/results/ed57fce-live/QA_VERDICT_LIVE.md` |
+| Live commit (web/) | a4fd2af (frozen thin-a4fd2af folder staged byte-for-byte in web/), published 2026-11-10 by SM (deploy commit baab69a, workflow run 42789073837 success; DEPLOY.md) |
+| Live pck sha256 == gated? | **yes**: live index.pck sha256 90c87974bf15f4c1b30d95d08ab6f598083cecfa477335c3e270704e51853351 == thin-a4fd2af SHA256SUMS; box `tools/verify_served.sh https://shaharfranses.github.io/tea-bakery/ web` at 2026-11-10 11:19 Asia/Jerusalem: SERVED == FROZEN (index.html, index.js, index.wasm, index.pck MATCH) |
+| Live QA check | local thin-a4fd2af **PASS** 2026-11-10 11:06 Asia/Jerusalem (`/workspace/tea-and-tarts-qa/results/a4fd2af/QA_VERDICT.md`); live D0-24/25 not yet run (pending QA on this URL). Prior live was ed57fce, live **PASS** 2026-11-01 20:55 (main 1d4d1d3, run 41338693610; record finalized 2026-11-10) · `/workspace/tea-and-tarts-qa/results/ed57fce-live/QA_VERDICT_LIVE.md` |
 | Shahar phone check | not yet |
 
 ## Portal
