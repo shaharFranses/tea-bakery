@@ -428,6 +428,7 @@ func _build_screens() -> void:
 	lsc.size_flags_vertical = Control.SIZE_EXPAND_FILL; cl.col.add_child(lsc)
 	cl.col.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	list_box = VBoxContainer.new(); list_box.name = "ListBox"; list_box.add_theme_constant_override("separation", 8); lsc.add_child(list_box)
+	list_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL   # full scroll width, so the tray rows wrap at the screen edge, not at one button
 	for ch in range(1, 9):
 		var cl_l := _body("Chapter %d · %s" % [ch, Chapters.RECIPES[ch - 1]], "ListCh%d" % ch); list_box.add_child(cl_l)
 		# HFlowContainer: 5 "Tray N" buttons are ~412 px wide, wider than a 390 px phone; the row wraps instead of overflowing
