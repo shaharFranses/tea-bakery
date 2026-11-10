@@ -12,11 +12,11 @@ commit sha and the pck is not byte-reproducible across exports). The frozen comm
 (the day-0 re-freeze commit); its sha, the pck/zip md5+sha256 and the folder are in the gate folder's FREEZE.md.
 | Field | Value |
 |---|---|
-| Commit | see FREEZE.md (the thin-slice freeze commit on `main`, after the Day-0 re-freeze ed57fce merge 3211af6; built from a clean clone) |
+| Commit | see FREEZE.md (the thin-slice re-freeze commit on `main` after thin-4758b99: D0-05 / D0-10 fixes + the step-3 work on main; built from a clean clone) |
 | Gate folder | see FREEZE.md (`/workspace/tea-and-tarts-gates/thin-` + the frozen short sha; read-only; contains the frozen Web Release dir + SHA256SUMS, `web-debug/`, the CG zip + .md5/.sha256, `GATE_PACKET.md`, `d023_check.txt`, changelog, slim variant, `FREEZE.md`) |
 | Built from | a clean `git clone` checked out at that commit (`ci/run.sh --gate`, slug from ./SLUG = tea-bakery) |
 | index.pck sha256 | see FREEZE.md (also SHA256SUMS in the frozen release dir and GATE_PACKET.md; sha256 authoritative, md5 cross-check) |
-| Release size | 38.71 MB raw on the stock template (index.wasm 35.38 MB, gz 8.00 MB; index.pck 2.98 MB, of which the 8 unused cake sprites excluded saved 0.40 MB; exact bytes in FREEZE.md / SIZE.json) vs 20 MB budget: OVER. Slim variant (PKD slim template, not default): 25.35 MB raw (wasm 22.05 MB). **20 MB is a HARD gate at Portal-kit exit.** |
+| Release size | 38.83 MB raw on the stock template (index.wasm 35.38 MB, gz 8.00 MB; index.pck 3.09 MB incl. chapters 1-8 + the 400-board daily pool, 8 unused cake sprites excluded; exact bytes in FREEZE.md / SIZE.json) vs 20 MB budget: OVER. Slim variant (PKD slim template, not default): about 25.5 MB raw (wasm 22.05 MB; measured value in FREEZE.md). **20 MB is a HARD gate at Portal-kit exit.** |
 | Engine template | **stock** Godot 4.3 web template (default). PKD slim template from Pipeline Ops measured as a variant only |
 | SPEC | v1.0.2 (git ce306b9, SPEC.md sha256 f2065400902881b2c96bcb6cb6645f79454ee8e785404b563052a63fd70dd25a): ch5 "Cherry Bakewell"; D-02 phone rules <=3 lines at >=16 px (board >=352, targets >=44); TT-AC-53 note (engine-loader same-origin export-file loads allowed); Art B2 approved |
 | QA verdict | 2026-11-01 12:25 Asia/Jerusalem · `ed57fce` · local **PASS** (0 FAIL) · live: see Live QA check row · `/workspace/tea-and-tarts-qa/results/ed57fce/QA_VERDICT.md` |
@@ -47,5 +47,5 @@ commit sha and the pck is not byte-reproducible across exports). The frozen comm
 
 ## Last CI (auto)
 <!-- ci:begin -->
-2026-11-01 12:06: CI **PASS** on `6d35a6d` · release 39.16 MB (wasm 35.38 MB) · packet `qa/results/ci-6d35a6d/GATE_PACKET.md`
+2026-11-10 07:55: CI **PASS** on `f4e00db` · release 38.83 MB (wasm 35.38 MB) · packet `qa/results/ci-f4e00db/GATE_PACKET.md`
 <!-- ci:end -->
