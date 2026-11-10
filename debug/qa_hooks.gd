@@ -109,9 +109,12 @@ func _bind_js() -> void:
 	JavaScriptBridge.eval("""(function(){ if (window.__pkdNet) return; var L = window.__pkdNet = [];
 	  function rec(api, url){ var st = (new Error()).stack || ''; L.push({api: api, url: String(url).slice(0, 200), t: performance.now(),
 	    from_sdk: /crazygames/i.test(st), engine_loader: loader(url, st)}); }
+	  // The direct caller (frame 3: after rec + the API wrapper) must be the engine loader's own index.js code. This hook and any
+	  // JavaScriptBridge.eval code run as 'eval at ... index.js' frames, so a plain '/index.js' search marked game fetches as loader ones.
 	  function loader(u, st){ try { var a = new URL(String(u && u.url || u), location.href);
+	    var fr = st.split('\\n').filter(function (l) { return /^\\s*at /.test(l); }), c = fr[2] || '';
 	    return a.origin === location.origin && ['index.js', 'index.wasm', 'index.pck', 'index.side.wasm', 'index.audio.worklet.js',
-	      'index.audio.position.worklet.js'].indexOf(a.pathname.split('/').pop()) >= 0 && st.indexOf('/index.js') >= 0; } catch (e) { return false; } }
+	      'index.audio.position.worklet.js'].indexOf(a.pathname.split('/').pop()) >= 0 && c.indexOf('/index.js') >= 0 && c.indexOf('eval at') < 0; } catch (e) { return false; } }
 	  if (window.fetch) { var f = window.fetch; window.fetch = function(u, o){ rec('fetch', u && u.url || u); return f.apply(this, arguments); }; }
 	  if (navigator.sendBeacon) { var b = navigator.sendBeacon.bind(navigator); navigator.sendBeacon = function(u, d){ rec('sendBeacon', u); return b(u, d); }; }
 	  var xo = XMLHttpRequest.prototype.open; XMLHttpRequest.prototype.open = function(m, u){ rec('xhr', u); return xo.apply(this, arguments); };

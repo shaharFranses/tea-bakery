@@ -139,8 +139,9 @@ static func show(main, cmd: String) -> String:
 		if id == "tutorial": id = "c1-b1"
 		if not main.open_board(id, true): res = "unknown board %s" % id
 	elif cmd.begins_with("daily:"):
-		var d := cmd.substr(6)
-		res = "open %s" % d if main.open_daily(d) else "refused: %s already baked (not replayable)" % d
+		var d := Clock.resolve_date(cmd.substr(6))      # S1-01: "today" (or set_date override) -> ISO before DailyPool
+		if d == "": res = "bad date %s (want YYYY-MM-DD or today)" % cmd.substr(6)
+		else: res = "open %s" % d if main.open_daily(d) else "refused: %s already baked (not replayable)" % d
 	elif cmd.begins_with("chapter_end_screen:"):                        # layout: the real chapter-end screen for K
 		main.show_chapter_end(cmd.substr(19).to_int())
 	elif cmd.begins_with("chapter_end:"):                               # BR-3: completes chapter K, runs the slot decision

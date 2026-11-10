@@ -13,7 +13,10 @@ import json, math, os, re, sys
 from playwright.sync_api import sync_playwright
 dbg, rel, out = sys.argv[1].rstrip("/"), sys.argv[2].rstrip("/"), sys.argv[3]; os.makedirs(out, exist_ok=True)
 PERF_RE = re.compile(r"^pkd:perf pkd:(transition_start|transition_end|board_interactive) \d+\.\d$")
-BOOT_OK = re.compile(r"^(\[PKD\] (main ready|intro finished)|Godot Engine v4\.3\..*|OpenGL API .*)$")   # starter boot markers + engine banner
+BOOT_OK = re.compile(r"^(\[PKD\] (main ready|intro finished)|Godot Engine v4\.3\..*|OpenGL API .*"
+                     r"|still waiting on run dependencies:|dependency: wasm-instantiate|\(end of list\))$")   # starter boot markers + engine banner
+# + the Emscripten loader's "still waiting on run dependencies" notice, printed by the stock index.js when wasm instantiation
+# takes > 10 s on a loaded CI box (engine loader, not game code; seen on 30eb67c step 6c)
 res, notes = {}, {}
 def boot(br, url, q, **kw):
     ctx = br.new_context(viewport={"width": 390, "height": 844}, **kw); pg = ctx.new_page(); logs = []

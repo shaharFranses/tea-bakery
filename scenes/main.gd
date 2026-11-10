@@ -194,6 +194,7 @@ func _ready() -> void:
 	if st != "": _preset_state(st)
 	Ads.hold(true)            # no SDK call / ad until the intro has finished (SD dev a795a1a boot hold)
 	if Dbg.toggle("intro", "1") == "0":
+		print("[PKD] intro skipped (?intro=0)")     # starter D0-16 marker (release too), as starter scenes/main.gd
 		_on_intro_finished.call_deferred()
 	else:
 		var intro := PkdIntro.instantiate()
@@ -1243,15 +1244,28 @@ func _unit_cells(lbl: String) -> Array:
 		if Grader.unit_label(u) == lbl: return u.cells
 	return []
 
+## HN-47 idle clock runs on WALL time between frames, not on the engine's process delta: Godot clamps the process
+## delta to max_physics_steps_per_frame / physics_ticks (8/60 = 0.133 s), so below ~7.5 fps (slow phones, headless
+## QA Chrome at DPR 3) the summed delta lagged the real 30 s and the pulse never fired (S2-01, thin-07f7ba8).
+## Per-frame wall step capped at 1 s, so a resumed tab (no frames while hidden) does not count the hidden time.
+var _idle_tick_ms := -1
+const IDLE_MAX_FRAME_S := 1.0
+
 func _process(dt: float) -> void:
+	var now := Time.get_ticks_msec()
+	var wall_dt := dt if _idle_tick_ms == -1 else clampf((now - _idle_tick_ms) / 1000.0, 0.0, IDLE_MAX_FRAME_S)
+	_idle_tick_ms = now
 	if screen == "board" and interactive and not won and not page_hidden and not Ads.busy:
 		active_ms += dt * 1000.0
-		idle_s += dt
-		if idle_s >= IDLE_PULSE_S and hint_state.pulse_count == 0 and not hint_btn.disabled:
-			hint_state.pulse_count = 1                     # TT-AC-47: once per board, no hint consumed
-			hint_btn.pivot_offset = hint_btn.size / 2.0
-			var tw := create_tween(); tw.tween_property(hint_btn, "scale", Vector2(1.12, 1.12), 0.25); tw.tween_property(hint_btn, "scale", Vector2.ONE, 0.25)
-			Dbg.hit("hint pulse")
+		_advance_idle(wall_dt)
+
+func _advance_idle(wall_dt: float) -> void:
+	idle_s += wall_dt
+	if idle_s >= IDLE_PULSE_S and hint_state.pulse_count == 0 and not hint_btn.disabled:
+		hint_state.pulse_count = 1                     # TT-AC-47: once per board, no hint consumed
+		hint_btn.pivot_offset = hint_btn.size / 2.0
+		var tw := create_tween(); tw.tween_property(hint_btn, "scale", Vector2(1.12, 1.12), 0.25); tw.tween_property(hint_btn, "scale", Vector2.ONE, 0.25)
+		Dbg.hit("hint pulse")
 
 # ------------------------------------------------------------------ save
 func _schedule_save() -> void:
