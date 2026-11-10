@@ -1,4 +1,4 @@
-## H5 pack verification (SPEC §13.1): every SHIPPED board - 40 chapter boards (c1-b1..c8-b5) + the 400-board daily
+## H5 pack verification (SPEC §13.1): every SHIPPED board - 96 chapter boards (c1-b1..c8-b12, SPEC v1.1) + the 400-board daily
 ## pool - is re-verified: valid regions, exactly one solution (solver limit 2) equal to the stored one, ladder grade ==
 ## stored grade (no T7), chapter size/grade == the spec table (via the levels files), all region maps distinct.
 ## usage: godot --headless --path . -s tools/validate_boards.gd -- <out.json>   (non-zero exit on any failure)
@@ -29,7 +29,7 @@ func _init() -> void:
 	var path: String = args[0] if args.size() > 0 else "validate_boards.json"
 	var out := []; var seen := {}; var ok := true
 	for ch in range(1, 9):
-		for b in range(1, 6):
+		for b in range(1, Chapters.BOARDS + 1):
 			var p := Chapters.board(ch, b)
 			if p.is_empty(): out.append({"id": "c%d-b%d" % [ch, b], "ok": false, "errors": ["missing"]}); ok = false; continue
 			ok = _check(p, out, seen) and ok
@@ -41,7 +41,7 @@ func _init() -> void:
 		ok = _check(p, out, seen) and ok
 	var bad := out.filter(func(x): return not x.ok)
 	var f := FileAccess.open(path, FileAccess.WRITE)
-	f.store_string(JSON.stringify({"pass": ok and bs.size() == 400, "chapter_boards": 40, "daily_boards": bs.size(), "failures": bad, "boards": out}, " "))
+	f.store_string(JSON.stringify({"pass": ok and bs.size() == 400, "chapter_boards": 8 * Chapters.BOARDS, "daily_boards": bs.size(), "failures": bad, "boards": out}, " "))
 	f.close()
-	print("validate_boards: %s: %d boards (40 chapter + %d daily), %d failures -> %s" % ["PASS" if ok and bs.size() == 400 else "FAIL", out.size(), bs.size(), bad.size(), path])
+	print("validate_boards: %s: %d boards (%d chapter + %d daily), %d failures -> %s" % ["PASS" if ok and bs.size() == 400 else "FAIL", out.size(), out.size() - bs.size(), bs.size(), bad.size(), path])
 	quit(0 if ok and bs.size() == 400 else 1)

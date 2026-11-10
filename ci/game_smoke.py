@@ -9,6 +9,7 @@ import json, os, re, sys
 from playwright.sync_api import sync_playwright
 base, out = sys.argv[1].rstrip("/"), sys.argv[2]; os.makedirs(out, exist_ok=True)
 HERE = os.path.dirname(os.path.abspath(__file__))
+BPC = 12   # levels per chapter (SPEC v1.1 §3.5 boards_per_chapter)
 allow = [re.compile(l.strip()) for l in open(os.path.join(HERE, "console_allowlist.txt")) if l.strip() and not l.startswith("#")]
 res, bad, notes = {}, [], {}
 def dump(pg):
@@ -84,7 +85,7 @@ with sync_playwright() as p:
     # b1 -> b2 sample above is the cold/warm-up one; b2->b3, b3->b4, b4->b5 go through the same solved card ->
     # auto-advance path (no skip). PASS = median of the 4 engine-clock samples <= 2000 ms. The 2 s requirement is not
     # loosened (design path = CARD_MS 1500 + work); every sample is recorded and any single one > 2000 ms is a noted spike.
-    for b in range(1, 6):
+    for b in range(1, BPC + 1):
         show(pg, f"board:c1-b{b}")
         if b in (2, 3, 4):
             pg.wait_for_function(f"() => {{ const g = JSON.parse(window.PKD_QA.dump()).game; return g.board_id == 'c1-b{b}' && g.interactive }}", timeout=10000)
@@ -92,7 +93,7 @@ with sync_playwright() as p:
             pg.wait_for_function(f"() => {{ const g = JSON.parse(window.PKD_QA.dump()).game; return g.board_id == 'c1-b{b + 1}' && g.interactive }}", timeout=10000)
             samples.append(dump(pg)["game"]["t_interactive_ms"] - ws["t_solved_ms"]); continue
         show(pg, "solve"); pg.wait_for_timeout(100)
-        if b < 5: show(pg, "skip")
+        if b < BPC: show(pg, "skip")
     srt = sorted(samples); med = (srt[1] + srt[2]) / 2
     notes["solve_to_next_interactive_ms"] = {"samples": samples, "median": med, "spikes_gt_2000": [x for x in samples if x > 2000]}
     res["b1_to_b2_interactive_le_2s"] = len(samples) == 4 and all(x > 0 for x in samples) and med <= 2000   # engine clock, median of 4
@@ -124,9 +125,9 @@ with sync_playwright() as p:
     # AD-17 at REAL chapter ends: ch2 end at session 300 s -> ok (mock ad shown) -> Next -> ch3; ch3 end at 479 s
     # (179 s after the ch2 request) -> gap<180s denied -> Next -> ch4; ch4 end at 480 s (180 s gap) -> ok -> Home.
     def finish(ch):
-        for b in range(1, 6):
+        for b in range(1, BPC + 1):
             show(pg, f"board:c{ch}-b{b}"); show(pg, "solve"); pg.wait_for_timeout(100)
-            if b < 5: show(pg, "skip")
+            if b < BPC: show(pg, "skip")
         show(pg, "skip"); pg.wait_for_timeout(500); return dump(pg)["game"]
     ge = finish(2)
     res["chapter2_end_has_next"] = ge["screen"] == "chapter_end" and ge["unlocked"]["recipes"] == [1, 2] and next(u for u in ge["ui"] if u["name"] == "EndNext")["visible"]

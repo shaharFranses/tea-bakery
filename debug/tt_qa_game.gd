@@ -19,6 +19,7 @@ const Gen = preload("res://game/generator.gd")
 const Cfg = preload("res://game/tt_config.gd")
 const Clock = preload("res://game/clock.gd")
 const Cells = preload("res://game/cells.gd")
+const Chapters = preload("res://game/chapters.gd")
 
 static func apply_url(params: Dictionary) -> void:
 	if params.has("ads"): Ads.set_mode(str(params["ads"]))                 # H4
@@ -50,7 +51,7 @@ static func _ui(main: Control) -> Array:
 		for c in n.get_children(): stack.append(c)
 		if not (n is BaseButton or n is Label): continue
 		var r: Rect2 = n.get_global_rect()
-		# scrolled out of its ScrollContainer (Recipe Book / chapter list): reported, flagged "scrolled_out"
+		# scrolled out of its ScrollContainer (Recipe Book / level map): reported, flagged "scrolled_out"
 		var so := false
 		var a: Node = n.get_parent()
 		while a != null and a != main:
@@ -72,10 +73,10 @@ static func state(main) -> Dictionary:
 	var sm: Dictionary = main.daily.summary(Clock.local_date())
 	return {"screen": main.screen, "screen_log": main.screen_log, "chapter": main.chapter, "board_no": main.board_no,
 		"givens": main.givens.keys().map(func(i): return [i / main.n, i % main.n]), "card_open": main.card_open, "t_solved_ms": main.t_solved_ms, "t_interactive_ms": main.t_interactive_ms, "interactive": main.interactive,
-		"progress": main.progress.to_dict(), "save_writes": Store.save_writes, "corrupt_backed_up": Store.corrupt_backed_up,
-		"shakes_started": b.shakes_started, "baking": b.bake_t0 >= 0, "steam_cells": b.steam_cells.size(), "texture_id": "berry2",
+		"progress": main.progress.to_dict(), "level": Chapters.level_of(main.board_id()), "last_stars": main.last_stars, "conflicts_board": main.conflicts_board, "total_stars": main.progress.total_stars(), "save_writes": Store.save_writes, "corrupt_backed_up": Store.corrupt_backed_up,
+		"shakes_started": b.shakes_started, "baking": b.bake_t0 >= 0, "steam_cells": b.steam_cells.size(), "texture_id": "berry2", "piece": b.piece,
 		"targets": main.board.hint_target.keys().map(func(i): return [i / main.n, i % main.n]), "coach": main.puzzle.get("coach", ""),
-		"bubble_text": main.hint_label.text, "dots_on": range(5).filter(func(k): return main.chapter > 0 and main.progress.is_solved("c%d-b%d" % [main.chapter, k + 1])).size(), "board_id": main.board_id(), "mode": main.mode,
+		"bubble_text": main.hint_label.text, "dots_on": range(Chapters.BOARDS).filter(func(k): return main.chapter > 0 and main.progress.is_solved("c%d-b%d" % [main.chapter, k + 1])).size(), "board_id": main.board_id(), "mode": main.mode,
 		"intro_done": main.intro_done, "taps": main.taps, "n": main.n, "seed": main.seed_value, "max_size": main.max_size(),
 		"tutorial": main.puzzle.get("tutorial", false), "regions": Array(main.puzzle.regions), "cells": cells,
 		"cakes": main.cakes().map(func(p): return [p.x, p.y]),
@@ -130,7 +131,8 @@ static func show(main, cmd: String) -> String:
 	elif cmd == "end_next": main.chapter_end_continue("next")
 	elif cmd == "end_home": main.chapter_end_continue("home")
 	elif cmd == "all_baked": main.show_all_baked()
-	elif cmd == "chapter_list": main.show_chapter_list()
+	elif cmd == "chapter_list" or cmd == "level_map": main.show_level_map()
+	elif cmd.begins_with("level:"): res = "ok" if main.open_level(Chapters.id_of_level(cmd.substr(6).to_int())) else "refused: locked"
 	elif cmd.begins_with("replay:"): res = "ok" if main.replay_board(cmd.substr(7)) else "refused: not solved"
 	elif cmd.begins_with("board:"):
 		var id := cmd.substr(6)

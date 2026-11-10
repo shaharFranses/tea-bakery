@@ -24,7 +24,7 @@ func test_every_pool_board():
 	assert_eq(d.boards.size(), 400); assert_eq(str(d.epoch), "2026-11-02")
 	var seen := {}
 	for ch in range(1, 9):
-		for b in range(1, 6):
+		for b in range(1, Chapters.BOARDS + 1):
 			var p := Chapters.board(ch, b); seen[Packs.canon(p.n, p.regions)] = "c%d-b%d" % [ch, b]
 	var bad := 0
 	for j in 400:

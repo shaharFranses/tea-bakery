@@ -13,10 +13,18 @@ const Solver = preload("res://game/solver.gd")
 const Grader = preload("res://game/grader.gd")
 const Packs = preload("res://tools/build_packs.gd")
 
-const CH := {1: {"sizes": [5, 5, 5, 5, 5], "grades": [1, 1, 1, 1, 2]}, 2: {"sizes": [5, 6, 5, 6, 6], "grades": [2, 2, 1, 2, 2]},
-	3: {"sizes": [6, 6, 6, 6, 6], "grades": [2, 2, 1, 2, 3]}, 4: {"sizes": [6, 7, 6, 7, 7], "grades": [2, 2, 1, 2, 3]},
-	5: {"sizes": [7, 7, 7, 7, 7], "grades": [2, 3, 1, 2, 3]}, 6: {"sizes": [7, 8, 7, 8, 8], "grades": [2, 2, 1, 3, 2]},
-	7: {"sizes": [8, 8, 8, 8, 8], "grades": [2, 3, 1, 3, 2]}, 8: {"sizes": [8, 8, 8, 8, 8], "grades": [3, 2, 3, 4, 2]}}   # SPEC v1.0.2 §3.5
+## SPEC v1.1 §3.5: 12 levels per chapter. b1-b5 = the v1.0.2 boards (built first, in the same order, so they stay
+## byte-identical); b6-b12 are added in a second pass from the remaining pack boards.
+const CH := {
+	1: {"sizes": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5], "grades": [1, 1, 1, 1, 2, 1, 2, 1, 2, 1, 2, 2]},
+	2: {"sizes": [5, 6, 5, 6, 6, 5, 6, 6, 5, 6, 6, 6], "grades": [2, 2, 1, 2, 2, 2, 2, 1, 2, 2, 1, 2]},
+	3: {"sizes": [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6], "grades": [2, 2, 1, 2, 3, 2, 2, 1, 3, 2, 1, 3]},
+	4: {"sizes": [6, 7, 6, 7, 7, 7, 6, 7, 7, 6, 7, 7], "grades": [2, 2, 1, 2, 3, 2, 2, 1, 3, 2, 1, 3]},
+	5: {"sizes": [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7], "grades": [2, 3, 1, 2, 3, 2, 2, 1, 3, 2, 1, 3]},
+	6: {"sizes": [7, 8, 7, 8, 8, 8, 7, 8, 8, 7, 8, 8], "grades": [2, 2, 1, 3, 2, 2, 3, 1, 2, 3, 1, 3]},
+	7: {"sizes": [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8], "grades": [2, 3, 1, 3, 2, 2, 3, 1, 2, 3, 1, 3]},
+	8: {"sizes": [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8], "grades": [3, 2, 3, 4, 2, 3, 2, 3, 2, 3, 1, 3]}}
+const V1_BOARDS := 5
 const COACH := [
 	"Every row and column needs one cake. Tap the glowing cell twice to bake it.",
 	"Each color needs one cake too. Pick the free cell whose color has no cake yet.",
@@ -98,20 +106,29 @@ func pick(n: int, g: int, pred := Callable()) -> Dictionary:
 	push_error("no board for %dx%d g%d" % [n, g]); quit(1); return {}
 
 func _init() -> void:
-	for ch in CH:
-		var boards := []
-		for k in 5:
-			var n: int = CH[ch].sizes[k]; var gr: int = CH[ch].grades[k]
-			if ch == 1 and k < 3:
-				var kind := k + 1
-				var b := pick(n, gr, func(bb): return tut(bb, kind))
-				var t := tut(b, kind)
-				t["coach"] = COACH[k]
-				boards.append(entry(ch, k + 1, b, t))
-			else:
-				boards.append(entry(ch, k + 1, pick(n, gr), {}))
-		var doc := {"chapter": ch, "format": "tt-chapter-1", "spec": "SPEC v1.0.2 §3.5", "boards": boards}
-		var f := FileAccess.open("res://game/levels/chapter_%02d.json" % ch, FileAccess.WRITE)
-		f.store_string(JSON.stringify(doc, " ", false)); f.close()
-		print("chapter %d: %s" % [ch, ", ".join(boards.map(func(e): return "%s %dx%d g%d (%s)" % [e.id, e.size, e.size, e.grade, e.source]))])
+	var all := {}
+	for ch in CH: all[ch] = []
+	for pass_ in [range(0, V1_BOARDS), range(V1_BOARDS, CH[1].sizes.size())]:
+		for ch in CH: all[ch] += build(ch, pass_)
+	for ch in CH: write(ch, all[ch])
 	quit(0)
+
+func build(ch: int, ks) -> Array:
+	var boards := []
+	for k: int in ks:
+		var n: int = CH[ch].sizes[k]; var gr: int = CH[ch].grades[k]
+		if ch == 1 and k < 3:
+			var kind := k + 1
+			var b := pick(n, gr, func(bb): return tut(bb, kind))
+			var t := tut(b, kind)
+			t["coach"] = COACH[k]
+			boards.append(entry(ch, k + 1, b, t))
+		else:
+			boards.append(entry(ch, k + 1, pick(n, gr), {}))
+	return boards
+
+func write(ch: int, boards: Array) -> void:
+	var doc := {"chapter": ch, "format": "tt-chapter-1", "spec": "SPEC v1.1 §3.5", "boards": boards}
+	var f := FileAccess.open("res://game/levels/chapter_%02d.json" % ch, FileAccess.WRITE)
+	f.store_string(JSON.stringify(doc, " ", false)); f.close()
+	print("chapter %d: %s" % [ch, ", ".join(boards.map(func(e): return "%s %dx%d g%d (%s)" % [e.id, e.size, e.size, e.grade, e.source]))])

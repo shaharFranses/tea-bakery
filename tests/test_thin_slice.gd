@@ -29,7 +29,7 @@ func _solve(m) -> void:
 func test_progress_routing():
 	var p = Progress.new()
 	assert_eq(p.boot_target(), "c1-b1")
-	for b in range(1, 6): p.mark_solved("c1-b%d" % b)
+	for b in range(1, Chapters.BOARDS + 1): p.mark_solved("c1-b%d" % b)
 	assert_eq(p.next_unsolved(), "c2-b1")
 	p.current_id = "c2-b3"; p.current_cells = [1]
 	assert_eq(p.boot_target(), "c2-b3", "saved marks win")
@@ -39,7 +39,7 @@ func test_progress_routing():
 
 func test_hint_text_every_chapter_board_ac20c():
 	for ch in [1, 2]:
-		for b in range(1, 6):
+		for b in range(1, Chapters.BOARDS + 1):
 			var pz := Chapters.board(ch, b)
 			var cakes := []
 			for g in pz.givens: cakes.append(g)
@@ -99,8 +99,8 @@ func test_hints_ch1_free_ch2_rewarded():
 
 func test_chapter_end_unlock_and_slot():
 	var m = await _main()
-	for b in range(1, 5): m.progress.mark_solved("c1-b%d" % b)
-	m.open_board("c1-b5"); await wait_frames(2)
+	for b in range(1, Chapters.BOARDS): m.progress.mark_solved("c1-b%d" % b)
+	m.open_board("c1-b12"); await wait_frames(2)
 	_solve(m); m._after_card()
 	assert_eq(m.screen, "chapter_end")
 	assert_true(1 in m.progress.recipes)
@@ -119,6 +119,6 @@ func test_chapter_end_unlock_and_slot():
 func test_home_and_book_screens():
 	var m = await _main()
 	m.show_home(); assert_eq(m.screen, "home"); assert_true(m.home_screen.visible)
-	assert_true(m.home_daily.disabled, "daily locked before c1-b5")
+	assert_true(m.home_daily.disabled, "daily locked before chapter 1 is done")
 	m.show_recipe_book(); assert_eq(m.screen, "recipe_book")
 	assert_eq(m.book_cards.size(), 8)

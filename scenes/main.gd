@@ -1,6 +1,8 @@
 ## Bakery Logic Puzzle main scene (thin slice, SPEC v1.0.1): PKD intro -> c1-b1 (no menu, D-14) -> tutorial trays
-## c1-b1..b3 (givens, coach line, pulsing target) -> c1-b4/b5 -> chapter end (recipe card + décor, midgame slot) -> ch2.
-## Screens: board, home, recipe_book, chapter_end (+ solved card / settings / rewarded-hint / reset-confirm modals).
+## c1-b1..b3 (givens, coach line, pulsing target) -> c1-b4..b12 -> chapter end (recipe card + décor, midgame slot) -> ch2.
+## SPEC v1.1: 8 chapters x 12 levels, numbered 1..96 on the level map; every solved level keeps its best stars (1-3).
+## Screens: board, home, recipe_book, chapter_end, all_baked, level_map (+ solved card / settings / rewarded-hint /
+## reset-confirm modals).
 ## Boot routing (TT-AC-23): saved-marks board, else next unsolved chapter board, else Home.
 ## SDK (§12.1): gameplayStart when a board becomes interactive; gameplayStop on solved card, chapter end, Home, menus,
 ## settings, any ad, tab hidden; happytime on chapter complete only; midgame only at the chapter-end slot (D-19).
@@ -30,6 +32,7 @@ const HintText = preload("res://game/hint_text.gd")
 const RecipeCard = preload("res://scenes/recipe_card.gd")
 const TouchScroll = preload("res://ui/touch_scroll.gd")
 const Shelf = preload("res://scenes/shelf.gd")
+const StarRow = preload("res://scenes/star_row.gd")
 
 const CARD_MS := 1500            # bake reward + "Baked!" card, then the next board (TT-AC-25: interactive <= 2.0 s)
 const SAVE_DEBOUNCE_S := 1.0     # §3.5 save.debounce_ms
@@ -54,7 +57,7 @@ var settings = Settings.new()
 var progress = Progress.new()
 var board_t0_ms := 0
 var last_daily_result: Dictionary = {}
-var screen := "board"            # board | home | recipe_book | chapter_end | all_baked | chapter_list
+var screen := "board"            # board | home | recipe_book | chapter_end | all_baked | level_map
 var screen_log: Array = []       # [screen or board id] in order (TT-AC-05d / -23)
 var givens := {}                 # cell index -> true (immutable plated cakes)
 var history: Array = []          # undo stack of cell snapshots (not saved)
@@ -65,18 +68,20 @@ var card_open := false
 var page_hidden := false
 var hint_state := {"free_left": 1, "rewarded_visible": false, "text": "", "technique": "", "targets": [], "pulse_count": 0, "kind": ""}
 var hints_used_board := 0
+var conflicts_board := 0         # times a new conflict appeared on this board (stars, SPEC v1.1 §3.6)
+var last_stars := 0              # stars of the last solve (solved card)
 var idle_s := 0.0
 var last_chapter_end := 0
 var muted := false
 
-const PORTRAIT_BACKDROP_SCREENS := ["home", "recipe_book", "chapter_end", "all_baked", "chapter_list"]
+const PORTRAIT_BACKDROP_SCREENS := ["home", "recipe_book", "chapter_end", "all_baked", "level_map"]
 const BACKDROP_LANDSCAPE := "res://assets/backdrop/backdrop_landscape.webp"   # desktop / wide
 const BACKDROP_PORTRAIT := "res://assets/backdrop/backdrop_portrait.webp"     # phone Home / Recipe Book / chapter end
 var tex_landscape: Texture2D
 var tex_portrait: Texture2D
 
 @onready var margin: MarginContainer = $Margin
-var label: Label                 # board title ("Chapter 2 · Tray 3/5" / "Bake of the Day")
+var label: Label                 # board title ("Level 14" / "Bake of the Day")
 var status: Label
 var board: Control
 var button: Button               # "New tray" (free/debug boards only)
@@ -134,15 +139,21 @@ var end_shelf: Control
 var book_grid: GridContainer
 var book_scroll: ScrollContainer
 var book_cards: Array = []
-var home_replay: Button
+var home_levels: Button          # level map (SPEC v1.1 §9)
+var home_stars: Label
 var all_screen: Control
 var all_grid: GridContainer
 var all_cards: Array = []
 var all_shelf: Control
-var list_screen: Control
-var list_box: VBoxContainer
+var map_screen: Control          # level map (SPEC v1.1 §9): chapters as groups of 12 numbered levels + stars
+var map_box: VBoxContainer
+var map_scroll: ScrollContainer
+var map_total: Label
+var map_buttons := {}            # board id -> Button
 var card_title: Label
 var card_time: Label
+var card_stars: Control
+var card_tip: Label
 var _js_cbs: Array = []
 
 func _ready() -> void:
@@ -267,8 +278,9 @@ func _build_ui() -> void:
 	bubble.add_child(hint_label)
 	dots = HBoxContainer.new(); dots.name = "ChapterDots"; dots.add_theme_constant_override("separation", 6)
 	dots.alignment = BoxContainer.ALIGNMENT_CENTER
-	for k in 5:
-		var d := TextureRect.new(); d.name = "Dot%d" % k; d.custom_minimum_size = Vector2(16, 16)
+	dots.add_theme_constant_override("separation", 5)
+	for k in Chapters.BOARDS:
+		var d := TextureRect.new(); d.name = "Dot%d" % k; d.custom_minimum_size = Vector2(14, 14)
 		d.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; d.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		dots.add_child(d)
 	vb.add_child(dots)
@@ -372,12 +384,13 @@ func _build_screens() -> void:
 	home_shelf = Shelf.new(); home_shelf.name = "HomeShelf"; home_shelf.custom_minimum_size = Vector2(320, 142)
 	h.col.add_child(home_shelf)
 	home_streak = _body("", "HomeStreak"); h.col.add_child(home_streak)
+	home_stars = _body("", "HomeStars"); home_stars.add_theme_font_size_override("font_size", 14); h.col.add_child(home_stars)
 	home_continue = _tool_button("HomeContinue", "Continue", "play", "PrimaryButton", h.col)
 	home_continue.pressed.connect(home_continue_pressed)
 	home_daily = _tool_button("HomeDaily", "Bake of the Day", "streak", "SecondaryButton", h.col)
 	home_daily.pressed.connect(func(): if open_daily(Clock.local_date()): pass)
-	home_replay = _tool_button("HomeReplay", "Replay a chapter", "play", "", h.col)
-	home_replay.pressed.connect(func(): show_chapter_list())
+	home_levels = _tool_button("HomeLevels", "Levels", "check", "", h.col)
+	home_levels.pressed.connect(func(): show_level_map())
 	var hb := _tool_button("HomeRecipeBook", "Recipe Book", "book", "", h.col)
 	hb.pressed.connect(func(): show_recipe_book())
 	var hs := _tool_button("HomeSettings", "Settings", "settings", "", h.col)
@@ -420,27 +433,44 @@ func _build_screens() -> void:
 	a.col.add_child(_body("New trays every day in Bake of the Day.", "AllLine"))
 	var ah := _tool_button("AllHome", "Home", "home", "PrimaryButton", a.col)
 	ah.pressed.connect(func(): show_home())
-	# Chapter list ("Replay a chapter", §7.2/§9): every solved board, replay rules (no rewards, events or midgame)
-	var cl := _page("ChapterList"); list_screen = cl.root
-	var lb := HBoxContainer.new(); lb.add_theme_constant_override("separation", 8); cl.col.add_child(lb)
-	var lback := _round_button("ListBack", "back", "Back"); lback.pressed.connect(func(): show_home()); lb.add_child(lback)
-	var lt := _title("Replay a chapter", "ListTitle", 24); lt.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lb.add_child(lt)
-	var lsc := TouchScroll.new(); lsc.name = "ListScroll"; lsc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	lsc.size_flags_vertical = Control.SIZE_EXPAND_FILL; cl.col.add_child(lsc)
-	cl.col.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list_box = VBoxContainer.new(); list_box.name = "ListBox"; list_box.add_theme_constant_override("separation", 8); lsc.add_child(list_box)
-	list_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL   # full scroll width, so the tray rows wrap at the screen edge, not at one button
-	for ch in range(1, 9):
-		var cl_l := _body("Chapter %d · %s" % [ch, Chapters.RECIPES[ch - 1]], "ListCh%d" % ch); list_box.add_child(cl_l)
-		# HFlowContainer: 5 "Tray N" buttons are ~412 px wide, wider than a 390 px phone; the row wraps instead of overflowing
-		var rowb := HFlowContainer.new(); rowb.name = "ListRow%d" % ch
-		rowb.add_theme_constant_override("h_separation", 8); rowb.add_theme_constant_override("v_separation", 8)
-		rowb.alignment = FlowContainer.ALIGNMENT_CENTER; list_box.add_child(rowb)
-		for b in range(1, 6):
+	# Level map (SPEC v1.1 §9): one group per chapter (title + stars), 12 numbered level buttons with their best stars.
+	# Solved levels replay (no rewards, events or midgame); the first unsolved level plays; later levels are locked.
+	var lm := _page("LevelMap"); map_screen = lm.root
+	var lb := HBoxContainer.new(); lb.add_theme_constant_override("separation", 8); lm.col.add_child(lb)
+	var lback := _round_button("MapBack", "back", "Back"); lback.pressed.connect(func(): show_home()); lb.add_child(lback)
+	var lt := _title("Levels", "MapTitle", 24); lt.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lb.add_child(lt)
+	map_total = _body("", "MapTotal"); map_total.add_theme_font_size_override("font_size", 14)
+	map_total.custom_minimum_size.x = 56; lb.add_child(map_total)
+	map_scroll = TouchScroll.new(); map_scroll.name = "MapScroll"; map_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	map_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; lm.col.add_child(map_scroll)
+	lm.col.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	map_box = VBoxContainer.new(); map_box.name = "MapBox"; map_box.add_theme_constant_override("separation", 8)
+	map_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var mpad := MarginContainer.new(); mpad.name = "MapPad"; mpad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mpad.add_theme_constant_override("margin_right", 14)   # keep the right column clear of the scrollbar
+	map_scroll.add_child(mpad); mpad.add_child(map_box)
+	for ch in range(1, Chapters.count_available() + 1):
+		var hh := HBoxContainer.new(); hh.name = "MapHead%d" % ch; hh.alignment = BoxContainer.ALIGNMENT_CENTER
+		hh.add_theme_constant_override("separation", 6); map_box.add_child(hh)
+		var ci := TextureRect.new(); ci.name = "MapCake%d" % ch; ci.custom_minimum_size = Vector2(32, 32)   # the chapter's cake
+		ci.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ci.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ci.texture = load("res://assets/board/cake_%s@2x.png" % Chapters.cake_for(ch)); hh.add_child(ci)
+		var hl := _body("", "MapCh%d" % ch); hl.theme_type_variation = "TitleLabel"; hl.add_theme_font_size_override("font_size", 18)
+		hl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT; hh.add_child(hl)
+		var grid := GridContainer.new(); grid.name = "MapGrid%d" % ch; grid.columns = 4
+		grid.add_theme_constant_override("h_separation", 8); grid.add_theme_constant_override("v_separation", 8)
+		grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; map_box.add_child(grid)
+		for b in range(1, Chapters.BOARDS + 1):
 			var id := "c%d-b%d" % [ch, b]
-			var bb := Button.new(); bb.name = "Replay_%s" % id.replace("-", "_"); bb.text = "Tray %d" % b
-			bb.custom_minimum_size = Vector2(56, 48); bb.add_theme_font_size_override("font_size", 14)
-			bb.pressed.connect(func(): replay_board(id)); rowb.add_child(bb)
+			var bb := Button.new(); bb.name = "Level_%s" % id.replace("-", "_"); bb.custom_minimum_size = Vector2(72, 72)
+			bb.tooltip_text = "Level %d" % Chapters.level(ch, b)
+			var v := VBoxContainer.new(); v.set_anchors_preset(Control.PRESET_FULL_RECT); v.alignment = BoxContainer.ALIGNMENT_CENTER
+			v.mouse_filter = Control.MOUSE_FILTER_IGNORE; v.add_theme_constant_override("separation", 2); bb.add_child(v)
+			var nl := Label.new(); nl.name = "Num"; nl.text = str(Chapters.level(ch, b)); nl.add_theme_font_size_override("font_size", 20)
+			nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; nl.mouse_filter = Control.MOUSE_FILTER_IGNORE; v.add_child(nl)
+			var sr := StarRow.new(); sr.name = "Stars"; sr.custom_minimum_size = Vector2(56, 14); v.add_child(sr)
+			bb.pressed.connect(func(): open_level(id)); grid.add_child(bb)
+			map_buttons[id] = bb
 	# modal layer (over everything except the intro)
 	modal_root = Control.new(); modal_root.name = "Modals"; modal_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	modal_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -454,7 +484,10 @@ func _build_screens() -> void:
 	var scp := PanelContainer.new(); scp.theme_type_variation = "CardPanel"; scp.mouse_filter = Control.MOUSE_FILTER_IGNORE; scc.add_child(scp)
 	var scv := VBoxContainer.new(); scv.mouse_filter = Control.MOUSE_FILTER_IGNORE; scp.add_child(scv)
 	card_title = _title("Baked!", "CardTitle", 32); card_title.custom_minimum_size.x = 200; scv.add_child(card_title)
+	card_stars = StarRow.new(); card_stars.name = "CardStars"; card_stars.custom_minimum_size = Vector2(150, 40); scv.add_child(card_stars)
 	card_time = _body("", "CardTime"); card_time.add_theme_font_size_override("font_size", 14); scv.add_child(card_time)
+	card_tip = _body("", "CardTip"); card_tip.add_theme_font_size_override("font_size", 14); card_tip.custom_minimum_size.x = 240
+	scv.add_child(card_tip)
 	# settings (§9: Sound, Auto-molds, Tap order)
 	var s := _modal("SettingsModal"); settings_modal = s.root
 	s.col.add_child(_title("Settings", "SettingsTitle", 24))
@@ -509,7 +542,7 @@ func _set_screen_raw(s: String) -> void:
 	margin.visible = on_board and layout_mode_name != "wide"
 	wide_root.visible = on_board and layout_mode_name == "wide"
 	home_screen.visible = s == "home"; book_screen.visible = s == "recipe_book"; end_screen.visible = s == "chapter_end"
-	all_screen.visible = s == "all_baked"; list_screen.visible = s == "chapter_list"
+	all_screen.visible = s == "all_baked"; map_screen.visible = s == "level_map"
 	screen_log.append(s if not on_board else board_id())
 	if screen_log.size() > 100: screen_log.pop_front()
 	_apply_safe_area()
@@ -532,17 +565,20 @@ func _refresh_home() -> void:
 	var tgt: String = progress.next_unsolved()
 	var has_marks: bool = progress.current_id != "" and not progress.is_solved(progress.current_id)
 	home_continue.visible = tgt != "" or has_marks
-	home_continue.text = "Play" if progress.solved.is_empty() and not has_marks else "Continue"
-	var unlocked: bool = progress.is_solved("c1-b5")
+	var cont_id: String = progress.current_id if has_marks else tgt
+	home_continue.text = "Play" if progress.solved.is_empty() and not has_marks else ("Continue · Level %d" % Chapters.level_of(cont_id) if cont_id != "" else "Continue")
+	var unlocked: bool = progress.chapter_done(1)
 	var done := daily.is_done(Clock.local_date())
 	home_daily.disabled = not unlocked or done
 	home_daily.text = "Baked · back tomorrow" if done else "Bake of the Day"
 	home_daily.icon = TtTheme.icon("check" if done else "streak", true)
-	# §7.2: once every chapter is done, Bake of the Day is the primary button and "Replay a chapter" appears
+	# §7.2: once every chapter is done, Bake of the Day is the primary button ("Levels" replaces "Replay a chapter", v1.1)
 	var all_done: bool = progress.all_done()
 	home_daily.theme_type_variation = "PrimaryButton" if all_done else "SecondaryButton"
 	home_daily.text = "Baked ✓ · back tomorrow" if done and all_done else home_daily.text
-	home_replay.visible = all_done
+	home_levels.visible = not progress.solved.is_empty()
+	home_stars.text = "Stars: %d / %d" % [progress.total_stars(), Progress.max_stars()]
+	home_stars.visible = not progress.solved.is_empty()
 	var sm: Dictionary = daily.summary(Clock.local_date())
 	home_streak.text = "Streak: %d · Best: %d" % [sm.streak, sm.best_streak] if unlocked else "Finish chapter 1 to unlock Bake of the Day."
 	home_shelf.set_owned(progress.decor)
@@ -622,10 +658,10 @@ func _set_puzzle(p: Dictionary) -> void:
 	puzzle = p
 	givens = {}
 	for g in p.get("givens", []): givens[g.x * n + g.y] = true
-	board.setup(n, puzzle.regions, p.get("givens", []))
+	board.setup(n, puzzle.regions, p.get("givens", []), board_cake())
 	for i in givens: board.cells[i] = Cells.CAKE
 	moves = 0; won = false; history.clear(); undo_count = 0; active_ms = 0.0
-	hints_used_board = 0; idle_s = 0.0
+	hints_used_board = 0; conflicts_board = 0; idle_s = 0.0
 	ad_policy.on_board_start()
 	hint_state = {"free_left": 1, "rewarded_visible": false, "text": "", "technique": "", "targets": [], "pulse_count": 0, "kind": ""}
 	last_hint_step = {}; showme_btn.visible = false
@@ -639,7 +675,7 @@ func _set_puzzle(p: Dictionary) -> void:
 ## Title, dots, coach/rules bubble, tool row per mode.
 func _sync_board_chrome() -> void:
 	match mode:
-		"chapter", "replay": label.text = "Chapter %d · Tray %d/5" % [chapter, board_no]
+		"chapter", "replay": label.text = "Level %d" % Chapters.level(chapter, board_no)
 		"daily": label.text = "Bake of the Day"
 		_: label.text = Cfg.TITLE_PLACEHOLDER
 	dots.visible = chapter > 0
@@ -732,6 +768,8 @@ func _relayout() -> void:
 	var ah := minf((aw - 6.0 * (acols - 1)) / acols * 320.0 / 240.0, spare_h / arows)
 	for c in all_cards: c.custom_minimum_size = Vector2(ah * 0.75, ah)
 	end_shelf.visible = m == "portrait"
+	for ch in range(1, Chapters.count_available() + 1):   # level map: 4 per row on phones, 6 on wide
+		(map_box.get_node("MapGrid%d" % ch) as GridContainer).columns = 6 if m == "wide" else 4
 	settings_flow.custom_minimum_size.x = 452.0 if m == "wide" else 220.0   # 2 toggles per row on wide (fits 800x450)
 	var short := vs.y < 600.0                      # e.g. the 800x450 CrazyGames embed: compact Home
 	home_shelf.custom_minimum_size.y = 90.0 if short else 142.0
@@ -777,7 +815,7 @@ func _apply_safe_area() -> void:
 	var m = PkdView.safe_margins()
 	var vs := get_viewport_rect().size
 	var side := maxf(16.0, (vs.x - UiLayout.PORTRAIT_MAX_W) / 2.0)
-	for mc in [margin, home_screen, book_screen, end_screen]:
+	for mc in [margin, home_screen, book_screen, end_screen, map_screen]:
 		if mc == null: continue
 		var sd := side if (mc == margin or layout_mode_name != "wide") else 16.0   # wide pages use the full width
 		mc.add_theme_constant_override("margin_top", int(16 + m[0]))
@@ -946,7 +984,9 @@ func _refresh() -> void:
 	var bad := Rules.conflicts(n, puzzle.regions, cs)
 	var before: int = board.conflict_cells.size()
 	board.set_conflicts(bad)
-	if bad.size() > before and chapter > 0 and mode == "chapter": progress.stats(chapter).conflicts_shown += 1
+	if bad.size() > before:
+		conflicts_board += 1
+		if chapter > 0 and mode == "chapter": progress.stats(chapter).conflicts_shown += 1
 	board.conflict_units = BoardView.units_of_conflicts(n, puzzle.regions, bad)
 	board.auto = Cells.auto_molds(n, puzzle.regions, board.cells, settings.auto_mold)
 	var was_won := won
@@ -973,6 +1013,8 @@ func _on_solved() -> void:
 	board.hint_target = {}; board.hint_unit = {}
 	var first := false
 	if mode == "chapter" or mode == "replay": first = progress.mark_solved(id)
+	last_stars = Progress.stars_for(hints_used_board, conflicts_board)
+	if mode == "chapter" or mode == "replay": progress.record_stars(id, last_stars)
 	if chapter > 0 and mode == "chapter": progress.stats(chapter).active_s += active_ms / 1000.0
 	Analytics.board_complete(id, "daily" if mode == "daily" else "chapter", n, int(puzzle.get("grade", 0)),
 		active_ms / 1000.0, hints_used_board, undo_count, mode == "replay")
@@ -984,6 +1026,9 @@ func _on_solved() -> void:
 	if intro_done: Ads.set_context("results")            # solved card: gameplayStop
 	var s := int(active_ms / 1000.0)
 	card_time.text = "Baked in %d:%02d" % [s / 60, s % 60]   # D-16: time only on the solved card
+	card_stars.visible = mode != "free"; card_stars.filled = last_stars
+	card_tip.visible = mode != "free" and last_stars < 3
+	card_tip.text = "No hints for 2 stars, and no clashes too for 3." if last_stars == 1 else "Bake it with no clashes for 3 stars."
 	card_open = true; solved_card.visible = true; card_open_ms = Time.get_ticks_msec()
 	_card_first = first
 	card_timer.start()
@@ -1042,7 +1087,7 @@ func show_chapter_end(ch: int) -> void:
 
 func _max_size_in(ch: int) -> int:
 	var m := 0
-	for b in range(1, 6): m = maxi(m, int(Chapters.board(ch, b).get("n", 0)))
+	for b in range(1, Chapters.BOARDS + 1): m = maxi(m, int(Chapters.board(ch, b).get("n", 0)))
 	return m
 
 ## Chapter-end screen -> "Next chapter" / "Home": the ONLY midgame slot (D-19). Every decision is logged (BR-3).
@@ -1064,14 +1109,46 @@ func show_all_baked() -> void:
 	all_shelf.set_owned(progress.decor)
 	set_screen("all_baked")
 
-## "Replay a chapter" list: solved boards only (§7.2: any solved board).
-func show_chapter_list() -> void:
-	for ch in range(1, 9):
-		for b in range(1, 6):
+## Level map (SPEC v1.1 §9): best stars per level, solved levels replayable, the next level playable, later ones locked.
+func show_level_map() -> void:
+	var nxt: String = progress.next_unsolved()
+	for ch in range(1, Chapters.count_available() + 1):
+		var got := 0
+		for b in range(1, Chapters.BOARDS + 1):
 			var id := "c%d-b%d" % [ch, b]
-			var bb: Button = list_box.get_node("ListRow%d/Replay_%s" % [ch, id.replace("-", "_")])
-			bb.disabled = not progress.is_solved(id)
-	set_screen("chapter_list")
+			var bb: Button = map_buttons[id]
+			var st: int = progress.stars_of(id)
+			got += st
+			bb.disabled = not progress.level_open(id)
+			bb.theme_type_variation = "PrimaryButton" if id == nxt else ""
+			bb.icon = TtTheme.icon("lock") if bb.disabled else null
+			bb.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER; bb.expand_icon = false
+			var num: Label = bb.find_child("Num", true, false)
+			num.visible = not bb.disabled
+			num.add_theme_color_override("font_color", Pal.CLOTTED_CREAM if id == nxt else Pal.EARL_GREY_INK)
+			var sr = bb.find_child("Stars", true, false)
+			sr.filled = st; sr.visible = st > 0
+		(map_box.get_node("MapHead%d/MapCh%d" % [ch, ch]) as Label).text = "Chapter %d · %s · %d/%d stars" % [ch, Chapters.RECIPES[ch - 1], got, Chapters.BOARDS * 3]
+	map_total.text = "%d/%d" % [progress.total_stars(), Progress.max_stars()]
+	set_screen("level_map")
+	_scroll_map_to.call_deferred(nxt)
+
+func _scroll_map_to(id: String) -> void:
+	if id == "" or not map_buttons.has(id): return
+	await get_tree().process_frame
+	var head: Control = map_box.get_node("MapHead%d" % Chapters.parse_id(id)[0])   # chapter heading of the next level
+	map_scroll.scroll_vertical = int(maxf(0.0, head.get_global_rect().position.y - map_box.get_global_rect().position.y - 8.0))
+
+## Level map tap: replay a solved level, play the next one; locked levels do nothing.
+func open_level(id: String) -> bool:
+	if progress.is_solved(id): return replay_board(id)
+	if not progress.level_open(id): return false
+	_mark_transition_start()
+	return open_board(id, true)
+
+## Compatibility alias (QA hook "chapter_list" / old callers): the level map replaced the "Replay a chapter" list.
+func show_chapter_list() -> void:
+	show_level_map()
 
 ## Replay one solved board: mode "replay" (no unlocks, no chapter events, no midgame; hints follow the board).
 func replay_board(id: String) -> bool:
@@ -1310,6 +1387,11 @@ func check_day() -> void:
 ## Second completion attempt on today's daily: always rejected if already baked; streak/total unchanged (V8).
 func retry_today_daily() -> Dictionary:
 	return complete_daily(Clock.local_date())
+
+## Cake piece for the current board (SPEC v1.2): chapter cake, chocolate on the daily, berry on debug boards.
+func board_cake() -> String:
+	if mode == "daily": return Chapters.DAILY_CAKE
+	return Chapters.cake_for(chapter) if chapter > 0 else Chapters.DEFAULT_CAKE
 
 func board_id() -> String:
 	if mode == "daily": return "d-" + (daily.open_date if daily.open_date != "" else "done")

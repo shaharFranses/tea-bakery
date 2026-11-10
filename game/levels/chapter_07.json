@@ -1,7 +1,7 @@
 {
  "chapter": 7,
  "format": "tt-chapter-1",
- "spec": "SPEC v1.0.2 §3.5",
+ "spec": "SPEC v1.1 §3.5",
  "boards": [
   {
    "id": "c7-b1",
@@ -180,6 +180,256 @@
    "seed": 3,
    "gen": "ttgen-0.2",
    "source": "8-g2-0003",
+   "givens": []
+  },
+  {
+   "id": "c7-b6",
+   "size": 8,
+   "regions": [
+    "BBBACCCC",
+    "DBBBCCCC",
+    "DBDCCCCC",
+    "DDDCCCCC",
+    "DDEEECCC",
+    "DDEHHCFF",
+    "EEEHGGGG",
+    "EHHHHGGG"
+   ],
+   "solution": [
+    3,
+    1,
+    6,
+    0,
+    4,
+    7,
+    5,
+    2
+   ],
+   "grade": 2,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4"
+   ],
+   "steps": 17,
+   "seed": 8,
+   "gen": "ttgen-0.2",
+   "source": "8-g2-0008",
+   "givens": []
+  },
+  {
+   "id": "c7-b7",
+   "size": 8,
+   "regions": [
+    "EEEEBCCA",
+    "EEBBBCAA",
+    "EBBBCCAA",
+    "EEFFFDDA",
+    "EEEFFFFH",
+    "EEFFFFHH",
+    "EGGFFFHH",
+    "EGFFFHHH"
+   ],
+   "solution": [
+    7,
+    2,
+    4,
+    6,
+    0,
+    3,
+    1,
+    5
+   ],
+   "grade": 3,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5"
+   ],
+   "steps": 14,
+   "seed": 6,
+   "gen": "ttgen-0.2",
+   "source": "8-g3-0006",
+   "givens": []
+  },
+  {
+   "id": "c7-b8",
+   "size": 8,
+   "regions": [
+    "AAAAABBB",
+    "AACBBBDB",
+    "CCCBBBDB",
+    "CCCBEEDD",
+    "GCCBEEED",
+    "GGGEEEFD",
+    "GGGEEEED",
+    "HGEEEEEE"
+   ],
+   "solution": [
+    3,
+    5,
+    1,
+    7,
+    4,
+    6,
+    2,
+    0
+   ],
+   "grade": 1,
+   "techniques": [
+    "T1",
+    "T2"
+   ],
+   "steps": 8,
+   "seed": 4,
+   "gen": "ttgen-0.2",
+   "source": "8-g1-0003",
+   "givens": []
+  },
+  {
+   "id": "c7-b9",
+   "size": 8,
+   "regions": [
+    "BBBBBBAA",
+    "BBBCCBAD",
+    "BEBCEDDD",
+    "BEEEEEDE",
+    "BEEEEEEE",
+    "FEEEEEEE",
+    "FGGEEEHE",
+    "GGGGHHHE"
+   ],
+   "solution": [
+    7,
+    1,
+    3,
+    6,
+    4,
+    0,
+    2,
+    5
+   ],
+   "grade": 2,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3"
+   ],
+   "steps": 10,
+   "seed": 9,
+   "gen": "ttgen-0.2",
+   "source": "8-g2-0009",
+   "givens": []
+  },
+  {
+   "id": "c7-b10",
+   "size": 8,
+   "regions": [
+    "BBBBCCCA",
+    "BBBBCCCC",
+    "BEEECCCC",
+    "EDEEECCC",
+    "EEEEEECC",
+    "EEEEEFCF",
+    "GGEHHFFF",
+    "GGGGHFFF"
+   ],
+   "solution": [
+    7,
+    2,
+    6,
+    1,
+    3,
+    5,
+    0,
+    4
+   ],
+   "grade": 3,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5"
+   ],
+   "steps": 11,
+   "seed": 7,
+   "gen": "ttgen-0.2",
+   "source": "8-g3-0007",
+   "givens": []
+  },
+  {
+   "id": "c7-b11",
+   "size": 8,
+   "regions": [
+    "BBBBCCAC",
+    "DBDBCCCC",
+    "DDDCCCCC",
+    "DDCCCCCC",
+    "DFCEECCC",
+    "DFFEECCC",
+    "FFFFEEGG",
+    "FFFHEGGG"
+   ],
+   "solution": [
+    6,
+    1,
+    5,
+    0,
+    4,
+    2,
+    7,
+    3
+   ],
+   "grade": 1,
+   "techniques": [
+    "T1",
+    "T2"
+   ],
+   "steps": 8,
+   "seed": 5,
+   "gen": "ttgen-0.2",
+   "source": "8-g1-0004",
+   "givens": []
+  },
+  {
+   "id": "c7-b12",
+   "size": 8,
+   "regions": [
+    "DDDCCCCA",
+    "DBBBCCCA",
+    "DDBCCCEE",
+    "DBBCGEEE",
+    "FBBGGGEE",
+    "FFHGGGGE",
+    "HFHGGGGE",
+    "HHHGGGGG"
+   ],
+   "solution": [
+    7,
+    3,
+    5,
+    0,
+    6,
+    1,
+    4,
+    2
+   ],
+   "grade": 3,
+   "techniques": [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5"
+   ],
+   "steps": 13,
+   "seed": 8,
+   "gen": "ttgen-0.2",
+   "source": "8-g3-0008",
    "givens": []
   }
  ]

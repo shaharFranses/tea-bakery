@@ -23,7 +23,7 @@ const BAND_MAX_ATTEMPTS := 60
 const RULES_TEXT := "One cake in every row, column and color.\nCakes can't touch — not even corners — or they'll stick in the oven!"   # D-02 verbatim
 
 # Chapters / hints / ads (§3.4, §3.5 tunables, §12 D-19)
-const BOARDS_PER_CHAPTER := 5
+const BOARDS_PER_CHAPTER := 12   # SPEC v1.1: 12 levels per chapter (96 levels)
 const CHAPTERS := 8
 const HINTS_FREE_PER_BOARD := 1
 const HINTS_CHAPTER1_UNLIMITED_FREE := true
