@@ -4,7 +4,7 @@ The single "what is current" pointer for this game. Every bot reads this before 
 SM owns the State line; `ci/run.sh` fills in "Last CI"; QA fills in Verdict; PO fills in Portal. Times are Asia/Jerusalem.
 
 ## State
-**State:** active · Stage: 3 thin slice (tutorial + chapters 1-2), **gated local build frozen for TT QA** (local only; no repo, no Pages, no push) · Updated: 2026-11-01 12:40 Asia/Jerusalem, TT Godot Build (re-freeze after the 12:27 box rollback)
+**State:** active · Stage: 3 thin slice (tutorial + chapters 1-2) re-freeze for TT QA (D0-05 / D0-10 fixes) · Repo: github.com/shaharFranses/tea-bakery (exists; SM pushes and deploys, GB never pushes) · Live: Day-0 `ed57fce` on GitHub Pages since 2026-11-01, served files verified against day0-ed57fce (live index.pck sha256 784edc1c…ab67 re-checked 2026-11-10 07:20) · D0-04 ruled satisfied (SM 2026-11-01 20:55) · Updated: 2026-11-10 07:25 Asia/Jerusalem, TT Godot Build
 
 ## Gated build (what QA is testing / has passed)
 This file is committed IN the frozen commit, so the commit cannot name its own sha or the export hashes (the export embeds the
@@ -19,15 +19,15 @@ commit sha and the pck is not byte-reproducible across exports). The frozen comm
 | Release size | 38.71 MB raw on the stock template (index.wasm 35.38 MB, gz 8.00 MB; index.pck 2.98 MB, of which the 8 unused cake sprites excluded saved 0.40 MB; exact bytes in FREEZE.md / SIZE.json) vs 20 MB budget: OVER. Slim variant (PKD slim template, not default): 25.35 MB raw (wasm 22.05 MB). **20 MB is a HARD gate at Portal-kit exit.** |
 | Engine template | **stock** Godot 4.3 web template (default). PKD slim template from Pipeline Ops measured as a variant only |
 | SPEC | v1.0.2 (git ce306b9, SPEC.md sha256 f2065400902881b2c96bcb6cb6645f79454ee8e785404b563052a63fd70dd25a): ch5 "Cherry Bakewell"; D-02 phone rules <=3 lines at >=16 px (board >=352, targets >=44); TT-AC-53 note (engine-loader same-origin export-file loads allowed); Art B2 approved |
-| QA verdict | 2026-11-01 12:25 Asia/Jerusalem · `ed57fce` · local **PASS** (0 FAIL) · live not run (pending repo) · `/workspace/tea-and-tarts-qa/results/ed57fce/QA_VERDICT.md` |
+| QA verdict | 2026-11-01 12:25 Asia/Jerusalem · `ed57fce` · local **PASS** (0 FAIL) · live: see Live QA check row · `/workspace/tea-and-tarts-qa/results/ed57fce/QA_VERDICT.md` |
 
 ## Live
 | Field | Value |
 |---|---|
-| Pages URL | https://shaharfranses.github.io/tea-bakery/ (repo name TBD, likely tea-bakery; not created yet) |
-| Live commit (web/) | ed57fce staged in web/ for the first Pages deploy (DEPLOY.md); not published yet (no repo) |
-| Live pck sha256 == gated? | not checked yet (not published); staged web/ pck sha256 784edc1cc02abb510afc6360429698b5b1ffb3cb4b34283d97785807054aab67 = day0-ed57fce, verified locally; after deploy run tools/verify_served.sh (see FREEZE.md of day0-ed57fce) |
-| Live QA check | not run yet |
+| Pages URL | https://shaharfranses.github.io/tea-bakery/ (repo shaharFranses/tea-bakery; Pages source GitHub Actions, pages.yml manual-only) |
+| Live commit (web/) | ed57fce (frozen day0-ed57fce folder staged byte-for-byte in web/), published 2026-11-01 by SM (main 1d4d1d3, run 41338693610; DEPLOY.md) |
+| Live pck sha256 == gated? | **yes**: live index.pck sha256 784edc1cc02abb510afc6360429698b5b1ffb3cb4b34283d97785807054aab67 == day0-ed57fce SHA256SUMS (QA D0-24 2026-11-01; re-fetched by GB 2026-11-10 07:20, match); live SHA256SUMS == staged web/SHA256SUMS |
+| Live QA check | Tested 2026-11-01 20:55 Asia/Jerusalem · `ed57fce` live https://shaharfranses.github.io/tea-bakery/ (main 1d4d1d3, run 41338693610) · **PASS** (D0-24, D0-25, AN-53, NAME, D0-02 PASS; D0-04 PASS by SM ruling 2026-11-01 20:55; record finalized 2026-11-10, no retest) · D0-26 phone check: link sent to Shahar 2026-11-01, result not recorded · `/workspace/tea-and-tarts-qa/results/ed57fce-live/QA_VERDICT_LIVE.md` |
 | Shahar phone check | not yet |
 
 ## Portal
