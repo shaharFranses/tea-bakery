@@ -4,6 +4,7 @@ usage: game_smoke.py <base_url> <out_dir>
 Checks: board 1 = tutorial (givens, target); b1 -> b2 <= 2 s; hints ch1 free / ch2 rewarded; chapter ends + AD-17 at the
 real slot; save/reload; Home + Recipe Book; gameplayStart fired; phone cap 8x8 / desktop 9x9; real touch taps cycle empty->X->cake;
 conflict highlight; PKD_QA.show('solve') -> won; ?seed=&size= deterministic across reloads; 0 console errors."""
+import math
 import json, os, re, sys
 from playwright.sync_api import sync_playwright
 base, out = sys.argv[1].rstrip("/"), sys.argv[2]; os.makedirs(out, exist_ok=True)
@@ -116,15 +117,16 @@ with sync_playwright() as p:
     d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c2"] = dec
     res["ad17_300_ok_real_chapter2_end"] = bool(dec) and dec[-1]["reason"] == "ok" and dec[-1]["origin"] == "chapter_end"
     res["next_chapter_opens_c3b1"] = d["game"]["board_id"] == "c3-b1" and d["game"]["screen"] == "board"
+    s2 = dec[-1]["session_s"] if dec else 300.0   # anchor the gap edges on the RECORDED ch2 decision (wall-clock slip, as br_smoke)
     ge = finish(3)
     res["chapter3_end_screen"] = ge["screen"] == "chapter_end" and ge["unlocked"]["recipes"] == [1, 2, 3]
     pg.screenshot(path=f"{out}/game_phone_chapter3_end.png")
-    pg.evaluate("window.PKD_QA.set_session_s(479)"); show(pg, "end_next"); pg.wait_for_timeout(1000)
+    pg.evaluate(f"window.PKD_QA.set_session_s({math.floor(s2) + 179})"); show(pg, "end_next"); pg.wait_for_timeout(1000)
     d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c3"] = dec[-1:]
     res["ad17_179_gap_denied_real_chapter3_end"] = dec[-1]["reason"] == "gap<180s" and dec[-1]["origin"] == "chapter_end" and not dec[-1]["allowed"]
     res["next_chapter_opens_c4b1"] = d["game"]["board_id"] == "c4-b1"
     ge = finish(4)
-    pg.evaluate("window.PKD_QA.set_session_s(480)"); show(pg, "end_home"); pg.wait_for_timeout(1500)
+    pg.evaluate(f"window.PKD_QA.set_session_s({math.ceil(s2) + 180})"); show(pg, "end_home"); pg.wait_for_timeout(1500)
     d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c4"] = dec[-1:]
     res["ad17_180_gap_ok_real_chapter4_end"] = dec[-1]["reason"] == "ok" and dec[-1]["origin"] == "chapter_end" and dec[-1]["allowed"]
     res["home_after_chapter_end"] = d["game"]["screen"] == "home"
