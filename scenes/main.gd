@@ -183,6 +183,7 @@ func _ready() -> void:
 	if st != "": _preset_state(st)
 	Ads.hold(true)            # no SDK call / ad until the intro has finished (SD dev a795a1a boot hold)
 	if Dbg.toggle("intro", "1") == "0":
+		print("[PKD] intro skipped (?intro=0)")     # starter D0-16 marker (release too), as starter scenes/main.gd
 		_on_intro_finished.call_deferred()
 	else:
 		var intro := PkdIntro.instantiate()

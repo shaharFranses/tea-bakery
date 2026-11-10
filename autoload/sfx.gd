@@ -18,6 +18,7 @@ var gestured := false     # SPEC §8: audio starts only after the first user ges
 
 func _ready() -> void:
 	disabled = Dbg.toggle("audio", "1") == "0"
+	if disabled: print("[PKD] audio off (?audio=0)")   # starter D0-16 marker (release too), as starter autoload/sfx.gd
 	if AudioServer.get_bus_index("Music") < 0:
 		AudioServer.add_bus(); AudioServer.set_bus_name(AudioServer.bus_count - 1, "Music")
 		AudioServer.set_bus_send(AudioServer.bus_count - 1, "Master"); AudioServer.set_bus_volume_db(AudioServer.bus_count - 1, -12.0)

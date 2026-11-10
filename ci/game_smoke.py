@@ -130,9 +130,12 @@ with sync_playwright() as p:
         show(pg, "skip"); pg.wait_for_timeout(500); return dump(pg)["game"]
     ge = finish(2)
     res["chapter2_end_has_next"] = ge["screen"] == "chapter_end" and ge["unlocked"]["recipes"] == [1, 2] and next(u for u in ge["ui"] if u["name"] == "EndNext")["visible"]
-    pg.evaluate("window.PKD_QA.set_session_s(300)"); show(pg, "end_next"); pg.wait_for_timeout(1500)
+    pg.evaluate("window.PKD_QA.set_session_s(300)"); show(pg, "end_next")
+    try: pg.wait_for_function("() => { const g = JSON.parse(window.PKD_QA.dump()).game; return g.board_id == 'c3-b1' && g.screen == 'board' }", timeout=10000)   # mock ad, then Next (was a fixed 1.5 s wait: flaked once on 46b0176)
+    except Exception: pass
     d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c2"] = dec
     res["ad17_300_ok_real_chapter2_end"] = bool(dec) and dec[-1]["reason"] == "ok" and dec[-1]["origin"] == "chapter_end"
+    notes["after_c2_end_next"] = {k: d["game"].get(k) for k in ("board_id", "screen", "card_open", "interactive")}
     res["next_chapter_opens_c3b1"] = d["game"]["board_id"] == "c3-b1" and d["game"]["screen"] == "board"
     s2 = dec[-1]["session_s"] if dec else 300.0   # anchor the gap edges on the RECORDED ch2 decision (wall-clock slip, as br_smoke)
     ge = finish(3)
@@ -143,7 +146,9 @@ with sync_playwright() as p:
     res["ad17_179_gap_denied_real_chapter3_end"] = dec[-1]["reason"] == "gap<180s" and dec[-1]["origin"] == "chapter_end" and not dec[-1]["allowed"]
     res["next_chapter_opens_c4b1"] = d["game"]["board_id"] == "c4-b1"
     ge = finish(4)
-    pg.evaluate(f"window.PKD_QA.set_session_s({math.ceil(s2) + 180})"); show(pg, "end_home"); pg.wait_for_timeout(1500)
+    pg.evaluate(f"window.PKD_QA.set_session_s({math.ceil(s2) + 180})"); show(pg, "end_home")
+    try: pg.wait_for_function("() => JSON.parse(window.PKD_QA.dump()).game.screen == 'home'", timeout=10000)
+    except Exception: pass
     d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c4"] = dec[-1:]
     res["ad17_180_gap_ok_real_chapter4_end"] = dec[-1]["reason"] == "ok" and dec[-1]["origin"] == "chapter_end" and dec[-1]["allowed"]
     res["home_after_chapter_end"] = d["game"]["screen"] == "home"
