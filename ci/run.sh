@@ -54,6 +54,7 @@ importcheck() { local T; T=$(mktemp -d "$PKD_WORK_DIR/tt_import.XXXXXX"); git ls
   rm -rf "$T"; echo "import rc=$rc, $(wc -l < "$R/import_check.log") log lines"
   if grep -nE 'Parse Error|SCRIPT ERROR|ERROR:|Unicode parsing error' "$R/import_check.log"; then echo "FAIL: errors in headless import"; return 1; fi
   echo "headless import clean (0 Parse Error / SCRIPT ERROR / ERROR: / Unicode parsing error)"; }
+music_loop() { python3 tools/check_music_loop.py assets/audio/music_loop.ogg "$R/music_loop_check.json"; }   # §8 loop seam / size / level
 packs() { $GODOT --headless --path "$ROOT" -s tools/validate_boards.gd -- "$R/validate_boards.json" 2>&1 | grep -E 'validate_boards|SCRIPT ERROR|ERROR:'; python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d['pass'] and d['chapter_boards']==40 and d['daily_boards']==400 else 1)" "$R/validate_boards.json"; }   # H5: every shipped board re-verified
 build() { tools/build_web.sh debug build/web-debug && tools/build_web.sh release build/web-release; }
 # D0-05 (QA thin-4758b99 FAIL, SM 11-01): AFTER the export, the top-level build/.gdignore must exist in this export tree.
@@ -98,6 +99,7 @@ step 0 preflight preflight
 step 1 "GUT tests" tests
 step 1b "headless import of all scripts, fresh checkout (fail on Parse Error / SCRIPT ERROR / ERROR:)" importcheck
 step 1c "pack verification: 40 chapter + 400 daily boards (unique, stored solution, grade, distinct)" packs
+step 1d "music loop: 30-60 s, < 600 KB, quiet, seamless seam (no click)" music_loop
 if [ $NOBUILD = 0 ]; then step 2 "web export (debug+release)" build; fi
 step 2b "gdignore check: top-level build/.gdignore exists after export (D0-05)" gdignore_check
 step 2c "brand check: PKD boot splash/icon/boot colour in the export, no Godot default (D0-10)" brand_check

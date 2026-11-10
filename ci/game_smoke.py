@@ -34,7 +34,11 @@ with sync_playwright() as p:
     res["tutorial_givens_and_target"] = len(g["givens"]) >= 3 and len(g["targets"]) == 1 and g["coach"] != ""
     res["phone_gameplay_started"] = g["gameplay_started"] is True and any("gameplayStart" in h for h in d["hitlog"])
     res["phone_max_size_8"] = g["max_size"] == 8
+    m0 = g["music"]; notes["music_before_gesture"] = m0   # SPEC §8: the loop starts only after the first gesture
+    res["music_asset_loop_no_play_before_gesture"] = m0["asset"] is True and m0["loop"] is True and m0["gestured"] is False and m0["playing"] is False
     gx, gy = g["givens"][0]; pg.touchscreen.tap(*cell_xy(g, gx, gy)); pg.wait_for_timeout(300)
+    m1 = dump(pg)["game"]["music"]; notes["music_after_first_tap"] = m1
+    res["music_starts_on_first_tap"] = m1["gestured"] is True and m1["playing"] is True and m1["on"] is True
     res["given_cake_immutable"] = dump(pg)["game"]["cells"][gx * 5 + gy] == "cake"
     pg.screenshot(path=f"{out}/game_phone_tutorial.png")
     # real taps on the tutorial target: mold, cake -> solved card -> c1-b2 interactive <= 2.0 s
