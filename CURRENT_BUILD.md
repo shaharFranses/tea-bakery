@@ -12,7 +12,7 @@ commit sha and the pck is not byte-reproducible across exports). The frozen comm
 (the day-0 re-freeze commit); its sha, the pck/zip md5+sha256 and the folder are in the gate folder's FREEZE.md.
 | Field | Value |
 |---|---|
-| Commit | see FREEZE.md (the thin-slice re-freeze commit on `main` after thin-4758b99: D0-05 / D0-10 fixes + the step-3 work on main; built from a clean clone) |
+| Commit | see FREEZE.md (the thin-slice re-freeze commit on `main` after the thin-07f7ba8 QA FAIL: S1-01 daily:today / S2-01 HN-47 idle pulse fixes + the §8 music loop; built from a clean clone) |
 | Gate folder | see FREEZE.md (`/workspace/tea-and-tarts-gates/thin-` + the frozen short sha; read-only; contains the frozen Web Release dir + SHA256SUMS, `web-debug/`, the CG zip + .md5/.sha256, `GATE_PACKET.md`, `d023_check.txt`, changelog, slim variant, `FREEZE.md`) |
 | Built from | a clean `git clone` checked out at that commit (`ci/run.sh --gate`, slug from ./SLUG = tea-bakery) |
 | index.pck sha256 | see FREEZE.md (also SHA256SUMS in the frozen release dir and GATE_PACKET.md; sha256 authoritative, md5 cross-check) |
@@ -47,5 +47,5 @@ commit sha and the pck is not byte-reproducible across exports). The frozen comm
 
 ## Last CI (auto)
 <!-- ci:begin -->
-2026-11-10 07:55: CI **PASS** on `f4e00db` · release 38.83 MB (wasm 35.38 MB) · packet `qa/results/ci-f4e00db/GATE_PACKET.md`
+2026-11-10 10:01: CI **PASS** on `621c82b` (3/3 consecutive runs) · release 38.97 MB (wasm 35.38 MB) · packet `qa/results/ci-621c82b/GATE_PACKET.md`
 <!-- ci:end -->
