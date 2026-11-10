@@ -20,5 +20,6 @@ Commit: `{sha}` (`{full}`), built by `ci/run.sh --gate` from a clean `git clone`
 
 Sizes (stock template = default): raw {raw / 1e6:.2f} MB; index.wasm {f.get('index.wasm', 0) / 1e6:.2f} MB; index.pck {f.get('index.pck', 0) / 1e6:.2f} MB.
 SHA256SUMS in `{sha}/` is authoritative for the served files.
+D0-05 evidence (QA run_day0.sh): EXPORT_TREE=`{os.environ.get("PKD_EXPORT_TREE", os.getcwd())}` (post-export tree; `build/.gdignore` present: {os.path.exists(os.path.join(os.environ.get("PKD_EXPORT_TREE", os.getcwd()), "build", ".gdignore"))}), EXPORT_LOG=`{os.environ.get("PKD_EXPORT_LOG", "")}` (names build/.gdignore); CI step 2b log alongside it.
 """
 open(out, "w").write(md); print(out)

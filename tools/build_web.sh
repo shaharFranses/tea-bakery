@@ -31,6 +31,10 @@ s = s.replace('<head>', '<head>\n<script>window.__PKD_BUILD = %r;</script>' % bi
 open(p, 'w').write(s); print('build id', bid)
 PY
 touch "$OUT/.nojekyll"; : > "$OUT/.gdignore"
+# D0-05 (QA thin-4758b99 FAIL): re-assert the TOP-LEVEL marker AFTER the export and name it in the export log, so the
+# post-export tree and the export log both prove it (QA run_day0.sh EXPORT_TREE / EXPORT_LOG grep 'build/.gdignore').
+mkdir -p "$ROOT/build" && : > "$ROOT/build/.gdignore"
+test -e "$ROOT/build/.gdignore" && echo "D0-05: build/.gdignore present after export ($ROOT/build/.gdignore)" || { echo "D0-05: build/.gdignore MISSING after export"; exit 1; }
 gzip -9 -k -f "$OUT/index.wasm" "$OUT/index.pck"
 python3 - "$OUT" "$VAR" "$SHA" "$BID" <<'PY'
 import json, os, sys, hashlib
