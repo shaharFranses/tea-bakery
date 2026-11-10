@@ -45,10 +45,31 @@ static func local_date() -> String:
 static func local_datetime() -> String:
 	return Time.get_datetime_string_from_unix_time(local_unix())
 
-## "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM[:SS]" (device-local). Returns false on a bad string.
+## True for a plain "YYYY-MM-DD" (checked BEFORE any Godot ISO parser call: a bad string there logs a USER ERROR).
+static func is_iso_date(s: String) -> bool:
+	if s.length() != 10 or s[4] != "-" or s[7] != "-": return false
+	for i in [0, 1, 2, 3, 5, 6, 8, 9]:
+		if not s[i].is_valid_int(): return false
+	var y := s.substr(0, 4).to_int(); var m := s.substr(5, 2).to_int(); var d := s.substr(8, 2).to_int()
+	if m < 1 or m > 12 or d < 1: return false
+	var dim := [31, 29 if (y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+	return d <= dim[m - 1]
+
+## QA/debug date argument -> "YYYY-MM-DD", or "" if it is not a date. "today" / "now" / "" resolve to local_date(),
+## which already honours a set_date override (S1-01: PKD_QA.show("daily:today")).
+static func resolve_date(s: String) -> String:
+	var t := s.strip_edges().to_lower()
+	if t in ["", "today", "now"]: return local_date()
+	return s.strip_edges() if is_iso_date(s.strip_edges()) else ""
+
+## "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM[:SS]" (device-local). Returns false on a bad string (no parser call, no USER ERROR).
 static func set_local_now(s: String) -> bool:
 	var t := s if "T" in s else s + "T12:00:00"
 	if t.length() == 16: t += ":00"
+	if t.length() != 19 or not is_iso_date(t.substr(0, 10)) or t[10] != "T" or t[13] != ":" or t[16] != ":": return false
+	for i in [11, 12, 14, 15, 17, 18]:
+		if not t[i].is_valid_int(): return false
+	if t.substr(11, 2).to_int() > 23 or t.substr(14, 2).to_int() > 59 or t.substr(17, 2).to_int() > 59: return false
 	var u := Time.get_unix_time_from_datetime_string(t)
 	if u == 0 and not t.begins_with("1970-01-01"): return false
 	_now_override_unix = u; _now_override_ticks = Time.get_ticks_msec()

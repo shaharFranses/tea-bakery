@@ -45,7 +45,7 @@ preflight() {
   python3 -c "import datetime as d; w=d.date(2026,11,2)+d.timedelta(400); t=d.date.today(); print(('WARN: daily pool wraps on %s (today+60 >= wrap; TT-AC-10)' if t+d.timedelta(60)>=w else 'daily pool wrap date %s (no warn)') % w)"
   echo preflight ok; }
 tests() { $GODOT --headless --path "$ROOT" --import >/dev/null 2>&1; out=$($GODOT --headless --path "$ROOT" -s addons/gut/gut_cmdln.gd -gexit 2>&1); echo "$out" | sed 's/\x1b\[[0-9;]*m//g' | tail -20
-  echo "$out" | grep -q 'SCRIPT ERROR' && { echo "SCRIPT ERROR counts as FAIL (SD build retro)"; return 1; }
+  echo "$out" | grep -nE 'SCRIPT ERROR|Parse Error|ERROR:' && { echo "SCRIPT ERROR / Parse Error / ERROR: in the GUT log counts as FAIL (SD build retro)"; return 1; }
   echo "$out" | grep -q 'All tests passed'; }
 # Fresh-checkout headless import of every tracked file (no .godot cache) = what the editor / a clean clone sees. Catches
 # warnings-as-errors and unicode problems GUT's runner does not surface (QA 10-25: test_tap_order Variant inference; 0xA7).
