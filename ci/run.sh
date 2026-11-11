@@ -21,7 +21,8 @@ SHA=$(git rev-parse --short HEAD); R="qa/results/ci-$SHA"; mkdir -p "$R"
 FAILS=(); STEPS=()
 step() { local n=$1 name=$2; shift 2; if [ -f "$R/step-$n.done" ] && [ "${PKD_FORCE:-0}" != 1 ]; then echo "== [$n] $name: done earlier (resume)"; STEPS+=("$name: PASS (cached)"); return 0; fi
   echo "== [$n] $name"; if "$@" > "$R/step-$n.log" 2>&1; then touch "$R/step-$n.done"; STEPS+=("$name: PASS"); tail -3 "$R/step-$n.log";
-  else STEPS+=("$name: FAIL (see $R/step-$n.log)"); FAILS+=("$name"); tail -15 "$R/step-$n.log"; fi; }
+  else STEPS+=("$name: FAIL (see $R/step-$n.log)"); FAILS+=("$name"); tail -15 "$R/step-$n.log"
+    grep -n '^FAIL' "$R/step-$n.log" | head -20 | sed 's/^/  failed check: /'; fi; }   # name every failed check, not only the last 15 lines
 
 if [ -n "$LIVE" ]; then
   G=$(ls -d /workspace/$SLUG-gated/$SHA 2>/dev/null || true)
@@ -55,7 +56,7 @@ importcheck() { local T; T=$(mktemp -d "$PKD_WORK_DIR/tt_import.XXXXXX"); git ls
   if grep -nE 'Parse Error|SCRIPT ERROR|ERROR:|Unicode parsing error' "$R/import_check.log"; then echo "FAIL: errors in headless import"; return 1; fi
   echo "headless import clean (0 Parse Error / SCRIPT ERROR / ERROR: / Unicode parsing error)"; }
 music_loop() { python3 tools/check_music_loop.py assets/audio/music_loop.ogg "$R/music_loop_check.json"; }   # §8 loop seam / size / level
-packs() { $GODOT --headless --path "$ROOT" -s tools/validate_boards.gd -- "$R/validate_boards.json" 2>&1 | grep -E 'validate_boards|SCRIPT ERROR|ERROR:'; python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d['pass'] and d['chapter_boards']==40 and d['daily_boards']==400 else 1)" "$R/validate_boards.json"; }   # H5: every shipped board re-verified
+packs() { $GODOT --headless --path "$ROOT" -s tools/validate_boards.gd -- "$R/validate_boards.json" 2>&1 | grep -E 'validate_boards|SCRIPT ERROR|ERROR:'; python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d['pass'] and d['chapter_boards']==96 and d['daily_boards']==400 else 1)" "$R/validate_boards.json"; }   # H5: every shipped board re-verified
 build() { tools/build_web.sh debug build/web-debug && tools/build_web.sh release build/web-release; }
 # D0-05 (QA thin-4758b99 FAIL, SM 11-01): AFTER the export, the top-level build/.gdignore must exist in this export tree.
 gdignore_check() { local t="$ROOT/build/.gdignore"; echo "export tree: $ROOT"; echo "export log: $ROOT/$R/step-2.log"
@@ -98,7 +99,7 @@ gate() { G=$(tools/freeze_gate.sh build/web-release "$SLUG" | tail -1) && echo "
 step 0 preflight preflight
 step 1 "GUT tests" tests
 step 1b "headless import of all scripts, fresh checkout (fail on Parse Error / SCRIPT ERROR / ERROR:)" importcheck
-step 1c "pack verification: 40 chapter + 400 daily boards (unique, stored solution, grade, distinct)" packs
+step 1c "pack verification: 96 chapter + 400 daily boards (unique, stored solution, grade, distinct)" packs
 step 1d "music loop: 30-60 s, < 600 KB, quiet, seamless seam (no click)" music_loop
 if [ $NOBUILD = 0 ]; then step 2 "web export (debug+release)" build; fi
 step 2b "gdignore check: top-level build/.gdignore exists after export (D0-05)" gdignore_check

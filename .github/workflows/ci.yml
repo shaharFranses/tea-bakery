@@ -1,0 +1,71 @@
+# CI for every pull request and every push to main: runs the same ci/run.sh the build box runs (preflight, spec assert,
+# GUT tests, fresh-checkout import, 496-board validation, music loop, debug + release web export, release audit, and
+# the Chrome smokes: boot / console-zero, game flow, responsive layout, BR hooks, net calls, banned text, release flags).
+# It never deploys and never gates: Pages only changes through pages.yml (manual). Added after the per-chapter cake
+# sprites were found missing from the web export only by a hand-made build (PR #3): the export + boot smoke catch that.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  GODOT_VERSION: 4.3-stable
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache Godot 4.3 + web export templates
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates/4.3.stable
+          key: godot-${{ env.GODOT_VERSION }}-web-v1
+      - name: Download Godot 4.3 + web export templates
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          B=https://github.com/godotengine/godot/releases/download/$GODOT_VERSION
+          mkdir -p ~/godot ~/.local/share/godot/export_templates/4.3.stable
+          curl -fsSL -o /tmp/godot.zip "$B/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          unzip -q -o /tmp/godot.zip -d ~/godot
+          mv ~/godot/Godot_v${GODOT_VERSION}_linux.x86_64 ~/godot/godot
+          curl -fsSL -o /tmp/tpl.tpz "$B/Godot_v${GODOT_VERSION}_export_templates.tpz"
+          unzip -q -j -o /tmp/tpl.tpz 'templates/web_*' 'templates/version.txt' -d ~/.local/share/godot/export_templates/4.3.stable
+          rm -f /tmp/godot.zip /tmp/tpl.tpz
+      - name: Tools (Godot on PATH, Python packages, ffmpeg)
+        run: |
+          set -euo pipefail
+          chmod +x ~/godot/godot && echo "$HOME/godot" >> "$GITHUB_PATH"
+          python3 -m pip install --quiet --break-system-packages playwright zstandard pillow numpy
+          command -v ffmpeg >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }   # tools/check_music_loop.py decodes the loop
+          google-chrome --version
+      - name: Spec assert
+        run: python3 spec/spec_assert.py
+      - name: ci/run.sh (tests, export, browser smokes)
+        env:
+          PKD_PY: python3
+          PKD_ZPY: python3
+          PKD_CHROME: /usr/bin/google-chrome
+        # ci/run.sh is resumable per step: a second call re-runs only the steps that failed. One retry absorbs timing
+        # spikes on software-rendered runners (TT-AC-25 "next level interactive <= 2.0 s" sits near its limit there:
+        # medians 1.81-2.04 s over 6 local runs, before and after the v1.1-v1.4 changes); a real break fails twice.
+        run: |
+          export PKD_WORK_DIR="$RUNNER_TEMP/pkd-work"
+          ci/run.sh || { echo "::warning::ci/run.sh failed once; retrying the failed steps"; ci/run.sh; }
+      - name: Upload CI results (logs, screenshots, gate packet)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-results
+          path: qa/results/ci-*
+          if-no-files-found: ignore
+          retention-days: 14

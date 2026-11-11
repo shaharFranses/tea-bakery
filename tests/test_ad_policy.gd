@@ -96,3 +96,29 @@ func test_ad17_edges_299_300_and_179_180_spec_reasons():
 	assert_eq(e.reason, "rewarded_since_b5")
 	assert_eq(seen.keys().size(), REASONS.size(), "all 10 spec reasons exercised")
 	for r in seen: assert_true(r in REASONS, "reason %s in the spec enum" % r)
+
+## SPEC v1.4 level-break slot: due after b4 and b8 only; same floors as the chapter-end slot; shares the 180 s gap.
+func test_level_break_slot():
+	assert_eq(Cfg.ADS_LEVEL_BREAK_EVERY, 4)
+	var due := []
+	for b in range(1, 13): if AdPolicy.level_break_due(b, 12): due.append(b)
+	assert_eq(due, [4, 8], "b12 is the chapter end, not a level break")
+	assert_false(AdPolicy.level_break_due(0, 12))
+	var floor_ms: int = Cfg.ADS_MIN_SESSION_MS_BEFORE_INTERSTITIAL; var gap_ms: int = Cfg.ADS_CG_MIDGAME_CAP_MS
+	var p = AdPolicy.new(0, 0)
+	var e = p.decide(1, floor_ms * 3, true, "level_break")
+	assert_eq([e.allowed, e.reason, e.origin], [false, "chapter1_not_done", "level_break"], "no ads inside chapter 1")
+	p.on_chapter_completed(1)
+	e = p.decide(2, floor_ms - 1000, true, "level_break"); assert_eq(e.reason, "session_s<300")
+	e = p.decide(2, floor_ms, true, "level_break")
+	assert_eq([e.allowed, e.reason], [true, "ok"], "chapter 2 in progress, chapter 1 done: allowed")
+	e = p.decide(2, floor_ms + gap_ms - 1000, true, "level_break"); assert_eq(e.reason, "gap<180s")
+	p.on_chapter_completed(2)
+	e = p.decide(2, floor_ms + gap_ms - 1, true, "chapter_end"); assert_eq(e.reason, "gap<180s", "one shared gap for both slots")
+	e = p.decide(2, floor_ms + gap_ms, true, "chapter_end"); assert_true(e.allowed)
+	e = p.decide(3, 9000 * 1000, true, "level_break", "replay"); assert_eq(e.reason, "replay")
+	e = p.decide(3, 9000 * 1000, true, "level_break", "daily"); assert_eq(e.reason, "daily")
+	e = p.decide(3, 9000 * 1000, false, "level_break"); assert_eq(e.reason, "ad_unavailable")
+	p.on_board_start(); p.on_hint_used("rewarded")
+	e = p.decide(3, 9000 * 1000, true, "level_break"); assert_eq(e.reason, "rewarded_since_b5")
+	e = p.decide(3, 9000 * 1000, true, "board_end"); assert_eq(e.reason, "not_chapter_end", "any other origin is still refused")

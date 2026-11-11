@@ -1053,6 +1053,13 @@ func _after_card() -> void:
 	if mode == "daily": show_home(); return
 	if mode == "free": board.stop_bake(); if intro_done: Ads.set_context("play"); return
 	if board_no < Chapters.BOARDS:
+		# SPEC v1.4 level-break slot: after b4 / b8 of a chapter on first play, same floors as the chapter-end slot
+		if mode == "chapter" and AdPolicy.level_break_due(board_no, Chapters.BOARDS):
+			var nxt := "c%d-b%d" % [chapter, board_no + 1]
+			var e := level_break_slot()
+			if e.allowed:
+				await Ads.midgame("level_break")
+				if screen != "board" or board_id() == nxt: return   # the player left (or already moved on) during the ad
 		_mark_transition_start()
 		open_board("c%d-b%d" % [chapter, board_no + 1])
 	elif mode == "chapter" or (_card_first and progress.chapter_done(chapter) and not (chapter in progress.recipes)):
@@ -1162,6 +1169,12 @@ func replay_board(id: String) -> bool:
 func chapter_end_slot(ch: int) -> Dictionary:
 	var m := mode if mode in ["daily", "replay"] else "chapter"
 	var e: Dictionary = ad_policy.decide(ch, Clock.session_ms(), Ads.available(), "chapter_end", m, Clock.session_started())
+	Ads.decided.emit(e)
+	return e
+
+## Midgame decision at the level-break slot (SPEC v1.4; logged like every decision, BR-3).
+func level_break_slot() -> Dictionary:
+	var e: Dictionary = ad_policy.decide(chapter, Clock.session_ms(), Ads.available(), "level_break", "chapter", Clock.session_started())
 	Ads.decided.emit(e)
 	return e
 

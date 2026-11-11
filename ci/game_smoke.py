@@ -105,7 +105,10 @@ with sync_playwright() as p:
     pg.screenshot(path=f"{out}/game_phone_chapter_end.png")
     pg.evaluate("window.PKD_QA.set_session_s(299)"); show(pg, "end_next"); pg.wait_for_timeout(800)
     d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c1"] = dec
-    res["ad17_299_denied_real_chapter_end"] = len(dec) == 1 and dec[0]["reason"] == "session_s<300" and dec[0]["origin"] == "chapter_end"
+    ce = [e for e in dec if e["origin"] == "chapter_end"]; lb = [e for e in dec if e["origin"] == "level_break"]
+    res["ad17_299_denied_real_chapter_end"] = len(ce) == 1 and ce[0]["reason"] == "session_s<300"
+    # SPEC v1.4: the level-break slot (after b4 / b8) is decided and denied inside chapter 1 (no ads before chapter 1 ends)
+    res["level_break_denied_in_ch1"] = [e["reason"] for e in lb] == ["chapter1_not_done", "chapter1_not_done"] and len(dec) == 3
     res["next_chapter_opens_c2b1"] = d["game"]["board_id"] == "c2-b1" and d["game"]["screen"] == "board"
     # ch2 hints: 1 free, then rewarded confirm (mock ads available)
     pg.close(); pg = boot(ctx, "qa=1&intro=0&ads=mock_available"); g = dump(pg)["game"]
@@ -146,7 +149,10 @@ with sync_playwright() as p:
     d = dump(pg); dec = d["ads_decisions"]; notes["ads_decisions_c3"] = dec[-1:]
     res["ad17_179_gap_denied_real_chapter3_end"] = dec[-1]["reason"] == "gap<180s" and dec[-1]["origin"] == "chapter_end" and not dec[-1]["allowed"]
     res["next_chapter_opens_c4b1"] = d["game"]["board_id"] == "c4-b1"
+    pg.evaluate(f"window.PKD_QA.set_session_s({math.floor(s2) + 60})")   # keep the ch4 level breaks (b4, b8) inside the 180 s gap: denied
     ge = finish(4)
+    lb4 = [e for e in dump(pg)["ads_decisions"] if e["origin"] == "level_break"][-2:]
+    res["level_break_gap_denied_in_ch4"] = [e["reason"] for e in lb4] == ["gap<180s", "gap<180s"]
     pg.evaluate(f"window.PKD_QA.set_session_s({math.ceil(s2) + 180})"); show(pg, "end_home")
     try: pg.wait_for_function("() => JSON.parse(window.PKD_QA.dump()).game.screen == 'home'", timeout=10000)
     except Exception: pass
@@ -156,6 +162,20 @@ with sync_playwright() as p:
     hd = next(u for u in d["game"]["ui"] if u["name"] == "HomeDaily")
     res["home_daily_unlocked_after_c1"] = hd["enabled"] is True
     pg.screenshot(path=f"{out}/game_phone_home.png")
+    # SPEC v1.4 level-break slot allowed: ch5 b1..b4 on first play, 200 s after the ch4-end ad -> after b4 the mock ad
+    # plays (origin level_break), then c5-b5 opens; b1..b3 transitions decide nothing.
+    n0 = len(d["ads_decisions"]); s4 = dec[-1]["session_s"]
+    pg.evaluate(f"window.PKD_QA.set_session_s({math.ceil(s4) + 200})")
+    for b in range(1, 5):
+        show(pg, f"board:c5-b{b}"); show(pg, "solve"); pg.wait_for_timeout(100)
+        if b < 4: show(pg, "skip")
+    show(pg, "skip")
+    try: pg.wait_for_function("() => { const g = JSON.parse(window.PKD_QA.dump()).game; return g.board_id == 'c5-b5' && g.screen == 'board' }", timeout=10000)
+    except Exception: pass
+    d5 = dump(pg); new = d5["ads_decisions"][n0:]; notes["ads_decisions_c5_break"] = new
+    res["level_break_ok_after_c5_b4"] = len(new) == 1 and new[0]["origin"] == "level_break" and new[0]["allowed"] and new[0]["reason"] == "ok"
+    res["level_break_midgame_requested"] = any(isinstance(e, dict) and e.get("kind") == "midgame" and e.get("origin") == "level_break" for e in d5["game"]["ads_log"])
+    res["level_break_then_next_level"] = d5["game"]["board_id"] == "c5-b5"
     show(pg, "recipe_book"); pg.wait_for_timeout(400); gb = dump(pg)["game"]
     res["recipe_book_screen"] = gb["screen"] == "recipe_book" and gb["backdrop"] is True
     pg.screenshot(path=f"{out}/game_phone_recipe_book.png")
