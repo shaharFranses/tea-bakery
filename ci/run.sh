@@ -21,7 +21,8 @@ SHA=$(git rev-parse --short HEAD); R="qa/results/ci-$SHA"; mkdir -p "$R"
 FAILS=(); STEPS=()
 step() { local n=$1 name=$2; shift 2; if [ -f "$R/step-$n.done" ] && [ "${PKD_FORCE:-0}" != 1 ]; then echo "== [$n] $name: done earlier (resume)"; STEPS+=("$name: PASS (cached)"); return 0; fi
   echo "== [$n] $name"; if "$@" > "$R/step-$n.log" 2>&1; then touch "$R/step-$n.done"; STEPS+=("$name: PASS"); tail -3 "$R/step-$n.log";
-  else STEPS+=("$name: FAIL (see $R/step-$n.log)"); FAILS+=("$name"); tail -15 "$R/step-$n.log"; fi; }
+  else STEPS+=("$name: FAIL (see $R/step-$n.log)"); FAILS+=("$name"); tail -15 "$R/step-$n.log"
+    grep -n '^FAIL' "$R/step-$n.log" | head -20 | sed 's/^/  failed check: /'; fi; }   # name every failed check, not only the last 15 lines
 
 if [ -n "$LIVE" ]; then
   G=$(ls -d /workspace/$SLUG-gated/$SHA 2>/dev/null || true)
