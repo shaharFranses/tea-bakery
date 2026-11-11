@@ -19,6 +19,7 @@ func test_ads_tunables_match_spec():
 	assert_eq(Cfg.ADS_CG_MIDGAME_CAP_MS, int(a.min_gap_between_midgame_s) * 1000)
 	assert_eq(Cfg.ADS_FIRST_INTERSTITIAL_AFTER_CHAPTER, int(a.first_interstitial_after_chapter))
 	assert_eq(Cfg.ADS_INTERSTITIAL_AFTER_DAILY, bool(a.interstitial_after_daily))
+	assert_eq(Cfg.ADS_LEVEL_BREAK_EVERY, int(a.level_break_every))
 	assert_eq(Cfg.ADS_REWARDED_USES, a.rewarded_uses)
 	var synced = JSON.parse_string(FileAccess.get_file_as_string("res://data/spec_tunables.json")).ads
 	assert_eq(synced, a, "data/spec_tunables.json in sync with the spec")

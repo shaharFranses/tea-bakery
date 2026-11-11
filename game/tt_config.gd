@@ -32,6 +32,7 @@ const ADS_FIRST_INTERSTITIAL_AFTER_CHAPTER := 1
 # nothing is ever timer-triggered. tests/test_spec_tunables.gd checks these values against the spec.
 const ADS_MIN_SESSION_MS_BEFORE_INTERSTITIAL := 300000
 const ADS_CG_MIDGAME_CAP_MS := 180000           # SPEC v1.0 §3.5 min_gap_between_midgame_s (game-enforced, U2)
+const ADS_LEVEL_BREAK_EVERY := 4                # SPEC v1.4: a 2nd midgame slot after every 4th level of a chapter (b4, b8)
 const ADS_INTERSTITIAL_AFTER_DAILY := false
 const ADS_REWARDED_USES := ["hint"]
 

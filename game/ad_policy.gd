@@ -6,7 +6,10 @@
 ##    previous midgame request (both game-enforced, SPEC v1.0 U2); no round-count or timer-triggered midgame:
 ##    decide() only runs at the chapter-end slot;
 ##    and no rewarded ad since that chapter's last board started; every decision has a reason (decide());
-##  - never after a single board, never after the daily, never in the tutorial;
+##  - SPEC v1.4: a second slot, origin "level_break", between levels after every ADS_LEVEL_BREAK_EVERY-th level of a
+##    chapter (b4, b8; never b12, that is the chapter end), same floors (chapter 1 done, session >= 300 s, gap >= 180 s,
+##    no rewarded ad on that board, first play only);
+##  - never after any other board, never after the daily, never in the tutorial;
 ##  - rewarded only for hints: chapter 1 hints free + unlimited; later 1 free per board, then rewarded (if available).
 extends RefCounted
 
@@ -32,9 +35,15 @@ func on_board_start() -> void:
 func on_chapter_completed(chapter: int) -> void:
 	chapters_completed = max(chapters_completed, chapter)
 
-## Between boards: always "none" (interstitials only at chapter ends).
+## Offer between two boards outside a slot: always "none" (interstitials only at chapter ends and level breaks).
 func board_end_offer(_mode: String = "chapter") -> String:
 	return "none"
+
+## Is the transition after board `board_no` (1-based, first play of a chapter board) a level-break slot? b4 and b8
+## with ADS_LEVEL_BREAK_EVERY = 4 and 12 boards; never the chapter's last board (that is the chapter-end slot).
+static func level_break_due(board_no: int, boards_in_chapter: int) -> bool:
+	var k: int = Cfg.ADS_LEVEL_BREAK_EVERY
+	return k > 0 and board_no > 0 and board_no < boards_in_chapter and board_no % k == 0
 
 ## Chapter-end slot (player taps "Next chapter" / "Home" on the chapter-end screen): "midgame" or "none".
 ## now_ms is on the session clock base passed to _init (tests use a fake clock).
@@ -47,10 +56,12 @@ func chapter_end_offer(chapter: int, now_ms: int, ads_available: bool) -> String
 ## The 180 s gap is game-enforced and counts from the previous allowed REQUEST. Check order = enum order of precedence.
 func decide(chapter: int, session_ms: int, ads_available: bool, origin: String = "chapter_end", mode: String = "chapter", session_started: bool = true) -> Dictionary:
 	var reason := "ok"
-	if origin != "chapter_end": reason = "not_chapter_end"                       # never after a board / tutorial / timer
+	var brk := origin == "level_break"                                           # SPEC v1.4 slot (caller checks level_break_due)
+	if origin != "chapter_end" and not brk: reason = "not_chapter_end"           # never after another board / tutorial / timer
 	elif mode == "daily": reason = "daily"
 	elif mode == "replay": reason = "replay"
-	elif chapter < Cfg.ADS_FIRST_INTERSTITIAL_AFTER_CHAPTER or chapters_completed < maxi(chapter, Cfg.ADS_FIRST_INTERSTITIAL_AFTER_CHAPTER): reason = "chapter1_not_done"
+	elif brk and chapters_completed < Cfg.ADS_FIRST_INTERSTITIAL_AFTER_CHAPTER: reason = "chapter1_not_done"
+	elif not brk and (chapter < Cfg.ADS_FIRST_INTERSTITIAL_AFTER_CHAPTER or chapters_completed < maxi(chapter, Cfg.ADS_FIRST_INTERSTITIAL_AFTER_CHAPTER)): reason = "chapter1_not_done"
 	elif not session_started: reason = "before_first_gameplayStart"
 	elif session_ms < Cfg.ADS_MIN_SESSION_MS_BEFORE_INTERSTITIAL: reason = "session_s<%d" % (Cfg.ADS_MIN_SESSION_MS_BEFORE_INTERSTITIAL / 1000)
 	elif last_midgame_ms >= 0 and session_ms - last_midgame_ms < Cfg.ADS_CG_MIDGAME_CAP_MS: reason = "gap<%ds" % (Cfg.ADS_CG_MIDGAME_CAP_MS / 1000)
