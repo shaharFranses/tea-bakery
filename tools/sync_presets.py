@@ -27,9 +27,12 @@ EXC = "tests/*, tools/*, qa/*, ci/*, addons/gut/*, build/*, web/*, engine/*, met
 # Art ships 1x + @2x; the game loads only @2x (art/HANDOFF_GODOT.md), so the 1x PNGs stay out of the pck.
 import glob
 ONE_X = sorted(os.path.relpath(f, root) for f in glob.glob(os.path.join(root, "assets", "**", "*.png"), recursive=True) if "@2x" not in f)
-# SM ruling 2026-11-01: the 8 non-v1 cakes (every cake_* except cake_berry; recipe-card / post-v1 extras) stay in the
-# repo but out of the pck (D-03: berry v2 is the only cake wired in v1).
-EXTRA_CAKES = sorted(os.path.relpath(f, root) for f in glob.glob(os.path.join(root, "assets", "board", "cake_*@2x.png")) if "cake_berry" not in f)
+# SPEC v1.2 (D-03 revised): every cake_*@2x is a shipped piece (one per chapter + chocolate daily + berry debug), so
+# none is excluded any more. (SM ruling 2026-11-01 had kept the 8 non-berry cakes out of the pck while berry was the
+# only v1 cake; that exclusion made the exported game fail to load them.) tests/test_export_presets.gd guards this.
+SHIPPED_CAKES = ["berry", "scone", "victoria", "lemon", "apricot", "bakewell", "custard", "macaron", "chocolate"]
+EXTRA_CAKES = sorted(os.path.relpath(f, root) for f in glob.glob(os.path.join(root, "assets", "board", "cake_*@2x.png"))
+                     if os.path.basename(f)[len("cake_"):-len("@2x.png")] not in SHIPPED_CAKES)
 EXC = EXC + ", assets/backdrop/README.txt" + "".join(", " + f for f in ONE_X + EXTRA_CAKES)
 def preset(i, name, path, excl, release_tpl, debug_tpl):
     return f'''[preset.{i}]
