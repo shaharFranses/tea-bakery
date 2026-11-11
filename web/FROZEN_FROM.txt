@@ -1,4 +1,5 @@
-gate_folder=/workspace/tea-and-tarts-gates/thin-a4fd2af
-commit=a4fd2af
-pck_sha256=90c87974bf15f4c1b30d95d08ab6f598083cecfa477335c3e270704e51853351
-staged=2026-11-10 11:12 IST
+gate_folder=none (owner-requested test deploy, built in a Claude Code session from main 8ee1aed)
+commit=8ee1aed
+pck_sha256=f8831e590abe23d8e5d8bc3e946d6cd80b597009ae7160220bbcfeee58cabc3a
+staged=2026-11-11 12:06 UTC
+qa=NOT RUN: this build did not go through the QA gate; Shahar asked for it on Pages for testing (2026-11-11)
