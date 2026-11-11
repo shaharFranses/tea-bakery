@@ -1083,6 +1083,7 @@ func show_chapter_end(ch: int) -> void:
 	end_next.visible = Chapters.available(ch + 1)
 	set_screen("chapter_end")
 	end_card.flip_in.call_deferred()
+	end_card.celebrate.call_deferred()
 	end_shelf.drop(ch)
 
 func _max_size_in(ch: int) -> int:
