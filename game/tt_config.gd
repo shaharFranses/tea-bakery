@@ -4,7 +4,8 @@ extends RefCounted
 
 # Slug "tea-bakery" = filenames, export output, zip, repo ONLY; it is banned in user-visible text (SPEC §3.5
 # banned_user_text, QA ruling 10-25), so it is not a string anywhere in game code.
-const TITLE_PLACEHOLDER := "Bakery Logic Puzzle"   # = project.godot config/name (HTML <title>) until Growth picks a title
+const TITLE := "Teacake Lane"   # the game title (SPEC v1.5, Shahar 2026-11-11) = project.godot config/name (HTML <title>)
+const TITLE_PLACEHOLDER := TITLE   # old name of the constant, kept for callers
 
 # Board sizes (§9 D-04): mobile max 8x8 (44 px cells at 390 px), 9x9 desktop only
 const MIN_N := 5

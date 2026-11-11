@@ -1,4 +1,4 @@
-## Bakery Logic Puzzle main scene (thin slice, SPEC v1.0.1): PKD intro -> c1-b1 (no menu, D-14) -> tutorial trays
+## Teacake Lane main scene (thin slice, SPEC v1.0.1): PKD intro -> c1-b1 (no menu, D-14) -> tutorial trays
 ## c1-b1..b3 (givens, coach line, pulsing target) -> c1-b4..b12 -> chapter end (recipe card + décor, midgame slot) -> ch2.
 ## SPEC v1.1: 8 chapters x 12 levels, numbered 1..96 on the level map; every solved level keeps its best stars (1-3).
 ## Screens: board, home, recipe_book, chapter_end, all_baked, level_map (+ solved card / settings / rewarded-hint /

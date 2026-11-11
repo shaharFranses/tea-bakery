@@ -52,7 +52,10 @@ var anim := {}
 var bake_t0 := -1
 var steam_cells: Array = []
 var shakes_started := 0          # QA/debug counter
-func now_ms() -> int: return Time.get_ticks_msec()
+## Animation clock. In Movie Maker mode (godot --write-movie, used for the portal preview videos) frames render slower
+## than real time, so the clock follows the frame counter at 60 fps; everywhere else it is the wall clock.
+static var MOVIE := OS.has_feature("movie")
+func now_ms() -> int: return int(Engine.get_process_frames() * 1000.0 / 60.0) if MOVIE else Time.get_ticks_msec()
 
 func notify_change(i: int, before: int, after: int) -> void:
 	if after == MOLD: anim[i] = ["mold_in", now_ms()]

@@ -1,4 +1,4 @@
-# CURRENT_BUILD: tea-bakery (game #4; slug in ./SLUG; user-visible title "Bakery Logic Puzzle"; old title dropped SM 2026-10-25)
+# CURRENT_BUILD: tea-bakery (game #4; slug in ./SLUG; user-visible title "Teacake Lane" since SPEC v1.5, 2026-11-11; old title dropped SM 2026-10-25)
 
 The single "what is current" pointer for this game. Every bot reads this before acting (Playbook v1, standing rule 5).
 SM owns the State line; `ci/run.sh` fills in "Last CI"; QA fills in Verdict; PO fills in Portal. Times are Asia/Jerusalem.
