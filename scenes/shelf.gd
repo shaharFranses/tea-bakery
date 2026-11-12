@@ -9,6 +9,14 @@ var drop_ch := 0           # décor piece currently dropping in (chapter end), 0
 var drop_t := 1.0
 var _slots := {}
 var _tex := {}
+const CAKE_SIZE := 38.0   # 1x px on the 360x160 shelf
+## Cake x (1x px, bottom-centre): in front of, and a little right of, each décor piece; ch3 / ch6 sit in the gaps.
+const CAKE_X := {1: 62.0, 2: 122.0, 3: 124.0, 4: 180.0, 5: 238.0, 6: 208.0, 7: 294.0, 8: 346.0}
+
+func _cake_tex(ch: int) -> Texture2D:
+	var key := "cake%d" % ch
+	if not _tex.has(key): _tex[key] = load("res://assets/board/cake_%s@2x.png" % Chapters.CAKES[ch - 1])
+	return _tex[key]
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -40,4 +48,13 @@ func _draw() -> void:
 		var y := bottom - side
 		if ch == drop_ch: y -= (1.0 - drop_t) * 80.0 * k
 		draw_texture_rect(_tex[ch], Rect2(Vector2(o.x + float(s.x) * k - side / 2.0, y), Vector2(side, side)), false)
+	# the baked cake of every finished chapter sits on the counter in front of its décor piece (ch3 / ch6 have no piece: their
+	# cake takes the gap between neighbours); each drops in with its décor at chapter end
+	for ch in owned:
+		if ch < 1 or ch > Chapters.CAKES.size(): continue
+		var cx: float = CAKE_X.get(ch, 0.0)
+		var cside := CAKE_SIZE * k
+		var cy := o.y + 128.0 * k + cside * 0.10 - cside
+		if ch == drop_ch: cy -= (1.0 - drop_t) * 80.0 * k
+		draw_texture_rect(_cake_tex(ch), Rect2(Vector2(o.x + cx * k - cside / 2.0, cy), Vector2(cside, cside)), false)
 	if 6 in owned: draw_texture_rect(_tex.shelf_bunting_garland, full, false)
