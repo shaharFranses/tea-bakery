@@ -403,9 +403,16 @@ func _build_screens() -> void:
 	book_scroll = TouchScroll.new(); book_scroll.name = "BookScroll"
 	book_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	r.col.add_child(book_scroll)
+	# the grid is centred in the scroll viewport; a left margin the width of the scrollbar balances it so the cards sit
+	# in the exact middle of the page
+	var book_pad := MarginContainer.new(); book_pad.name = "BookPad"; book_pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	book_pad.add_theme_constant_override("margin_left", int(TtTheme.SCROLLBAR_W + 6.0))
+	book_pad.add_theme_constant_override("margin_top", 8); book_pad.add_theme_constant_override("margin_bottom", 12)
+	book_scroll.add_child(book_pad)
+	var book_center := CenterContainer.new(); book_center.name = "BookCenter"; book_pad.add_child(book_center)
 	book_grid = GridContainer.new(); book_grid.name = "BookGrid"; book_grid.columns = 2
-	book_grid.add_theme_constant_override("h_separation", 8); book_grid.add_theme_constant_override("v_separation", 8)
-	book_scroll.add_child(book_grid)
+	book_grid.add_theme_constant_override("h_separation", 12); book_grid.add_theme_constant_override("v_separation", 16)
+	book_center.add_child(book_grid)
 	for ch in range(1, 9):
 		var c := RecipeCard.new(); c.name = "Card%d" % ch; book_grid.add_child(c); c.setup(ch, false); book_cards.append(c)
 	# Chapter end (§7: recipe card flips in, décor drops onto the shelf; "Next chapter" primary + "Home")
@@ -758,7 +765,7 @@ func _relayout() -> void:
 	var hs := page_card_heights(vs, m)
 	book_grid.columns = hs.cols; var cols: int = hs.cols
 	for c in book_cards: c.custom_minimum_size = Vector2(hs.book * 0.75, hs.book)
-	book_scroll.custom_minimum_size = Vector2(cols * hs.book * 0.75 + 8.0 * (cols - 1), vs.y - 32.0 - 56.0 - 12.0)
+	book_scroll.custom_minimum_size = Vector2(cols * hs.book * 0.75 + 12.0 * (cols - 1) + 2.0 * (TtTheme.SCROLLBAR_W + 6.0), vs.y - 32.0 - 56.0 - 12.0)
 	end_card.custom_minimum_size = Vector2(hs.end * 0.75, hs.end)
 	# All recipes baked: 4x2 spread on phones, one row of 8 on wide; the full shelf is always shown (§7.2)
 	var acols := 8 if m == "wide" else 4; var arows := 8 / acols
@@ -784,10 +791,11 @@ static func page_card_heights(vs: Vector2, m: String) -> Dictionary:
 	# Recipe Book: as many columns as keep cards >= BOOK_CARD_MIN_H (2-line names at the 14 px label minimum); scrolls.
 	var max_w := minf(vs.x - 32.0, 480.0 if m == "portrait" else vs.x - 32.0)
 	var cols := 4
-	while cols > 1 and (max_w - 8.0 * (cols - 1)) / cols * 320.0 / 240.0 < BOOK_CARD_MIN_H: cols -= 1
+	max_w -= 2.0 * (TtTheme.SCROLLBAR_W + 6.0)   # room for the scrollbar and its balancing margin
+	while cols > 1 and (max_w - 12.0 * (cols - 1)) / cols * 320.0 / 240.0 < BOOK_CARD_MIN_H: cols -= 1
 	var rows := ceili(8.0 / cols)
-	var avail_h := vs.y - 32.0 - 56.0 - 12.0 - 8.0 * (rows - 1)
-	var book := minf((max_w - 8.0 * (cols - 1)) / cols * 320.0 / 240.0, maxf(avail_h / rows, BOOK_CARD_MIN_H))
+	var avail_h := vs.y - 32.0 - 56.0 - 12.0 - 16.0 * (rows - 1)
+	var book := minf((max_w - 12.0 * (cols - 1)) / cols * 320.0 / 240.0, maxf(avail_h / rows, BOOK_CARD_MIN_H))
 	# Chapter end: Next + Home share one row (EndButtons)
 	var end_h := clampf(vs.y - 32.0 - 40.0 - 142.0 - 24.0 - 48.0 - 12.0 * 4, 150.0, 300.0)
 	if m == "wide": end_h = clampf(vs.y - 24.0 - 40.0 - 48.0 - (6.0 if vs.y < 600.0 else 12.0) * 3 - 24.0, 150.0, 300.0)
