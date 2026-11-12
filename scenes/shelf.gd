@@ -4,19 +4,24 @@
 extends Control
 
 const Chapters = preload("res://game/chapters.gd")
+const Pal = preload("res://ui/theme/art_palette.gd")
 var owned: Array = []
 var drop_ch := 0           # décor piece currently dropping in (chapter end), 0 = none
 var drop_t := 1.0
 var _slots := {}
 var _tex := {}
-const CAKE_SIZE := 38.0   # 1x px on the 360x160 shelf
-## Cake x (1x px, bottom-centre): in front of, and a little right of, each décor piece; ch3 / ch6 sit in the gaps.
-const CAKE_X := {1: 62.0, 2: 118.0, 3: 136.0, 4: 186.0, 5: 238.0, 6: 208.0, 7: 294.0, 8: 346.0}
+## Cake tray (home shelf only): a cream runner under the counter with one slot per chapter; each finished chapter's baked
+## cake sits in its slot. Nothing overlaps the décor above. Empty slots stay empty (D-01: no silhouettes, no "?").
+const TRAY_H := 34.0       # 1x px added under the 360x160 shelf art
+const CAKE_SIZE := 28.0
+var cake_row := false      # set by main on the home shelf
+var _cake_tex := {}
 
-func _cake_tex(ch: int) -> Texture2D:
-	var key := "cake%d" % ch
-	if not _tex.has(key): _tex[key] = load("res://assets/board/cake_%s@2x.png" % Chapters.CAKES[ch - 1])
-	return _tex[key]
+func extra_h() -> float: return TRAY_H if cake_row else 0.0
+
+func _cake(ch: int) -> Texture2D:
+	if not _cake_tex.has(ch): _cake_tex[ch] = load("res://assets/board/cake_%s@2x.png" % Chapters.CAKES[ch - 1])
+	return _cake_tex[ch]
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -35,8 +40,9 @@ func drop(ch: int) -> void:
 	tw.parallel().tween_method(func(_v): queue_redraw(), 0.0, 1.0, 0.6)
 
 func _draw() -> void:
-	var k := minf(size.x / 360.0, size.y / 160.0)
-	var o := Vector2((size.x - 360.0 * k) / 2.0, size.y - 160.0 * k)
+	var H := 160.0 + extra_h()
+	var k := minf(size.x / 360.0, size.y / H)
+	var o := Vector2((size.x - 360.0 * k) / 2.0, size.y - H * k)
 	var full := Rect2(o, Vector2(360, 160) * k)
 	draw_texture_rect(_tex.shelf_counter, full, false)
 	if 3 in owned: draw_texture_rect(_tex.shelf_gingham_drape, full, false)
@@ -48,13 +54,16 @@ func _draw() -> void:
 		var y := bottom - side
 		if ch == drop_ch: y -= (1.0 - drop_t) * 80.0 * k
 		draw_texture_rect(_tex[ch], Rect2(Vector2(o.x + float(s.x) * k - side / 2.0, y), Vector2(side, side)), false)
-	# the baked cake of every finished chapter sits on the counter in front of its décor piece (ch3 / ch6 have no piece: their
-	# cake takes the gap between neighbours); each drops in with its décor at chapter end
-	for ch in owned:
-		if ch < 1 or ch > Chapters.CAKES.size(): continue
-		var cx: float = CAKE_X.get(ch, 0.0)
-		var cside := CAKE_SIZE * k
-		var cy := o.y + 128.0 * k + cside * 0.10 - cside
-		if ch == drop_ch: cy -= (1.0 - drop_t) * 80.0 * k
-		draw_texture_rect(_cake_tex(ch), Rect2(Vector2(o.x + cx * k - cside / 2.0, cy), Vector2(cside, cside)), false)
 	if 6 in owned: draw_texture_rect(_tex.shelf_bunting_garland, full, false)
+	if cake_row:
+		var tray := StyleBoxFlat.new(); tray.bg_color = Color(Pal.CLOTTED_CREAM, 0.92)
+		tray.set_corner_radius_all(int(14 * k)); tray.set_border_width_all(maxi(1, int(2 * k))); tray.border_color = Pal.EARL_GREY_INK
+		var ty := o.y + 156.0 * k
+		draw_style_box(tray, Rect2(Vector2(o.x + 12.0 * k, ty), Vector2(336, TRAY_H - 6.0) * k))
+		var cs := CAKE_SIZE * k
+		for ch in owned:
+			if ch < 1 or ch > Chapters.CAKES.size(): continue
+			var cx: float = 30.0 + (ch - 1) * 42.857      # 8 slots across the tray
+			var cy := ty + ((TRAY_H - 6.0) * k - cs) / 2.0
+			if ch == drop_ch: cy -= (1.0 - drop_t) * 60.0 * k
+			draw_texture_rect(_cake(ch), Rect2(Vector2(o.x + cx * k - cs / 2.0, cy), Vector2(cs, cs)), false)
