@@ -11,7 +11,7 @@ var _slots := {}
 var _tex := {}
 const CAKE_SIZE := 38.0   # 1x px on the 360x160 shelf
 ## Cake x (1x px, bottom-centre): in front of, and a little right of, each décor piece; ch3 / ch6 sit in the gaps.
-const CAKE_X := {1: 62.0, 2: 122.0, 3: 124.0, 4: 180.0, 5: 238.0, 6: 208.0, 7: 294.0, 8: 346.0}
+const CAKE_X := {1: 62.0, 2: 118.0, 3: 136.0, 4: 186.0, 5: 238.0, 6: 208.0, 7: 294.0, 8: 346.0}
 
 func _cake_tex(ch: int) -> Texture2D:
 	var key := "cake%d" % ch
