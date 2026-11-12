@@ -32,8 +32,8 @@ with sync_playwright() as p:
             if g.get("layout") != want_mode: f.append(f"layout {g.get('layout')} != {want_mode}")
             vis = [u for u in g["ui"] if u["visible"] and not u.get("scrolled_out")]
             if scr == "settings":   # the modal only (Home sits under the scrim)
-                vis = [u for u in vis if u["name"] in ("SettingsTitle", "Sound", "Music", "TapOrder", "AutoMolds", "ResetProgress", "SettingsClose")]
-                if len(vis) != 7: f.append(f"settings shows {sorted(u['name'] for u in vis)}")
+                vis = [u for u in vis if u["name"] in ("SettingsTitle", "Sound", "Music", "TapOrder", "ResetProgress", "SettingsClose")]
+                if len(vis) != 6: f.append(f"settings shows {sorted(u['name'] for u in vis)}")
             btns = [u for u in vis if u["type"] in ("Button", "CheckButton", "TextureButton")]
             for u in vis:
                 x, y, uw, uh = u["rect"]

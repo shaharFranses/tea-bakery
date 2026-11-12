@@ -1,4 +1,4 @@
-## Bakery Logic Puzzle main scene (thin slice, SPEC v1.0.1): PKD intro -> c1-b1 (no menu, D-14) -> tutorial trays
+## Teacake Lane main scene (thin slice, SPEC v1.0.1): PKD intro -> c1-b1 (no menu, D-14) -> tutorial trays
 ## c1-b1..b3 (givens, coach line, pulsing target) -> c1-b4..b12 -> chapter end (recipe card + décor, midgame slot) -> ch2.
 ## SPEC v1.1: 8 chapters x 12 levels, numbered 1..96 on the level map; every solved level keeps its best stars (1-3).
 ## Screens: board, home, recipe_book, chapter_end, all_baked, level_map (+ solved card / settings / rewarded-hint /
@@ -111,7 +111,6 @@ var too_small_cover: Control
 var home_btn: Button
 var settings_btn: Button
 var order_btn: Button
-var automold_btn: Button
 var music_btn: Button
 var progress_reset_modal: Control
 var settings_flow: HFlowContainer
@@ -488,7 +487,7 @@ func _build_screens() -> void:
 	card_time = _body("", "CardTime"); card_time.add_theme_font_size_override("font_size", 14); scv.add_child(card_time)
 	card_tip = _body("", "CardTip"); card_tip.add_theme_font_size_override("font_size", 14); card_tip.custom_minimum_size.x = 240
 	scv.add_child(card_tip)
-	# settings (§9: Sound, Auto-molds, Tap order)
+	# settings (§9: Sound, Music, Tap order; SPEC v1.6: no Auto-molds toggle, the game never marks cells by itself)
 	var s := _modal("SettingsModal"); settings_modal = s.root
 	s.col.add_child(_title("Settings", "SettingsTitle", 24))
 	settings_flow = HFlowContainer.new(); settings_flow.name = "SettingsToggles"
@@ -500,8 +499,6 @@ func _build_screens() -> void:
 	music_btn.toggled.connect(func(on): set_music(on))
 	order_btn = _toggle_button("TapOrder", "Cake first", settings_flow)
 	order_btn.toggled.connect(func(on): set_tap_order(Cells.ORDER_CAKE_FIRST if on else Cells.ORDER_MOLD_FIRST))
-	automold_btn = _toggle_button("AutoMolds", "Auto-molds", settings_flow)
-	automold_btn.toggled.connect(func(on): set_auto_mold(on))
 	var rp := _tool_button("ResetProgress", "Reset progress", "reset", "", s.col)
 	rp.pressed.connect(func(): progress_reset_modal.visible = true)
 	var sc := _tool_button("SettingsClose", "Close", "close", "PrimaryButton", s.col)
@@ -928,8 +925,6 @@ func clear_board() -> void:
 func set_tap_order(order: String) -> void:
 	settings.tap_order = order; save_now("settings"); _sync_setting_buttons(); _refresh()
 
-func set_auto_mold(on: bool) -> void:
-	settings.auto_mold = on; save_now("settings"); _sync_setting_buttons(); _refresh()
 
 func set_sound(on: bool) -> void:
 	settings.sound = on; muted = not on; Sfx.set_user_muted(not on); save_now("settings"); _sync_setting_buttons()
@@ -954,8 +949,6 @@ func _sync_setting_buttons() -> void:
 	if order_btn == null: return
 	var cf: bool = settings.tap_order == Cells.ORDER_CAKE_FIRST
 	order_btn.set_pressed_no_signal(cf); order_btn.icon = TtTheme.ui_tex("toggle_on" if cf else "toggle_off")
-	automold_btn.set_pressed_no_signal(settings.auto_mold)
-	automold_btn.icon = TtTheme.ui_tex("toggle_on" if settings.auto_mold else "toggle_off")
 	mute.set_pressed_no_signal(not muted); mute.icon = TtTheme.ui_tex("toggle_off" if muted else "toggle_on")
 	music_btn.set_pressed_no_signal(settings.music); music_btn.icon = TtTheme.ui_tex("toggle_on" if settings.music else "toggle_off")
 
@@ -988,7 +981,7 @@ func _refresh() -> void:
 		conflicts_board += 1
 		if chapter > 0 and mode == "chapter": progress.stats(chapter).conflicts_shown += 1
 	board.conflict_units = BoardView.units_of_conflicts(n, puzzle.regions, bad)
-	board.auto = Cells.auto_molds(n, puzzle.regions, board.cells, settings.auto_mold)
+	board.auto = {}   # SPEC v1.6 (D-13): no auto-molds; only the player's own molds are shown
 	var was_won := won
 	won = Rules.is_solution(n, puzzle.regions, cs)
 	board.won = won

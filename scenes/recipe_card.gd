@@ -112,7 +112,8 @@ static func _split2(t: String, font: Font, fs: int) -> Array:
 	return best
 
 # ------------------------------------------------------------------ magic (SPEC v1.3)
-func now_s() -> float: return Time.get_ticks_msec() / 1000.0
+func now_s() -> float:   # frame clock in Movie Maker mode (preview videos), wall clock otherwise (see board_view.now_ms)
+	return Engine.get_process_frames() / 60.0 if OS.has_feature("movie") else Time.get_ticks_msec() / 1000.0
 
 func _process(_dt: float) -> void:
 	if not is_visible_in_tree(): return                 # hidden screens cost nothing

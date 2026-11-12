@@ -4,7 +4,7 @@ extends RefCounted
 const Cells = preload("res://game/cells.gd")
 
 var tap_order: String = Cells.ORDER_MOLD_FIRST
-var auto_mold := true          # D-13: ON by default
+var auto_mold := false         # D-13 (SPEC v1.6): auto-molds are removed from the game; always false, not a setting
 var sound := true              # §9 Sound (TT-AC-32: persists)
 var music := true              # §9 Music (TT-AC-32: persists)
 
@@ -14,6 +14,6 @@ func to_dict() -> Dictionary:
 func from_dict(d: Dictionary) -> void:
 	var t := str(d.get("tap_order", Cells.ORDER_MOLD_FIRST))
 	tap_order = t if t in [Cells.ORDER_MOLD_FIRST, Cells.ORDER_CAKE_FIRST] else Cells.ORDER_MOLD_FIRST
-	auto_mold = bool(d.get("auto_mold", true))
+	auto_mold = false               # SPEC v1.6: a saved "auto_mold: true" from v1.0-v1.5 is ignored
 	sound = bool(d.get("sound", true))
 	music = bool(d.get("music", true))

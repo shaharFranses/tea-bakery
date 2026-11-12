@@ -2,7 +2,7 @@
 ## so none of these command strings / URL flags exist in release (checked by qa/release_audit.py + ci/release_flags_smoke.py).
 ##  H1  PKD_QA.dump().game schema           -> state(main)
 ##  H2  PKD_QA.show("board:<id>" | "gen:N,seed" | "solve_next" | "solve" | "home" | "daily:YYYY-MM-DD" | "tap:r,c" | "clear" | "new")
-##      + "rclick:r,c" (desktop mold toggle) | "tap_order:mold_first|cake_first" | "auto_mold:0|1" (Settings, persisted)
+##      + "rclick:r,c" (desktop mold toggle) | "tap_order:mold_first|cake_first" (Settings, persisted; "auto_mold" was removed in SPEC v1.6)
 ##  H3  ?qa=1&date=YYYY-MM-DD (local-date override) &session_offset_s=N (session clock offset)
 ##  BR-2 PKD_QA.set_date("YYYY-MM-DD"[ "THH:MM"]) runtime local date via main.check_day() (real rollover path);
 ##       PKD_QA.retry_daily() second completion attempt on today's daily -> rejected, streak unchanged (V8)
@@ -158,7 +158,7 @@ static func show(main, cmd: String) -> String:
 		var q := cmd.substr(7).split(",")
 		if q.size() == 2: main.right_click_cell(q[0].to_int(), q[1].to_int())
 	elif cmd.begins_with("tap_order:"): main.set_tap_order(cmd.substr(10))
-	elif cmd.begins_with("auto_mold:"): main.set_auto_mold(cmd.substr(10) == "1")
+	elif cmd.begins_with("auto_mold:"): res = "removed in SPEC v1.6 (no auto-molds)"
 	elif cmd.begins_with("tap:"):
 		var p := cmd.substr(4).split(",")
 		if p.size() == 2: main.tap_cell(p[0].to_int(), p[1].to_int())

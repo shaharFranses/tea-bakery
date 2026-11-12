@@ -9,7 +9,7 @@
    v1.0.2 note: the engine loader's same-origin fetches of the game's own export files are allowed, so every same-origin
    request must be one of the export files (index.html/js/wasm/pck/worklets/icons...; env PKD_RELEASE_DIR, default
    build/web-release) and nothing else.
-4. Page <title> is the user-visible stub 'Bakery Logic Puzzle' (config/name; QA ruling 10-25), never the slug."""
+4. Page <title> is the game title 'Teacake Lane' (config/name; SPEC v1.5), never the slug."""
 import json, os, re, sys, time
 from playwright.sync_api import sync_playwright
 base, out = sys.argv[1].rstrip("/"), sys.argv[2]; os.makedirs(out, exist_ok=True)
@@ -49,7 +49,7 @@ with sync_playwright() as p:
     res["flags_inert_no_qa_log"] = not any("QA on" in l or "QA show" in l or "[ads]" in l and "mock" in l for l in text)
     st = pg.evaluate("window.PKD_AUDIO ? window.PKD_AUDIO.state() : {}")
     res["flags_inert_cgmute_ignored"] = st.get("portalMute") is False
-    res["title_is_stub_not_slug"] = pg.title() == "Bakery Logic Puzzle"
+    res["title_is_stub_not_slug"] = pg.title() == "Teacake Lane"
     notes["title"] = pg.title()
     pg.screenshot(path=f"{out}/release_flags_390.png"); pg.close()
     # intro skip: control (no input) vs tap / click / key

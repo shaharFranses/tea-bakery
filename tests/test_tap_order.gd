@@ -49,10 +49,13 @@ func test_settings_persist_both_orders():
 		var saved: Dictionary = JSON.parse_string(JSON.stringify({"settings": s.to_dict()}))   # through the save format
 		var r = Settings.new(); r.from_dict(saved.settings)
 		assert_eq(r.tap_order, order); assert_false(r.auto_mold)
+		assert_false(saved.settings.has("auto_mold") and saved.settings.auto_mold, "never saved as on")
 		assert_eq(Cells.NAMES[Cells.next_state(Cells.EMPTY, r.tap_order)], "cake" if order == Cells.ORDER_CAKE_FIRST else "mold")
 	var bad = Settings.new(); bad.from_dict({"tap_order": "x"})
 	assert_eq(bad.tap_order, Cells.ORDER_MOLD_FIRST, "unknown value -> default")
-	assert_true(bad.auto_mold, "auto-molds ON by default (D-13)")
+	assert_false(bad.auto_mold, "no auto-molds (D-13, SPEC v1.6)")
+	var old = Settings.new(); old.from_dict({"auto_mold": true})
+	assert_false(old.auto_mold, "a v1.0-v1.5 save with auto-molds on loads with them off")
 
 func test_analytics_noop_sink():
 	assert_eq(Analytics.sink, "noop")
