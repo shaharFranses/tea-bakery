@@ -1,32 +1,32 @@
 # Teacake Lane: CrazyGames Basic Launch submission sheet
 
-Prepared 2026-11-11 in a Claude Code session at Shahar's request ("go with Teacake Lane and prepare the CrazyGames
+Prepared 2026-11-11, rebuilt 2026-11-12 after SPEC v1.6 (no auto-molds), in a Claude Code session at Shahar's request ("go with Teacake Lane and prepare the CrazyGames
 package"). **Nothing has been submitted.** The CrazyGames account, the Developer Terms and the upload are Shahar's
 (`portal/CG_READINESS.md` §9, steps 1, 2, 9, 11). Field list follows FF's as-seen form (`portal/CG_READINESS.md` §7).
 
 ## Build
 | Item | Value |
 |---|---|
-| Build commit | `c41c119` (branch `claude/practical-carson-le8dcc`; Godot 4.3 stock web template, `tools/build_web.sh release`) |
-| Upload file | `tea-bakery-cg-c41c119.zip`, 11,284,877 bytes (`tools/cg_zip.sh`; index.html at the zip root) |
-| zip md5 / sha256 | `8d34a8caad46f6bbcb66faadc3e7fa35` / `f8126d5552a8840a4aff966c4b98160f091f809906dca6f4455ed0cae52b7a4c` |
-| index.pck sha256 | `fc05958481f5a41d35d8f44f428b7342d285e1a253aff35720f9a952170d27a5` |
+| Build commit | `5e9c33b` (branch `claude/practical-carson-le8dcc`; Godot 4.3 stock web template, `tools/build_web.sh release`) |
+| Upload file | `tea-bakery-cg-5e9c33b.zip`, 11,284,572 bytes (`tools/cg_zip.sh`; index.html at the zip root) |
+| zip md5 / sha256 | `e81fff83b1a9b5a6d8d1a67dcd5ec8db` / `77a853c38a429f368ea98d0667cd98eaee6a8761375aa2c6478485a415566630` |
+| index.pck sha256 | `5a09018e9e817f06910665b27698b53c0fbc7709a872ea3b203f14e64ef0f4d2` |
 | Unzipped size | 39.41 MB (wasm 35.38 MB, pck 3.68 MB): under CrazyGames' 50 MB initial-download limit; over the 20 MB mobile-homepage threshold (`portal/CG_READINESS.md` §4) |
-| Checked | Unzipped and served locally, Chromium 390x844: page title "Teacake Lane", 0 console errors, 0 requests to other hosts (the CrazyGames SDK loads only on crazygames hosts). GUT 128/128, `spec_assert.py` PASS on this commit |
-| **QA** | **NOT RUN on this commit.** The last QA PASS is thin-slice `a4fd2af`, before the level map, stars, per-chapter cakes, card effects, level-break ad slot and the title. Step 6 of the readiness sheet (QA PASS on the gated build, CG iframe-size matrix, Safari/iOS, ads-disabled behaviour) is still open |
+| Checked | Unzipped and served locally, Chromium 390x844: page title "Teacake Lane", 0 console errors, 0 requests to other hosts (the CrazyGames SDK loads only on crazygames hosts). GUT 129/129, `spec_assert.py` PASS on this commit |
+| **QA** | **NOT RUN on this commit.** The last QA PASS is thin-slice `a4fd2af`, before the level map, stars, per-chapter cakes, card effects, level-break ad slot, the title and the removal of auto-molds (v1.6). Step 6 of the readiness sheet (QA PASS on the gated build, CG iframe-size matrix, Safari/iOS, ads-disabled behaviour) is still open |
 
 ## Form fields
 | Field | Value |
 |---|---|
 | Game name | Teacake Lane |
-| Game files | `tea-bakery-cg-c41c119.zip` |
+| Game files | `tea-bakery-cg-5e9c33b.zip` |
 | Description (one field) | `portal/copy/crazygames.md`, section "Description" |
 | Controls | `portal/copy/crazygames.md`, section "Controls" |
 | Category | Puzzle (confirm on the live form) |
 | Tags (max 5) | Logic, Relaxing, Food, Brain, 2D (alternates: Daily, Cute, Easy) |
 | Orientation / mobile | Portrait on phones, landscape re-layout on desktop; mobile friendly: yes |
-| Covers | `cover-landscape-1920x1080_c41c119.png`, `cover-portrait-800x1200_c41c119.png`, `cover-square-800x800_c41c119.png` |
-| Preview videos | `preview-landscape-1920x1080_c41c119.mp4`, `preview-portrait-1080x1620_c41c119.mp4` (15.6 s, H.264, 60 fps, no audio stream, faststart, 2.4 / 2.7 MB) |
+| Covers | `cover-landscape-1920x1080_5e9c33b.png`, `cover-portrait-800x1200_5e9c33b.png`, `cover-square-800x800_5e9c33b.png` |
+| Preview videos | `preview-landscape-1920x1080_5e9c33b.mp4`, `preview-portrait-1080x1620_5e9c33b.mp4` (15.6 s, H.264, 60 fps, no audio stream, faststart, 2.2 / 2.4 MB) |
 | PEGI 12 checkbox | Tick |
 | AI-tools disclosure | See below: **Shahar must complete this list** |
 
