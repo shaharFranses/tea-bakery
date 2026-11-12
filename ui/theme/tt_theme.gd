@@ -49,6 +49,30 @@ static func _button_type(th: Theme, type: String, style: String, text_col: Color
 	th.set_constant("h_separation", type, 8)
 	th.set_constant("icon_max_width", type, 28)
 
+const SCROLLBAR_W := 14.0   # slim pill scrollbar: a soft plum track, a raspberry thumb with a cream rim
+
+static func _pill(col: Color, border: Color, bw: int) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new(); sb.bg_color = col
+	sb.set_corner_radius_all(99)
+	sb.set_border_width_all(bw); sb.border_color = border
+	sb.content_margin_left = SCROLLBAR_W / 2.0; sb.content_margin_right = SCROLLBAR_W / 2.0
+	sb.content_margin_top = 12.0; sb.content_margin_bottom = 12.0
+	return sb
+
+static func _scrollbar(th: Theme) -> void:
+	var track := _pill(Color(Pal.EARL_GREY_INK, 0.12), Color(Pal.CLOTTED_CREAM, 0.55), 2)
+	var thumb := _pill(Pal.RASPBERRY_JAM, Pal.CLOTTED_CREAM, 2)
+	var thumb_hi := _pill(Pal.RASPBERRY_JAM.lightened(0.12), Pal.CLOTTED_CREAM, 2)
+	var thumb_pr := _pill(Pal.RASPBERRY_JAM.darkened(0.12), Pal.CLOTTED_CREAM, 2)
+	for t in ["VScrollBar", "HScrollBar"]:
+		th.set_stylebox("scroll", t, track); th.set_stylebox("scroll_focus", t, track)
+		th.set_stylebox("grabber", t, thumb); th.set_stylebox("grabber_highlight", t, thumb_hi)
+		th.set_stylebox("grabber_pressed", t, thumb_pr)
+		for k in ["increment", "decrement", "increment_highlight", "decrement_highlight", "increment_pressed", "decrement_pressed"]:
+			th.set_icon(k, t, ImageTexture.new())   # no arrow buttons
+	th.set_constant("scrollbar_h_separation", "ScrollContainer", 6)
+	th.set_constant("scrollbar_v_separation", "ScrollContainer", 6)
+
 static func build() -> Theme:
 	var th := Theme.new()
 	var body := lexend(400); var strong := lexend(600)
@@ -79,6 +103,7 @@ static func build() -> Theme:
 	th.set_stylebox("panel", "CoachBubble", slice("coach_bubble", Vector4(24, 24, 24, 24), Vector4(14, 12, 14, 12)))
 	th.set_type_variation("HoneyChip", "PanelContainer")
 	th.set_stylebox("panel", "HoneyChip", slice("chip_honey", Vector4(20, 18, 20, 18), Vector4(14, 6, 14, 6)))
+	_scrollbar(th)
 	th.set_type_variation("BubbleLabel", "Label")
 	th.set_font_size("font_size", "BubbleLabel", 16)
 	th.set_constant("line_spacing", "BubbleLabel", 0)
