@@ -1,5 +1,5 @@
-gate_folder=none (owner-requested test deploy, built in a Claude Code session from branch commit 6f84328 on top of main 9fc8f25)
-commit=6f84328
-pck_sha256=ec7ce55b34de07f1ced6392b078a5ccda51100c7c362a91180ad6cb3e3da1794
-staged=2026-11-12 14:41 UTC
+gate_folder=none (owner-requested test deploy, built in a Claude Code session from branch commit fbce42f on top of main ba8272a)
+commit=fbce42f
+pck_sha256=e80069bc279645fa14c4e3ad6af860569dedf7260bd7ca9f6c074cf337c20b0d
+staged=2026-11-12 16:35 UTC
 qa=NOT RUN: this build did not go through the QA gate; Shahar asked for it on Pages for testing (2026-11-12)
