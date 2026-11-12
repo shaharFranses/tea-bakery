@@ -94,3 +94,14 @@ func test_board_cake_per_chapter_and_daily():
 	assert_eq(m.board.piece, "chocolate")
 	m.show_level_map()
 	assert_eq(m.map_box.get_node("MapHead6/MapCake6").texture.resource_path, "res://assets/board/cake_berry@2x.png")
+
+## SPEC v1.6 (D-13): no auto-molds. A placed cake marks nothing else, and Settings has no Auto-molds toggle.
+func test_no_auto_molds_and_no_setting():
+	var m = await _main("c2-b1")
+	var sol: PackedInt32Array = m.puzzle.solution
+	m.tap_cell(0, sol[0]); m.tap_cell(0, sol[0])           # mold, then cake
+	assert_eq(m.board.cells[sol[0]], Cells.CAKE)
+	assert_eq(m.board.auto, {}, "the game marks no cell by itself")
+	for i in m.n * m.n: if i != sol[0]: assert_eq(m.board.shown(i), Cells.EMPTY)
+	assert_null(m.settings_modal.find_child("AutoMolds", true, false), "no Auto-molds toggle in Settings")
+	assert_false(m.settings.auto_mold)
