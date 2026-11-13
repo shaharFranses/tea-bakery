@@ -91,6 +91,6 @@ func test_board_cake_per_chapter_and_daily():
 	m.open_board("c1-b1"); await wait_frames(1)
 	assert_eq(m.board.piece, "scone")
 	assert_true(m.open_daily("2026-11-05")); await wait_frames(1)
-	assert_eq(m.board.piece, "chocolate")
+	assert_eq(m.board.piece, "custard")
 	m.show_level_map()
-	assert_eq(m.map_box.get_node("MapHead6/MapCake6").texture.resource_path, "res://assets/board/cake_berry@2x.png")
+	assert_eq(m.map_box.get_node("MapHead6/MapCake6").texture.resource_path, "res://assets/board/cake_berry_top@2x.png")

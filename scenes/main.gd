@@ -381,7 +381,7 @@ func _build_screens() -> void:
 	# Home (§9: Continue / Bake of the Day / Recipe Book / Settings; counter shelf with décor; streak)
 	var h := _page("HomeScreen"); home_screen = h.root
 	h.col.add_child(_title(Cfg.TITLE_PLACEHOLDER, "HomeTitle", 32))
-	home_shelf = Shelf.new(); home_shelf.name = "HomeShelf"; home_shelf.cake_row = true; home_shelf.custom_minimum_size = Vector2(320, 142 + 96 * 320 / 360.0)
+	home_shelf = Shelf.new(); home_shelf.name = "HomeShelf"; home_shelf.zigzag = true; home_shelf.custom_minimum_size = Vector2(320, 290)
 	h.col.add_child(home_shelf)
 	home_streak = _body("", "HomeStreak"); h.col.add_child(home_streak)
 	home_stars = _body("", "HomeStars"); home_stars.add_theme_font_size_override("font_size", 14); h.col.add_child(home_stars)
@@ -461,7 +461,7 @@ func _build_screens() -> void:
 		hh.add_theme_constant_override("separation", 6); map_box.add_child(hh)
 		var ci := TextureRect.new(); ci.name = "MapCake%d" % ch; ci.custom_minimum_size = Vector2(32, 32)   # the chapter's cake
 		ci.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ci.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		ci.texture = load("res://assets/board/cake_%s@2x.png" % Chapters.cake_for(ch)); hh.add_child(ci)
+		ci.texture = load(Chapters.cake_top(Chapters.cake_for(ch))); hh.add_child(ci)
 		var hl := _body("", "MapCh%d" % ch); hl.theme_type_variation = "TitleLabel"; hl.add_theme_font_size_override("font_size", 18)
 		hl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT; hh.add_child(hl)
 		var grid := GridContainer.new(); grid.name = "MapGrid%d" % ch; grid.columns = 4
@@ -779,7 +779,7 @@ func _relayout() -> void:
 		(map_box.get_node("MapGrid%d" % ch) as GridContainer).columns = 6 if m == "wide" else 4
 	settings_flow.custom_minimum_size.x = 452.0 if m == "wide" else 220.0   # 2 toggles per row on wide (fits 800x450)
 	var short := vs.y < 600.0                      # e.g. the 800x450 CrazyGames embed: compact Home
-	home_shelf.custom_minimum_size.y = (90.0 if short else 142.0) + 70.0
+	home_shelf.custom_minimum_size.y = (190.0 if short else 290.0)
 	home_screen.get_node("Column").add_theme_constant_override("separation", 6 if short else 12)
 	end_screen.get_node("Column").add_theme_constant_override("separation", 6 if short else 12)
 	_fit_bubble()

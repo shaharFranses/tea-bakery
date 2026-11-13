@@ -26,7 +26,7 @@ func _dist(a: Color, b: Color) -> float:
 	return Vector3(a.r - b.r, a.g - b.g, a.b - b.b).length() * 255.0
 
 func _image(name: String) -> Image:
-	return Image.load_from_file(ProjectSettings.globalize_path("res://assets/board/cake_%s@2x.png" % name))
+	return Image.load_from_file(ProjectSettings.globalize_path("res://assets/board/cake_%s_top@2x.png" % name))
 
 ## [ink coverage, halo coverage] over 360 rays.
 func _ring_coverage(img: Image) -> Array:
