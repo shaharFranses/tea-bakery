@@ -1,5 +1,5 @@
-gate_folder=none (owner-requested test deploy, built in a Claude Code session from branch commit 0597249 on top of main f8820b5)
-commit=0597249
-pck_sha256=627625f282305d27a8d004cb8dfbc95c4db826602ce51d2b60abecd540b969cc
-staged=2026-11-13 08:22 UTC
+gate_folder=none (owner-requested test deploy, built in a Claude Code session from branch commit 53fe440 on top of main 35dd5f2 + art branch claude/nifty-fermat-fltxwg)
+commit=53fe440
+pck_sha256=b92f02536ca0053387344282b33f5c84d921e4df52f847bda137bf27221e80a5
+staged=2026-11-13 09:14 UTC
 qa=NOT RUN: this build did not go through the QA gate; Shahar asked for it on Pages for testing (2026-11-13)
