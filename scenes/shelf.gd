@@ -13,14 +13,14 @@ var _tex := {}
 ## Cake stands (home shelf only): three empty stands (two tiered, one footed plate) on a lower plank, 8 slots in all.
 ## A finished chapter puts its baked cake on its slot; the chapter -> slot order is a fixed scatter, so the stands fill
 ## in a mixed-up way (not left to right) and never move between visits. Empty slots stay empty (D-01).
-const EXTRA_H := 86.0      # 1x px added under the 360x160 shelf art
-const CAKE_SIZE := 21.0
-const BASE_Y := 212.0      # plank top the stands stand on (1x canvas y)
+const EXTRA_H := 96.0      # 1x px added under the 360x160 shelf art
+const CAKE_SIZE := 31.0
+const BASE_Y := 222.0      # plank top the stands stand on (1x canvas y)
 ## stand: x centre, plate colour, tiers [plate y offset above the base, plate width, [cake x offsets]]
 const STANDS := [
-	{"x": 64.0, "col": Color("EDBB80"), "tiers": [[12.0, 64.0, [-16.0, 16.0]], [35.0, 36.0, [0.0]]]},
-	{"x": 180.0, "col": Color("A9C79A"), "tiers": [[12.0, 54.0, [-14.0, 14.0]], [33.0, 32.0, [0.0]]]},
-	{"x": 294.0, "col": Color("EFA9B4"), "tiers": [[10.0, 68.0, [-16.0, 16.0]]]},
+	{"x": 66.0, "col": Color("EDBB80"), "tiers": [[14.0, 82.0, [-21.0, 21.0]], [40.0, 46.0, [0.0]]]},
+	{"x": 180.0, "col": Color("A9C79A"), "tiers": [[14.0, 72.0, [-19.0, 19.0]], [38.0, 42.0, [0.0]]]},
+	{"x": 294.0, "col": Color("EFA9B4"), "tiers": [[12.0, 86.0, [-22.0, 22.0]]]},
 ]
 ## chapter (index 0..7) -> flat slot index over STANDS (stand A: 0,1 low / 2 top, B: 3,4 / 5, C: 6,7)
 const SLOT_OF := [3, 6, 2, 7, 0, 5, 1, 4]
@@ -94,8 +94,8 @@ func _draw_stands(o: Vector2, k: float) -> void:
 		for t in st.tiers: top_y = maxf(top_y, float(t[0]))
 		# foot, stem, then each plate (back to front)
 		var foot := Vector2(cx, BASE_Y - 1.5)
-		draw_colored_polygon(_ellipse(o, foot, 15.0, 3.0, k), Pal.CLOTTED_CREAM)
-		var fp := _ellipse(o, foot, 15.0, 3.0, k); fp.append(fp[0]); draw_polyline(fp, ink, lw, true)
+		draw_colored_polygon(_ellipse(o, foot, 19.0, 3.5, k), Pal.CLOTTED_CREAM)
+		var fp := _ellipse(o, foot, 19.0, 3.5, k); fp.append(fp[0]); draw_polyline(fp, ink, lw, true)
 		draw_line(o + Vector2(cx, BASE_Y - 3.0) * k, o + Vector2(cx, BASE_Y - top_y) * k, ink, lw * 2.6)
 		draw_line(o + Vector2(cx, BASE_Y - 3.0) * k, o + Vector2(cx, BASE_Y - top_y) * k, Pal.CLOTTED_CREAM, lw * 1.2)
 		for t in st.tiers:
@@ -109,6 +109,6 @@ func _draw_stands(o: Vector2, k: float) -> void:
 	for ch in owned:
 		if ch < 1 or ch > SLOT_OF.size(): continue
 		var sp := _slot_pos(SLOT_OF[ch - 1])
-		var y := o.y + (sp.y + 1.5) * k - cs
+		var y := o.y + (sp.y + 3.0) * k - cs
 		if ch == drop_ch: y -= (1.0 - drop_t) * 60.0 * k
 		draw_texture_rect(_cake(ch), Rect2(Vector2(o.x + sp.x * k - cs / 2.0, y), Vector2(cs, cs)), false)
