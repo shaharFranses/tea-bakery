@@ -179,26 +179,30 @@ def scone_top():
     return p.done()
 
 def victoria_top():
-    p = Pen(); cx = cy = 128; R = 104
+    p = Pen(); cx, cy, R = 119, 137, 96
     p.circle(cx, cy, R, fill=rgb("#F2CF87"), outline=OC, width=OW)          # sponge edge
-    p.circle(cx, cy, R - 16, fill=rgb("#FDF7EC"))                           # sugar-dusted top
-    sp = [(cx + (10 + 62 * t) * math.cos(t * 4.6 * math.pi), cy + (10 + 62 * t) * math.sin(t * 4.6 * math.pi)) for t in (i / 160 for i in range(161))]
+    p.circle(cx, cy, R - 15, fill=rgb("#FDF7EC"))                           # sugar-dusted top
+    sp = [(cx + (10 + 56 * t) * math.cos(t * 4.6 * math.pi), cy + (10 + 56 * t) * math.sin(t * 4.6 * math.pi)) for t in (i / 160 for i in range(161))]
     p.line(sp, fill=rgb(RASP), width=7)                                     # jam spiral
-    a0, a1 = math.radians(-78), math.radians(-28)                           # slice cut out (upper right)
+    a0, a1 = math.radians(-78), math.radians(-28); am = (a0 + a1) / 2       # the cut slice (upper right)
     for k in range(7):                                                      # strawberries round the edge, one per slice
-        a = math.radians(-53 + k * 360 / 7)
-        if k == 0: continue
-        x, y = cx + 68 * math.cos(a), cy + 68 * math.sin(a)
-        p.circle(x, y, 17, fill=rgb("#D8344F"), outline=OC, width=5)
+        a = am + k * 2 * math.pi / 7
+        x, y = cx + 63 * math.cos(a), cy + 63 * math.sin(a)
+        p.circle(x, y, 16, fill=rgb("#D8344F"), outline=OC, width=5)
         p.poly([(x - 8, y - 5), (x, y - 13), (x + 8, y - 5), (x, y - 1)], fill=rgb(SAGE))
-    im = p.im; far = 150 * SS
+    # pull the slice out along its bisector, so the whole cake keeps its ink outline (board readability test)
+    im = p.im; far = 150 * SS; off = 24; ox, oy = off * math.cos(am), off * math.sin(am)
     wedge = [(cx * SS, cy * SS)] + [(cx * SS + far * math.cos(a0 + (a1 - a0) * i / 12), cy * SS + far * math.sin(a0 + (a1 - a0) * i / 12)) for i in range(13)]
     hole = Image.new("L", im.size, 0); ImageDraw.Draw(hole).polygon(wedge, fill=255)
-    im.putalpha(Image.fromarray(np.where(np.array(hole) > 0, 0, np.array(im.split()[3])).astype(np.uint8)))
-    p.d = ImageDraw.Draw(im)
-    for a in (a0, a1):                                                      # cut faces: cream + jam line, inked
+    alpha = np.array(im.split()[3]); hm = np.array(hole) > 0
+    piece = im.copy(); piece.putalpha(Image.fromarray(np.where(hm, alpha, 0).astype(np.uint8)))
+    im.putalpha(Image.fromarray(np.where(hm, 0, alpha).astype(np.uint8)))
+    moved = Image.new("RGBA", im.size, (0, 0, 0, 0)); moved.paste(piece, (int(round(ox * SS)), int(round(oy * SS))))
+    p.layer(moved)
+    for a in (a0, a1):                                                      # cut faces, inked on the cake and on the slice
         ex, ey = cx + (R - 4) * math.cos(a), cy + (R - 4) * math.sin(a)
-        p.line([(cx, cy), (ex, ey)], fill=OC, width=OW)
+        p.line([(cx, cy), (ex, ey)], fill=OC, width=7)
+        p.line([(cx + ox, cy + oy), (ex + ox, ey + oy)], fill=OC, width=7)
     return p.done()
 
 def macaron_top():

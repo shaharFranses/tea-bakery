@@ -31,8 +31,11 @@ ONE_X = sorted(os.path.relpath(f, root) for f in glob.glob(os.path.join(root, "a
 # none is excluded any more. (SM ruling 2026-11-01 had kept the 8 non-berry cakes out of the pck while berry was the
 # only v1 cake; that exclusion made the exported game fail to load them.) tests/test_export_presets.gd guards this.
 SHIPPED_CAKES = ["berry", "scone", "victoria", "lemon", "apricot", "bakewell", "custard", "macaron", "chocolate"]
+# 2026-11-13: the game loads cake_<name>_top@2x (boards, map) and cake_<name>_side@2x (home-shelf trophies); the
+# unsuffixed cake_<name>@2x legacy sprites are no longer loaded, so they stay out of the pck.
+KEEP = {f"cake_{c}_{v}@2x.png" for c in SHIPPED_CAKES for v in ("top", "side")}
 EXTRA_CAKES = sorted(os.path.relpath(f, root) for f in glob.glob(os.path.join(root, "assets", "board", "cake_*@2x.png"))
-                     if os.path.basename(f)[len("cake_"):-len("@2x.png")] not in SHIPPED_CAKES)
+                     if os.path.basename(f) not in KEEP)
 EXC = EXC + ", assets/backdrop/README.txt" + "".join(", " + f for f in ONE_X + EXTRA_CAKES)
 def preset(i, name, path, excl, release_tpl, debug_tpl):
     return f'''[preset.{i}]

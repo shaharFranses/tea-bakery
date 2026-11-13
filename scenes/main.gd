@@ -461,7 +461,7 @@ func _build_screens() -> void:
 		hh.add_theme_constant_override("separation", 6); map_box.add_child(hh)
 		var ci := TextureRect.new(); ci.name = "MapCake%d" % ch; ci.custom_minimum_size = Vector2(32, 32)   # the chapter's cake
 		ci.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ci.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		ci.texture = load("res://assets/board/cake_%s@2x.png" % Chapters.cake_for(ch)); hh.add_child(ci)
+		ci.texture = load(Chapters.cake_top(Chapters.cake_for(ch))); hh.add_child(ci)
 		var hl := _body("", "MapCh%d" % ch); hl.theme_type_variation = "TitleLabel"; hl.add_theme_font_size_override("font_size", 18)
 		hl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT; hh.add_child(hl)
 		var grid := GridContainer.new(); grid.name = "MapGrid%d" % ch; grid.columns = 4

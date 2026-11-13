@@ -15,13 +15,13 @@ func test_mold_and_cake_draw_sizes() -> void:
 ## SPEC v1.2 (D-03 revised): one cake per chapter (its recipe), chocolate on the daily, berry v2 on debug boards.
 func test_cake_pieces_and_2x_sprites() -> void:
 	const Chapters = preload("res://game/chapters.gd")
-	assert_eq(Chapters.CAKES, ["scone", "victoria", "lemon", "apricot", "bakewell", "berry", "custard", "macaron"])
-	assert_eq(Chapters.DAILY_CAKE, "chocolate"); assert_eq(Chapters.DEFAULT_CAKE, "berry")
+	assert_eq(Chapters.CAKES, ["scone", "victoria", "lemon", "apricot", "bakewell", "berry", "chocolate", "macaron"])
+	assert_eq(Chapters.DAILY_CAKE, "custard"); assert_eq(Chapters.DEFAULT_CAKE, "berry")
 	assert_eq(Chapters.cake_for(1), "scone"); assert_eq(Chapters.cake_for(8), "macaron"); assert_eq(Chapters.cake_for(0), "berry")
 	for c in Chapters.CAKES + [Chapters.DAILY_CAKE]: assert_true(c in BoardView.CAKE_PIECES, c)
 	assert_eq(BoardView.MOLD_SPRITE, "res://assets/board/mold@2x.png")
 	var bv = BoardView.new(); add_child_autofree(bv)
-	for c in BoardView.CAKE_PIECES: assert_true(bv.tex["cake_" + c].resource_path.ends_with("cake_%s@2x.png" % c))
+	for c in BoardView.CAKE_PIECES: assert_true(bv.tex["cake_" + c].resource_path.ends_with("cake_%s_top@2x.png" % c))
 	bv.setup(5, PackedInt32Array(), [], "lemon"); assert_eq(bv.piece, "lemon")
 	bv.setup(5, PackedInt32Array(), [], "nope"); assert_eq(bv.piece, "berry", "unknown piece falls back to berry")
 	for k in bv.tex: assert_not_null(bv.tex[k], k)

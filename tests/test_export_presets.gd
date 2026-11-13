@@ -21,7 +21,8 @@ func test_every_cake_piece_ships():
 	assert_eq(ex.size(), 2, "Web + Web Release presets")
 	for f in ex:
 		for c in pieces:
-			assert_false(("assets/board/cake_%s@2x.png" % c) in f, "cake_%s@2x.png must not be excluded from the export" % c)
+			for v in ["top", "side"]:   # boards load the top view, the home shelf the side view
+				assert_false(("assets/board/cake_%s_%s@2x.png" % [c, v]) in f, "cake_%s_%s@2x.png must not be excluded from the export" % [c, v])
 
 func test_card_fx_assets_ship():
 	for f in _excludes():

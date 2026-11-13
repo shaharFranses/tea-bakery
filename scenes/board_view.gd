@@ -96,7 +96,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	for s in SPRITES: tex[s] = load(DIR + s + "@2x.png")
-	for c in CAKE_PIECES: tex["cake_" + c] = load(DIR + "cake_" + c + "@2x.png")
+	for c in CAKE_PIECES: tex["cake_" + c] = load(DIR + "cake_" + c + "_top@2x.png")   # top view on the board
 	tiles.clear()
 	for i in Pal.REGION_NAMES.size(): tiles.append(load(DIR + "tile_%d_%s@2x.png" % [i, Pal.REGION_NAMES[i]]))
 	tray_box = Slice.make(DIR + "tray_frame@2x.png", Vector4(32, 32, 32, 32), Vector4.ZERO)

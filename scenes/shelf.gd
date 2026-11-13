@@ -30,7 +30,7 @@ func extra_h() -> float: return EXTRA_H if cake_row else 0.0
 var cake_row := false      # set by main on the home shelf
 
 func _cake(ch: int) -> Texture2D:
-	if not _cake_tex.has(ch): _cake_tex[ch] = load("res://assets/board/cake_%s@2x.png" % Chapters.CAKES[ch - 1])
+	if not _cake_tex.has(ch): _cake_tex[ch] = load(Chapters.cake_side(Chapters.CAKES[ch - 1]))   # side view: the chapter trophy
 	return _cake_tex[ch]
 
 func _slot_pos(slot: int) -> Vector2:   # 1x canvas coords of the plate surface under slot's cake
