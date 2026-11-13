@@ -15,7 +15,7 @@ OC = rgb(INK); OW = 10; HL = (255, 255, 255, 130)
 CRUST = rgb("#F2C584"); CRUST_D = rgb("#DDA766"); CREAMY = rgb("#FFF6E8")
 SS = 3   # supersample; shapes are authored in 256-px units
 LEGACY = {"scone": "side", "victoria": "side", "lemon": "top", "apricot": "top", "bakewell": "top", "berry": "top",
-          "custard": "top", "macaron": "side"}
+          "custard": "top", "macaron": "side", "chocolate": "top"}
 
 
 class Pen:
@@ -133,6 +133,23 @@ def custard_side():
     crust_wall(p, flutes=9, crimp=True)
     return p.done()
 
+def chocolate_side():
+    p = Pen(); choc = rgb("#5A3230")
+    dome(p, choc, 60, inset=12)                                  # glossy ganache dome
+    p.ellipse([60, 106, 104, 122], fill=(255, 255, 255, 70))
+    for x, y0, y1 in ((52, 140, 158), (84, 144, 170), (150, 144, 164), (196, 140, 172)):   # ganache drips over the rim
+        p.line([(x, y0), (x, y1)], fill=OC, width=22); p.line([(x, y0), (x, y1)], fill=choc, width=12)
+    bx, by, br = 136, 82, 24                                     # raspberry + gold leaf, as on the top view
+    p.poly([(96, 98), (116, 84), (112, 108)], fill=rgb("#E7C46A"), outline=OC, width=4)
+    p.circle(bx, by, br, fill=rgb("#C2335A"), outline=OC, width=5)
+    for k in range(5):
+        a = k * 2 * math.pi / 5 - 0.3; p.circle(bx + math.cos(a) * 11, by + math.sin(a) * 11, 6, fill=rgb("#E0607F"))
+    p.circle(bx, by, 5, fill=rgb("#E0607F"))
+    crust_wall(p, flutes=9)
+    for x, y0, y1 in ((52, 150, 158), (84, 150, 170), (150, 150, 164), (196, 150, 172)):   # drips sit in front of the crust
+        p.line([(x, y0), (x, y1)], fill=OC, width=22); p.line([(x, y0 - 6), (x, y1)], fill=choc, width=12)
+    return p.done()
+
 def bakewell_side():
     p = Pen()
     p.line([(134, 66), (158, 26)], fill=OC, width=12); p.line([(134, 66), (158, 26)], fill=rgb(SAGE), width=7)   # stem
@@ -194,7 +211,7 @@ def macaron_top():
 
 
 NEW = {"scone": ("top", scone_top), "victoria": ("top", victoria_top), "lemon": ("side", lemon_side), "apricot": ("side", apricot_side),
-       "bakewell": ("side", bakewell_side), "berry": ("side", berry_side), "custard": ("side", custard_side), "macaron": ("top", macaron_top)}
+       "bakewell": ("side", bakewell_side), "berry": ("side", berry_side), "custard": ("side", custard_side), "chocolate": ("side", chocolate_side), "macaron": ("top", macaron_top)}
 
 IMPORT_TMPL = open(os.path.join(OUT, "cake_scone.png.import")).read()
 def write_import(name):
