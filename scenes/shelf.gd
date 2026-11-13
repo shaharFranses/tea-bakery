@@ -10,18 +10,37 @@ var drop_ch := 0           # décor piece currently dropping in (chapter end), 0
 var drop_t := 1.0
 var _slots := {}
 var _tex := {}
-## Cake tray (home shelf only): a cream runner under the counter with one slot per chapter; each finished chapter's baked
-## cake sits in its slot. Nothing overlaps the décor above. Empty slots stay empty (D-01: no silhouettes, no "?").
-const TRAY_H := 34.0       # 1x px added under the 360x160 shelf art
-const CAKE_SIZE := 28.0
-var cake_row := false      # set by main on the home shelf
+## Cake stands (home shelf only): three empty stands (two tiered, one footed plate) on a lower plank, 8 slots in all.
+## A finished chapter puts its baked cake on its slot; the chapter -> slot order is a fixed scatter, so the stands fill
+## in a mixed-up way (not left to right) and never move between visits. Empty slots stay empty (D-01).
+const EXTRA_H := 86.0      # 1x px added under the 360x160 shelf art
+const CAKE_SIZE := 21.0
+const BASE_Y := 212.0      # plank top the stands stand on (1x canvas y)
+## stand: x centre, plate colour, tiers [plate y offset above the base, plate width, [cake x offsets]]
+const STANDS := [
+	{"x": 64.0, "col": Color("EDBB80"), "tiers": [[12.0, 64.0, [-16.0, 16.0]], [35.0, 36.0, [0.0]]]},
+	{"x": 180.0, "col": Color("A9C79A"), "tiers": [[12.0, 54.0, [-14.0, 14.0]], [33.0, 32.0, [0.0]]]},
+	{"x": 294.0, "col": Color("EFA9B4"), "tiers": [[10.0, 68.0, [-16.0, 16.0]]]},
+]
+## chapter (index 0..7) -> flat slot index over STANDS (stand A: 0,1 low / 2 top, B: 3,4 / 5, C: 6,7)
+const SLOT_OF := [3, 6, 2, 7, 0, 5, 1, 4]
 var _cake_tex := {}
 
-func extra_h() -> float: return TRAY_H if cake_row else 0.0
+func extra_h() -> float: return EXTRA_H if cake_row else 0.0
+var cake_row := false      # set by main on the home shelf
 
 func _cake(ch: int) -> Texture2D:
 	if not _cake_tex.has(ch): _cake_tex[ch] = load("res://assets/board/cake_%s@2x.png" % Chapters.CAKES[ch - 1])
 	return _cake_tex[ch]
+
+func _slot_pos(slot: int) -> Vector2:   # 1x canvas coords of the plate surface under slot's cake
+	var n := 0
+	for st in STANDS:
+		for t in st.tiers:
+			for dx in t[2]:
+				if n == slot: return Vector2(float(st.x) + float(dx), BASE_Y - float(t[0]))
+				n += 1
+	return Vector2.ZERO
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -55,15 +74,41 @@ func _draw() -> void:
 		if ch == drop_ch: y -= (1.0 - drop_t) * 80.0 * k
 		draw_texture_rect(_tex[ch], Rect2(Vector2(o.x + float(s.x) * k - side / 2.0, y), Vector2(side, side)), false)
 	if 6 in owned: draw_texture_rect(_tex.shelf_bunting_garland, full, false)
-	if cake_row:
-		var tray := StyleBoxFlat.new(); tray.bg_color = Color(Pal.CLOTTED_CREAM, 0.92)
-		tray.set_corner_radius_all(int(14 * k)); tray.set_border_width_all(maxi(1, int(2 * k))); tray.border_color = Pal.EARL_GREY_INK
-		var ty := o.y + 156.0 * k
-		draw_style_box(tray, Rect2(Vector2(o.x + 12.0 * k, ty), Vector2(336, TRAY_H - 6.0) * k))
-		var cs := CAKE_SIZE * k
-		for ch in owned:
-			if ch < 1 or ch > Chapters.CAKES.size(): continue
-			var cx: float = 30.0 + (ch - 1) * 42.857      # 8 slots across the tray
-			var cy := ty + ((TRAY_H - 6.0) * k - cs) / 2.0
-			if ch == drop_ch: cy -= (1.0 - drop_t) * 60.0 * k
-			draw_texture_rect(_cake(ch), Rect2(Vector2(o.x + cx * k - cs / 2.0, cy), Vector2(cs, cs)), false)
+	if cake_row: _draw_stands(o, k)
+
+func _ellipse(o: Vector2, c: Vector2, rx: float, ry: float, k: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in 24: pts.append(o + (c + Vector2(cos(i * TAU / 24.0) * rx, sin(i * TAU / 24.0) * ry)) * k)
+	return pts
+
+func _draw_stands(o: Vector2, k: float) -> void:
+	var ink: Color = Pal.EARL_GREY_INK
+	var lw := maxf(1.2, 1.6 * k)
+	# lower plank: the bottom strip of the counter art (plank + scalloped trim), set under the stands
+	var sh := 38.0
+	var src := Rect2(0, 122.0 * 2.0, 720, sh * 2.0)
+	draw_texture_rect_region(_tex.shelf_counter, Rect2(o + Vector2(0, (BASE_Y - 4.5) * k), Vector2(360, sh) * k), src)
+	var base := o + Vector2(0, BASE_Y * k)
+	for st in STANDS:
+		var cx: float = st.x; var top_y := 0.0
+		for t in st.tiers: top_y = maxf(top_y, float(t[0]))
+		# foot, stem, then each plate (back to front)
+		var foot := Vector2(cx, BASE_Y - 1.5)
+		draw_colored_polygon(_ellipse(o, foot, 15.0, 3.0, k), Pal.CLOTTED_CREAM)
+		var fp := _ellipse(o, foot, 15.0, 3.0, k); fp.append(fp[0]); draw_polyline(fp, ink, lw, true)
+		draw_line(o + Vector2(cx, BASE_Y - 3.0) * k, o + Vector2(cx, BASE_Y - top_y) * k, ink, lw * 2.6)
+		draw_line(o + Vector2(cx, BASE_Y - 3.0) * k, o + Vector2(cx, BASE_Y - top_y) * k, Pal.CLOTTED_CREAM, lw * 1.2)
+		for t in st.tiers:
+			var c := o + Vector2(cx, BASE_Y - float(t[0])) * k
+			var rx: float = float(t[1]) / 2.0
+			var pl := _ellipse(o, Vector2(cx, BASE_Y - float(t[0])), rx, 3.6, k)
+			draw_colored_polygon(pl, st.col)
+			var pl2 := pl.duplicate(); pl2.append(pl[0]); draw_polyline(pl2, ink, lw, true)
+	# cakes last, so they sit on top of every plate
+	var cs := CAKE_SIZE * k
+	for ch in owned:
+		if ch < 1 or ch > SLOT_OF.size(): continue
+		var sp := _slot_pos(SLOT_OF[ch - 1])
+		var y := o.y + (sp.y + 1.5) * k - cs
+		if ch == drop_ch: y -= (1.0 - drop_t) * 60.0 * k
+		draw_texture_rect(_cake(ch), Rect2(Vector2(o.x + sp.x * k - cs / 2.0, y), Vector2(cs, cs)), false)

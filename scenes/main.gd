@@ -381,7 +381,7 @@ func _build_screens() -> void:
 	# Home (§9: Continue / Bake of the Day / Recipe Book / Settings; counter shelf with décor; streak)
 	var h := _page("HomeScreen"); home_screen = h.root
 	h.col.add_child(_title(Cfg.TITLE_PLACEHOLDER, "HomeTitle", 32))
-	home_shelf = Shelf.new(); home_shelf.name = "HomeShelf"; home_shelf.cake_row = true; home_shelf.custom_minimum_size = Vector2(320, 142 + 34 * 320 / 360.0)
+	home_shelf = Shelf.new(); home_shelf.name = "HomeShelf"; home_shelf.cake_row = true; home_shelf.custom_minimum_size = Vector2(320, 142 + 86 * 320 / 360.0)
 	h.col.add_child(home_shelf)
 	home_streak = _body("", "HomeStreak"); h.col.add_child(home_streak)
 	home_stars = _body("", "HomeStars"); home_stars.add_theme_font_size_override("font_size", 14); h.col.add_child(home_stars)
@@ -779,7 +779,7 @@ func _relayout() -> void:
 		(map_box.get_node("MapGrid%d" % ch) as GridContainer).columns = 6 if m == "wide" else 4
 	settings_flow.custom_minimum_size.x = 452.0 if m == "wide" else 220.0   # 2 toggles per row on wide (fits 800x450)
 	var short := vs.y < 600.0                      # e.g. the 800x450 CrazyGames embed: compact Home
-	home_shelf.custom_minimum_size.y = (90.0 if short else 142.0) + 30.0
+	home_shelf.custom_minimum_size.y = (90.0 if short else 142.0) + 62.0
 	home_screen.get_node("Column").add_theme_constant_override("separation", 6 if short else 12)
 	end_screen.get_node("Column").add_theme_constant_override("separation", 6 if short else 12)
 	_fit_bubble()
