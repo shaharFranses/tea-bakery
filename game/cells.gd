@@ -14,13 +14,13 @@ const MOLD_AUTO := 3          # display/dump only
 const NAMES := ["empty", "mold", "cake", "mold_auto"]
 
 const ORDER_MOLD_FIRST := "mold_first"   # default: empty -> mold -> cake -> empty
-const ORDER_CAKE_FIRST := "cake_first"   # Settings "Tap order: cake first": empty -> cake -> mold -> empty
+const ORDER_CAKE_FIRST := "cake_first"   # Settings "Tap order: cake first": empty -> cake -> empty (a tapped cake leaves no mold)
 
 ## Next stored state for one tap. An auto-mold cell is stored EMPTY, so it cycles like an empty cell.
 static func next_state(state: int, order: String = ORDER_MOLD_FIRST) -> int:
 	if state == MOLD_AUTO: state = EMPTY
 	if order == ORDER_CAKE_FIRST:
-		return [CAKE, EMPTY, MOLD][state]    # EMPTY->CAKE, MOLD->EMPTY, CAKE->MOLD
+		return [CAKE, EMPTY, EMPTY][state]   # EMPTY->CAKE, MOLD->EMPTY, CAKE->EMPTY (local change: removing a cake never leaves a mold)
 	return [MOLD, CAKE, EMPTY][state]        # EMPTY->MOLD, MOLD->CAKE, CAKE->EMPTY
 
 ## Right-click (desktop): toggles the empty mold directly, never produces a cake. On a cake it does nothing.
