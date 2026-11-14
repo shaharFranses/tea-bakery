@@ -80,5 +80,5 @@ static func board(ch: int, b: int) -> Dictionary:
 	var tgt := []
 	for t in e.get("targets", []): tgt.append(Vector2i(int(t[0]), int(t[1])))
 	return {"n": n, "regions": reg, "solution": sol, "grade": int(e.grade), "id": str(e.id), "givens": giv,
-		"coach": str(e.get("coach", "")), "targets": tgt, "tutorial": e.has("coach"), "chapter": ch, "board": b,
+		"coach": str(e.get("coach", "")), "coach_cake_first": str(e.get("coach_cake_first", "")), "guide": e.get("guide", []), "targets": tgt, "tutorial": e.has("coach"), "chapter": ch, "board": b,
 		"seed": int(e.get("seed", 0)), "source_id": str(e.get("source", "")), "ms": 0.0, "reshapes": 0}

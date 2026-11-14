@@ -15,6 +15,8 @@ const Slice = preload("res://ui/theme/slice2x.gd")
 
 signal cell_tapped(r: int, c: int)
 signal cell_right_clicked(r: int, c: int)
+signal cake_baked(k: int, total: int)   # win celebration: cake k (reading order) just turned golden
+signal bake_finished                    # every cake is golden (the oven bell rings here)
 
 const EMPTY := Cells.EMPTY
 const MOLD := Cells.MOLD
@@ -51,6 +53,12 @@ const ANIM_MS := {"mold_in": 90, "cake_pop": 150, "cake_out": 100, "shake": 200}
 var anim := {}
 var bake_t0 := -1
 var steam_cells: Array = []
+## Win celebration ("game magic"): cakes turn golden one by one (BAKE_STAGGER_MS apart), then the oven bell rings.
+const BAKE_STAGGER_MS := 90
+const BAKE_FINISH_PAUSE_MS := 160
+var _bake_cells: Array = []
+var _bake_next := 0
+var _bake_done := true
 var shakes_started := 0          # QA/debug counter
 func now_ms() -> int: return Time.get_ticks_msec()
 
@@ -75,6 +83,7 @@ func start_bake(seed_value: int) -> void:
 	for i in n * n: if cells[i] == CAKE: cakes_i.append(i)
 	var rng := RandomNumberGenerator.new(); rng.seed = seed_value
 	var k := clampi(3 + rng.randi() % 3, 0, cakes_i.size())
+	_bake_cells = cakes_i; _bake_next = 0; _bake_done = false
 	steam_cells = []
 	while steam_cells.size() < k:
 		var c: int = cakes_i[rng.randi() % cakes_i.size()]
@@ -82,7 +91,11 @@ func start_bake(seed_value: int) -> void:
 	set_process(true)
 
 func stop_bake() -> void:
-	bake_t0 = -1; steam_cells = []
+	bake_t0 = -1; steam_cells = []; _bake_cells = []; _bake_next = 0; _bake_done = true
+
+func cell_centre(i: int) -> Vector2:
+	var br := board_rect(); var cs := cell_size()
+	return Vector2(br.position.x + (i % n + 0.5) * cs, br.position.y + (i / n + 0.5) * cs)
 
 func _anim_k(i: int) -> Array:   # [kind, 0..1 progress] or []
 	if not anim.has(i): return []
@@ -103,7 +116,13 @@ func _ready() -> void:
 	tray_box_solved = Slice.make(DIR + "tray_frame_solved@2x.png", Vector4(32, 32, 32, 32), Vector4.ZERO)
 
 func _process(dt: float) -> void:
-	var busy := not anim.is_empty() or (bake_t0 >= 0 and now_ms() - bake_t0 < 2200)
+	var busy := not anim.is_empty() or (bake_t0 >= 0 and now_ms() - bake_t0 < 4000)
+	if bake_t0 >= 0 and not _bake_done:
+		var el := now_ms() - bake_t0
+		while _bake_next < _bake_cells.size() and el >= _bake_next * BAKE_STAGGER_MS:
+			cake_baked.emit(_bake_next, _bake_cells.size()); _bake_next += 1
+		if _bake_next >= _bake_cells.size() and el >= _bake_cells.size() * BAKE_STAGGER_MS + BAKE_FINISH_PAUSE_MS:
+			_bake_done = true; bake_finished.emit()
 	if not hint_target.is_empty():
 		hint_phase = fmod(hint_phase + dt / 0.9, 1.0); busy = true
 	if busy: queue_redraw()
@@ -231,7 +250,7 @@ func _draw() -> void:
 		elif st == EMPTY and not ak.is_empty() and ak[0] == "cake_out":
 			_sprite("cake_" + piece, _centred(ctr + Vector2(0, cs * 0.02), cake_side(cs) * (1.0 - ak[1])))
 		elif st == CAKE:
-			var golden := won and bake_t0 >= 0 and now_ms() - bake_t0 >= _reading_rank(i) * 40
+			var golden := won and bake_t0 >= 0 and now_ms() - bake_t0 >= _reading_rank(i) * BAKE_STAGGER_MS
 			var mod := Color(1.0, 0.86, 0.6) if golden or (won and bake_t0 < 0) else Color.WHITE
 			var t2: Texture2D = tex.get("cake_" + piece)
 			if t2: draw_texture_rect(t2, _centred(ctr + Vector2(0, cs * 0.02), cake_side(cs) * sc), false, mod)

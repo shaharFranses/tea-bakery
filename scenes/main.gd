@@ -34,6 +34,7 @@ const TouchScroll = preload("res://ui/touch_scroll.gd")
 const Shelf = preload("res://scenes/shelf.gd")
 const StarRow = preload("res://scenes/star_row.gd")
 
+const CARD_DELAY_MS := 1300      # win celebration: the tray bakes (golden wave, sparkles, steam, sprinkles) before the card
 const CARD_MS := 1500            # bake reward + "Baked!" card, then the next board (TT-AC-25: interactive <= 2.0 s)
 const SAVE_DEBOUNCE_S := 1.0     # §3.5 save.debounce_ms
 const IDLE_PULSE_S := 30.0
@@ -177,6 +178,8 @@ func _ready() -> void:
 	save_timer.timeout.connect(func(): save_now("debounce")); add_child(save_timer)
 	card_timer = Timer.new(); card_timer.name = "CardTimer"; card_timer.one_shot = true; card_timer.wait_time = CARD_MS / 1000.0
 	card_timer.timeout.connect(_after_card); add_child(card_timer)
+	board.cake_baked.connect(func(k, total): Sfx.bake_tick(k, total))
+	board.bake_finished.connect(func(): Sfx.bake_ding())
 	PkdView.insets_changed.connect(_on_resized)
 	_apply_safe_area()
 	get_viewport().size_changed.connect(_on_resized)
@@ -187,9 +190,8 @@ func _ready() -> void:
 		n = clampi((qsize if qsize != "" else "5").to_int(), Gen.MIN_N, max_size())
 		new_board(n, Gen.seed_from_string(qs) if qs != "" else _fresh_seed())
 	else:
-		var tgt: String = progress.boot_target()
-		if tgt == "home": show_home()
-		else: open_board(tgt, true)
+		# Local change: always boot to Home; Continue / Play resumes the saved board or next level.
+		show_home()
 	var st := Dbg.toggle("state", "")
 	if st != "": _preset_state(st)
 	Ads.hold(true)            # no SDK call / ad until the intro has finished (SD dev a795a1a boot hold)
@@ -487,7 +489,7 @@ func _build_screens() -> void:
 	solved_card.set_anchors_preset(Control.PRESET_FULL_RECT); modal_root.add_child(solved_card)
 	solved_card.gui_input.connect(_on_card_input)
 	var scc := CenterContainer.new(); scc.set_anchors_preset(Control.PRESET_FULL_RECT); scc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	solved_card.add_child(scc)
+	solved_card.add_child(scc); card_panel = scc
 	var scp := PanelContainer.new(); scp.theme_type_variation = "CardPanel"; scp.mouse_filter = Control.MOUSE_FILTER_IGNORE; scc.add_child(scp)
 	var scv := VBoxContainer.new(); scv.mouse_filter = Control.MOUSE_FILTER_IGNORE; scp.add_child(scv)
 	card_title = _title("Baked!", "CardTitle", 32); card_title.custom_minimum_size.x = 200; scv.add_child(card_title)
@@ -692,10 +694,48 @@ func _sync_board_chrome() -> void:
 	sizes.visible = mode == "free"; button.visible = mode == "free"
 	board.hint_target = {}; board.hint_unit = {}
 	var coach := str(puzzle.get("coach", ""))
+	if settings.tap_order == Cells.ORDER_CAKE_FIRST and str(puzzle.get("coach_cake_first", "")) != "": coach = str(puzzle.coach_cake_first)
 	hint_label.text = coach if coach != "" else Cfg.RULES_TEXT
 	if coach != "":
 		for t in puzzle.get("targets", []): board.hint_target[t.x * n + t.y] = true   # pulsing target cell (§6)
+	_sync_guide()
 	_sync_hint_button()
+
+## Guided tutorial trays (c1-b1, c1-b2): the puzzle carries "guide" = [{text, target: [r, c], unit: row|col|color|""}].
+## The player bakes every cake themself, one rule at a time: only the glowing cell reacts, one tap bakes it, and the
+## bubble + the highlighted row / column / color explain why. The current step is derived from the board (first step
+## whose target has no cake), so undo, reset and a restored save all stay in sync without extra state.
+func _guide() -> Array:
+	return puzzle.get("guide", [])
+
+func _guide_step() -> int:
+	var g := _guide()
+	for k in g.size():
+		var t: Array = g[k].target
+		if board.cells[int(t[0]) * n + int(t[1])] != Cells.CAKE: return k
+	return g.size()
+
+func _guide_active() -> bool:
+	return _guide_step() < _guide().size()
+
+func _sync_guide() -> void:
+	var g := _guide()
+	var k := _guide_step()
+	if won or k >= g.size(): return
+	var st: Dictionary = g[k]
+	var r := int(st.target[0]); var c := int(st.target[1])
+	hint_label.text = str(st.text)
+	board.hint_target = {r * n + c: true}
+	board.hint_unit = {}
+	match str(st.get("unit", "")):
+		"row":
+			for j in n: board.hint_unit[r * n + j] = true
+		"col":
+			for j in n: board.hint_unit[j * n + c] = true
+		"color":
+			for j in n * n:
+				if puzzle.regions[j] == puzzle.regions[r * n + c]: board.hint_unit[j] = true
+	board.queue_redraw()
 
 ## Largest board for this device: 8 on phones/touch, 9 on desktop only if 9x9 cells stay >= 44 px.
 func max_size() -> int:
@@ -892,9 +932,13 @@ func tap_cell(r: int, c: int) -> void:
 	if not _can_edit(): return
 	var i := r * n + c
 	if givens.has(i): return
+	var guided := _guide_active()
+	if guided:
+		var t: Array = _guide()[_guide_step()].target
+		if r != int(t[0]) or c != int(t[1]): return      # guided tray: only the glowing cell reacts
 	_push_history()
 	var before: int = board.cells[i]
-	board.cells[i] = Cells.next_state(before, settings.tap_order)
+	board.cells[i] = Cells.CAKE if guided else Cells.next_state(before, settings.tap_order)
 	board.notify_change(i, before, board.cells[i])
 	moves += 1
 	_input_happened()
@@ -905,7 +949,7 @@ func tap_cell(r: int, c: int) -> void:
 func right_click_cell(r: int, c: int) -> void:
 	if not _can_edit(): return
 	var i := r * n + c
-	if givens.has(i): return
+	if givens.has(i) or _guide_active(): return
 	_push_history()
 	var before: int = board.cells[i]
 	board.cells[i] = Cells.right_click(before)
@@ -1010,6 +1054,7 @@ func _refresh() -> void:
 		status.text = "Those cakes would stick together in the oven."
 	else:
 		status.text = "%d of %d cakes placed." % [cs.size(), n]
+	_sync_guide()
 	_sync_hint_button()
 
 # ------------------------------------------------------------------ solve flow
@@ -1039,8 +1084,27 @@ func _on_solved() -> void:
 	card_tip.text = "No hints for 2 stars, and no clashes too for 3." if last_stars == 1 else "Bake it with no clashes for 3 stars."
 	card_open = true; solved_card.visible = true; card_open_ms = Time.get_ticks_msec()
 	_card_first = first
+	# the card stays invisible while the tray celebrates; solved_card itself is up so a tap can still skip ahead
+	card_revealed = false; card_panel.modulate.a = 0.0
+	if _card_tween: _card_tween.kill()
+	_card_tween = create_tween()
+	_card_tween.tween_interval(CARD_DELAY_MS / 1000.0)
+	_card_tween.tween_callback(_reveal_card)
+
+## Shows the "Baked!" card (fade + small pop) and starts its timer. Called after the celebration or by an early tap.
+func _reveal_card() -> void:
+	if not card_open or card_revealed: return
+	card_revealed = true; card_open_ms = Time.get_ticks_msec()
+	if _card_tween: _card_tween.kill()
+	card_panel.pivot_offset = card_panel.size / 2.0; card_panel.scale = Vector2(0.85, 0.85)
+	_card_tween = create_tween().set_parallel(true)
+	_card_tween.tween_property(card_panel, "modulate:a", 1.0, 0.18)
+	_card_tween.tween_property(card_panel, "scale", Vector2.ONE, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	card_timer.start()
 
+var card_panel: Control
+var card_revealed := false
+var _card_tween: Tween
 var _card_first := false
 var card_open_ms := 0
 var t_solved_ms := 0           # engine ticks at solve (TT-AC-25 timing, debug dump)
@@ -1049,10 +1113,14 @@ var t_interactive_ms := 0      # engine ticks when the current board became inte
 ## Tap skips the card; the solving tap's own emulated mouse/touch twin (same input, < 250 ms) must not skip it.
 func _on_card_input(ev: InputEvent) -> void:
 	var down: bool = (ev is InputEventMouseButton and ev.pressed) or (ev is InputEventScreenTouch and ev.pressed)
-	if down and Time.get_ticks_msec() - card_open_ms >= 250: _after_card()
+	if not down or Time.get_ticks_msec() - card_open_ms < 250: return
+	if card_revealed: _after_card()
+	else: _reveal_card()          # first tap during the celebration brings the card; the next one moves on
 
 func _close_card() -> void:
 	card_timer.stop(); card_open = false; solved_card.visible = false
+	if _card_tween: _card_tween.kill()
+	if card_panel: card_panel.modulate.a = 1.0; card_panel.scale = Vector2.ONE
 
 ## After the bake reward + "Baked!" card (auto at 1.5 s, or one tap): next board / chapter end / Home (TT-AC-25).
 func _after_card() -> void:
@@ -1071,11 +1139,43 @@ func _after_card() -> void:
 		_mark_transition_start()
 		open_board("c%d-b%d" % [chapter, board_no + 1])
 	elif mode == "chapter" or (_card_first and progress.chapter_done(chapter) and not (chapter in progress.recipes)):
-		show_chapter_end(chapter)
+		_chapter_end_with_fly(chapter)
 	elif progress.chapter_done(chapter) and not (chapter in progress.recipes):
-		show_chapter_end(chapter)
+		_chapter_end_with_fly(chapter)
 	else:
 		show_home()
+
+## Last level of a chapter: the golden cakes lift off the tray and fly into the recipe card on the chapter-end screen.
+func _chapter_end_with_fly(ch: int) -> void:
+	var xf: Transform2D = board.get_global_transform()
+	var side: float = BoardView.cake_side(board.cell_size()) * xf.get_scale().x
+	var starts: Array = []
+	for i in n * n:
+		if board.cells[i] == Cells.CAKE: starts.append(xf * board.cell_centre(i))
+	var cake_tex: Texture2D = board.tex.get("cake_" + board.piece)
+	show_chapter_end(ch)
+	if cake_tex == null or starts.is_empty(): return
+	var layer := Control.new(); layer.name = "CakeFly"; layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(layer)
+	var tw := layer.create_tween().set_parallel(true)
+	for k in starts.size():
+		var spr := TextureRect.new(); spr.texture = cake_tex; spr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		spr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; spr.stretch_mode = TextureRect.STRETCH_SCALE
+		spr.modulate = Color(1.0, 0.86, 0.6)
+		layer.add_child(spr)
+		var from: Vector2 = starts[k]
+		var lift := side * (1.2 + 0.25 * (k % 3))
+		var step := func(t: float) -> void:
+			var to: Vector2 = end_card.get_global_rect().get_center()
+			var e := t * t * (3.0 - 2.0 * t)
+			var s := side * lerpf(1.0, 0.35, e)
+			spr.size = Vector2(s, s)
+			spr.global_position = from.lerp(to, e) - Vector2(0, sin(PI * t) * lift) - Vector2(s, s) / 2.0
+			spr.modulate.a = 1.0 if t < 0.8 else (1.0 - t) / 0.2
+		step.call(0.0)
+		tw.tween_method(step, 0.0, 1.0, 0.65).set_delay(0.06 * k)
+	tw.chain().tween_callback(layer.queue_free)
 
 ## First completion of a chapter: recipe card + décor (TT-AC-26), chapter_complete hook, happytime (§12.1).
 func show_chapter_end(ch: int) -> void:
@@ -1196,12 +1296,12 @@ func _sync_hint_button() -> void:
 	var ch1_free: bool = _hint_chapter() <= 1 and mode != "daily"
 	hint_state.free_left = -1 if ch1_free else maxi(0, Cfg.HINTS_FREE_PER_BOARD - ad_policy.free_hints_used_this_board)
 	hint_state.rewarded_visible = offer == "rewarded"
-	hint_btn.disabled = offer == "none" or won or not interactive or too_small
+	hint_btn.disabled = offer == "none" or won or not interactive or too_small or _guide_active()
 	hint_badge.visible = offer == "rewarded" or (offer == "free" and not ch1_free)
 	hint_badge.texture = TtTheme.ui_tex("badge_rewarded" if offer == "rewarded" else "badge_free_hint")
 
 func request_hint() -> void:
-	if not _can_edit(): return
+	if not _can_edit() or _guide_active(): return
 	var offer: String = ad_policy.hint_offer(_hint_chapter(), "daily" if mode == "daily" else "chapter", Ads.available())
 	idle_s = 0.0
 	if offer == "free": show_hint("free")

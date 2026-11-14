@@ -69,7 +69,35 @@ func music_state() -> Dictionary:
 		"loop": music_player.stream != null and music_player.stream.get("loop") == true, "bus_muted": AudioServer.is_bus_mute(AudioServer.get_bus_index("Music")),
 		"master_muted": AudioServer.is_bus_mute(0)}
 
-func play(stream: AudioStream) -> void:
+## Win celebration sounds, synthesised in code (no audio files): a soft pluck per cake on a rising scale, then an oven bell.
+const SFX_RATE := 22050
+const TICK_SCALE := [1.0, 1.125, 1.25, 1.5, 1.667, 2.0, 2.25, 2.5, 3.0]   # major pentatonic steps
+var _tick_wav: AudioStreamWAV
+var _ding_wav: AudioStreamWAV
+
+## partials: [[frequency_hz, gain], ...]; exponential decay with time constant `tau` seconds.
+static func make_tone(partials: Array, dur: float, tau: float, vol := 0.5) -> AudioStreamWAV:
+	var count := int(dur * SFX_RATE)
+	var data := PackedByteArray(); data.resize(count * 2)
+	for i in count:
+		var t := float(i) / SFX_RATE
+		var v := 0.0
+		for p in partials: v += sin(TAU * float(p[0]) * t) * float(p[1])
+		v *= exp(-t / tau) * minf(1.0, t / 0.004) * vol       # 4 ms attack: no click
+		data.encode_s16(i * 2, int(clampf(v, -1.0, 1.0) * 32767.0))
+	var w := AudioStreamWAV.new()
+	w.format = AudioStreamWAV.FORMAT_16_BITS; w.mix_rate = SFX_RATE; w.stereo = false; w.data = data
+	return w
+
+func bake_tick(k: int, _total: int) -> void:
+	if _tick_wav == null: _tick_wav = make_tone([[523.25, 1.0], [1046.5, 0.35], [1569.75, 0.12]], 0.22, 0.06, 0.45)
+	play(_tick_wav, TICK_SCALE[mini(k, TICK_SCALE.size() - 1)])
+
+func bake_ding() -> void:
+	if _ding_wav == null: _ding_wav = make_tone([[1318.5, 1.0], [2637.0, 0.4], [3639.0, 0.22], [5274.0, 0.1]], 1.4, 0.38, 0.4)
+	play(_ding_wav)
+
+func play(stream: AudioStream, pitch := 1.0) -> void:
 	if stream == null: return
 	played.append(stream.resource_path)
 	if played.size() > 20: played.pop_front()
@@ -77,6 +105,7 @@ func play(stream: AudioStream) -> void:
 	for p in _players:
 		if not p.playing:
 			p.stream = stream
+			p.pitch_scale = pitch
 			p.play()
 			return
 
