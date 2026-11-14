@@ -1,5 +1,5 @@
-gate_folder=none (owner-requested test deploy, built in a Claude Code session from branch commit 53fe440 on top of main 35dd5f2 + art branch claude/nifty-fermat-fltxwg)
-commit=53fe440
-pck_sha256=b92f02536ca0053387344282b33f5c84d921e4df52f847bda137bf27221e80a5
-staged=2026-11-13 09:14 UTC
-qa=NOT RUN: this build did not go through the QA gate; Shahar asked for it on Pages for testing (2026-11-13)
+gate_folder=none (owner-requested deploy, built in a Claude Code session from main 7c2f5fb with stock Godot 4.3 templates)
+commit=7c2f5fb
+pck_sha256=520a4bca0465cdea5cf3b4501a279bf4d262d991ba948c9158a44e8425c6bfdb
+staged=2026-11-14 10:27 UTC
+qa=NOT RUN: this build did not go through the QA gate; Shahar asked for the latest main on Pages (2026-11-14)
